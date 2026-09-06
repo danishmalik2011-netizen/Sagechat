@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="light" data-palette="mono">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -166,19 +166,19 @@
 
           <div class="topbar__actions">
             <button class="topbar__action-btn" id="topbarNewChatBtn" type="button" title="New conversation" aria-label="New chat">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
             </button>
             <button class="topbar__action-btn" id="projectFilesBtn" type="button" title="Project Files & Artifacts Workspace" aria-label="Project files">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
               <span>Files</span>
               <span class="project-files-badge" id="projectFilesBadge" hidden>0</span>
             </button>
             <button class="topbar__action-btn" id="exportBtn" type="button" title="Export conversation as Markdown" aria-label="Export conversation">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
               <span>Export</span>
             </button>
             <button class="topbar__action-btn" id="clearChatBtn" type="button" title="Clear current messages" aria-label="Clear chat">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
               <span>Clear</span>
             </button>
           </div>
@@ -422,10 +422,7 @@
                 <!-- Thick Slider taking most card estate -->
                 <div class="thinking-slider" id="thinkingSlider" data-thinking-level="2" role="slider" aria-valuemin="0" aria-valuemax="4" aria-valuenow="2" aria-valuetext="Balanced" tabindex="0">
                   <div class="thinking-slider__track" id="thinkingSliderTrack">
-                    <!-- Brand pink gradient fill that intensifies -->
                     <div class="thinking-slider__fill" id="thinkingSliderFill"></div>
-                    <!-- Procedural tactile grain overlay -->
-                    <div class="thinking-slider__grain"></div>
                     <!-- Discrete step dots aligned with stop positions -->
                     <div class="thinking-slider__dots">
                       <span class="thinking-slider__dot" data-step="0"></span>

@@ -2219,7 +2219,7 @@
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 12px; padding: 20px;
-            backdrop-filter: blur(10px);
+
           }
           .slide-card h3 {
             font-size: 16px; font-weight: 700; margin: 0 0 8px; color: #fff;
