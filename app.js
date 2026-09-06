@@ -7484,6 +7484,51 @@
     hydrateModelsFromCache();
     if (!state.conversations.length) createConversation();
 
+    // PWA install prompt
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      showPwaInstallBanner();
+    });
+
+    // Register service worker for offline caching
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
+
+    // PWA install banner actions
+    const pwaBanner = document.getElementById('pwaInstallBanner');
+    const pwaConfirm = document.getElementById('pwaInstallConfirm');
+    const pwaDismiss = document.getElementById('pwaInstallDismiss');
+
+    function showPwaInstallBanner() {
+      if (!pwaBanner) return;
+      pwaBanner.hidden = false;
+    }
+    function hidePwaInstallBanner() {
+      if (!pwaBanner) return;
+      pwaBanner.hidden = true;
+    }
+    window.showPwaInstallBanner = showPwaInstallBanner;
+    window.hidePwaInstallBanner = hidePwaInstallBanner;
+
+    if (pwaConfirm) {
+      on(pwaConfirm, 'click', async () => {
+        hidePwaInstallBanner();
+        try {
+          if (deferredPrompt) {
+            deferredPrompt.prompt();
+            await deferredPrompt.userChoice;
+            deferredPrompt = null;
+          }
+        } catch {}
+      });
+    }
+    if (pwaDismiss) {
+      on(pwaDismiss, 'click', () => hidePwaInstallBanner());
+    }
+
     // First render
     renderModes();
     updateSuggestions();
@@ -7549,4 +7594,11 @@
   CC.applyFileEdit = applyFileEdit;
   CC.updateProjectFilesBadge = updateProjectFilesBadge;
   CC.init = init;
+
+  // PWA banner helpers used by init's beforeinstallprompt handler
+  function showPwaInstallBanner() {
+    const el = document.getElementById('pwaInstallBanner');
+    if (el) el.hidden = false;
+  }
+  window.showPwaInstallBanner = showPwaInstallBanner;
 })();

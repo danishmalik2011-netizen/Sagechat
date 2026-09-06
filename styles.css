@@ -3915,6 +3915,114 @@ details[open] > .thinking-block__summary .thinking-block__chevron {
 }
 
 /* =========================================================
+   PWA INSTALL BANNER
+   ========================================================= */
+.pwa-install-banner {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  z-index: 900;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 18px;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.18);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: pwaBannerIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.pwa-install-banner[hidden] { display: none !important; }
+
+@keyframes pwaBannerIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.pwa-install-banner__body {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+.pwa-install-banner__icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--paper-elevated);
+  border: 1px solid var(--border);
+  color: var(--primary);
+  flex-shrink: 0;
+}
+.pwa-install-banner__text {
+  min-width: 0;
+}
+.pwa-install-banner__title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-900);
+  line-height: 1.25;
+}
+.pwa-install-banner__sub {
+  font-size: 11.5px;
+  color: var(--ink-500);
+  line-height: 1.35;
+}
+.pwa-install-banner__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.pwa-install-banner__btn {
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  white-space: nowrap;
+}
+.pwa-install-banner__btn--secondary {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--ink-700);
+}
+.pwa-install-banner__btn--secondary:hover {
+  background: var(--surface-hover);
+  color: var(--ink-900);
+}
+.pwa-install-banner__btn--primary {
+  background: var(--primary);
+  border: 1px solid var(--primary);
+  color: #ffffff;
+}
+.pwa-install-banner__btn--primary:hover {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+@media (max-width: 480px) {
+  .pwa-install-banner {
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    padding: 12px;
+    gap: 10px;
+    border-radius: 16px;
+  }
+  .pwa-install-banner__btn {
+    padding: 7px 10px;
+    font-size: 11.5px;
+  }
+}
+
+/* =========================================================
    HERO / EMPTY STATE (CENTERED & CLEAN)
    ========================================================= */
 .hero {

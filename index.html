@@ -24,6 +24,7 @@
       id="hljs-dark"
       disabled
     />
+    <link rel="manifest" href="manifest.json" />
     <link rel="stylesheet" href="styles.css?v=6" />
   </head>
   <body>
@@ -1574,6 +1575,27 @@
         </div>
         <h3>Drop Files or Images Here</h3>
         <p>Images will be analyzed with Vision • Documents attached as code</p>
+      </div>
+    </div>
+
+    <!-- PWA Install Banner -->
+    <div id="pwaInstallBanner" class="pwa-install-banner" hidden role="dialog" aria-label="Install app">
+      <div class="pwa-install-banner__body">
+        <div class="pwa-install-banner__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+        </div>
+        <div class="pwa-install-banner__text">
+          <div class="pwa-install-banner__title">Install Sage</div>
+          <div class="pwa-install-banner__sub">Add it to your home screen for quick access</div>
+        </div>
+      </div>
+      <div class="pwa-install-banner__actions">
+        <button class="pwa-install-banner__btn pwa-install-banner__btn--secondary" id="pwaInstallDismiss" type="button">Not now</button>
+        <button class="pwa-install-banner__btn pwa-install-banner__btn--primary" id="pwaInstallConfirm" type="button">Install</button>
       </div>
     </div>
 
