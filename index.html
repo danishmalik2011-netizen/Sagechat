@@ -1,0 +1,1183 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#fcfaf8" />
+    <title>cute chat — premium AI assistant</title>
+    <meta name="description" content="A fast, polished, elegant AI assistant. Real-time coding, deep thinking, research, document rendering, and PDF generation with Groq, OpenRouter, or Pollinations." />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%23ff9a7b'/%3E%3Cstop offset='100%25' stop-color='%23e06d53'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Cpath d='M20 32a12 12 0 0 1 24 0c0 5-3.5 9.5-8 11.5V47l-6-3.5A12 12 0 0 1 20 32Z' fill='%23ffffff'/%3E%3Ccircle cx='27' cy='31' r='2.5' fill='%23e06d53'/%3E%3Ccircle cx='37' cy='31' r='2.5' fill='%23e06d53'/%3E%3C/svg%3E" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css"
+      id="hljs-light"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark-dimmed.min.css"
+      id="hljs-dark"
+      disabled
+    />
+    <link rel="stylesheet" href="styles.css?v=4" />
+  </head>
+  <body>
+    <div class="app" id="app" role="application" aria-label="Cute Chat Assistant">
+      <!-- SIDEBAR -->
+      <aside class="sidebar" id="sidebar" aria-label="Conversations & Navigation">
+        <div class="sidebar__head">
+          <div class="brand">
+            <div class="brand__avatar" aria-hidden="true">
+              <svg viewBox="0 0 32 32" width="22" height="22" fill="none">
+                <rect width="32" height="32" rx="8" fill="currentColor" fill-opacity="0.1"/>
+                <path d="M16 6L18.2 12.8L25 15L18.2 17.2L16 24L13.8 17.2L7 15L13.8 12.8L16 6Z" fill="currentColor"/>
+                <circle cx="23" cy="9" r="1.5" fill="currentColor"/>
+              </svg>
+            </div>
+            <div class="brand__text">
+              <span class="brand__name">cute chat</span>
+              <div class="brand__status">
+                <span class="dot" id="providerDot" aria-hidden="true"></span>
+                <span id="providerLabel" class="brand__status-text">connecting…</span>
+              </div>
+            </div>
+          </div>
+          <button class="iconbtn" id="closeSidebarBtn" type="button" aria-label="Close sidebar" title="Close sidebar">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <div class="sidebar__actions">
+          <button class="newchat" id="newChatBtn" type="button">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+            <span>New Chat</span>
+          </button>
+        </div>
+
+        <div class="search">
+          <svg class="search__icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input id="searchInput" type="text" placeholder="Search conversations…" aria-label="Search conversations" autocomplete="off" />
+        </div>
+
+        <!-- Assistance Mode Accordion -->
+        <div class="sidebar-section" id="modesSection">
+          <button class="sidebar-section-toggle" id="toggleModesBtn" type="button" aria-expanded="true" aria-controls="modesBody" title="Toggle Assistance Modes">
+            <div class="sidebar-section-toggle__left">
+              <svg class="sidebar-section-toggle__chevron" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+              <span class="sidebar-section-toggle__title">Assistance Mode</span>
+            </div>
+            <span class="sidebar-section-toggle__badge sidebar-section-toggle__badge--mode" id="activeModeBadge">Chat</span>
+          </button>
+          <div class="sidebar-section__body" id="modesBody">
+            <div class="modes" id="modes" role="tablist" aria-label="Assistant mode">
+              <!-- Rendered dynamically with SVG icons in app.js -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Chats Accordion -->
+        <div class="sidebar-section sidebar-section--flex" id="chatsSection">
+          <button class="sidebar-section-toggle" id="toggleChatsBtn" type="button" aria-expanded="true" aria-controls="conversations" title="Toggle Recent Chats">
+            <div class="sidebar-section-toggle__left">
+              <svg class="sidebar-section-toggle__chevron" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+              <span class="sidebar-section-toggle__title">Recent Chats</span>
+            </div>
+            <span class="sidebar-section-toggle__badge sidebar-section-toggle__badge--count" id="chatsCountBadge">0</span>
+          </button>
+          <div class="sidebar-section__body sidebar-section__body--scroll" id="chatsBody">
+            <div class="conversations" id="conversations" aria-label="Past conversations"></div>
+          </div>
+        </div>
+
+        <div class="sidebar__foot">
+          <button class="ghost" id="openSettingsBtn" type="button" title="Open Settings">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+            <span>Settings</span>
+          </button>
+          <button class="ghost ghost--icon" id="toggleThemeBtn" type="button" title="Toggle Theme" aria-label="Toggle theme">
+            <svg id="themeIcon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+          </button>
+          <button class="ghost ghost--icon" id="collapseSidebarBtn" type="button" title="Collapse sidebar" aria-label="Collapse sidebar">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+        </div>
+      </aside>
+      <div class="sidebar-scrim" id="sidebarScrim" aria-hidden="true"></div>
+
+      <!-- MAIN CONTENT -->
+      <main class="main" id="main">
+        <header class="topbar">
+          <div class="topbar__left">
+            <button class="iconbtn topbar__toggle" id="openSidebarBtn" type="button" aria-label="Toggle sidebar" title="Toggle sidebar">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+            </button>
+            <div class="topbar__title">
+              <span class="topbar__mode-icon" id="topbarModeIcon">
+                <!-- SVG icon rendered by JS -->
+              </span>
+              <h2 id="topbarTitle">Chat</h2>
+              <span id="topbarSubtitle" hidden>Thoughtful, coherent AI conversation</span>
+            </div>
+          </div>
+
+          <div class="topbar__actions">
+            <div class="topbar__model-wrapper" id="topbarModelWrapper">
+              <button class="model-badge" id="topbarModelBtn" type="button" title="Select Model" aria-haspopup="listbox" aria-expanded="false">
+                <span class="model-badge__indicator"></span>
+                <span id="topbarModelName">OpenAI GPT</span>
+                <svg class="model-badge__chevron" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+              </button>
+              <div class="topbar-dropdown" id="topbarModelDropdown" hidden>
+                <div class="topbar-dropdown__head">
+                  <span class="topbar-dropdown__title">Select Model</span>
+                  <button type="button" class="topbar-dropdown__manage" id="topbarManageProvidersBtn">Settings</button>
+                </div>
+                <div class="topbar-dropdown__provider-bar" id="topbarProviderBar" role="tablist" aria-label="Filter by provider"></div>
+                <div class="topbar-dropdown__search">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                  <input type="text" id="topbarModelSearch" placeholder="Search models…" autocomplete="off" />
+                </div>
+                <div class="topbar-dropdown__list" id="topbarModelList" role="listbox"></div>
+              </div>
+            </div>
+            <button class="topbar__action-btn" id="exportBtn" type="button" title="Export conversation as Markdown" aria-label="Export conversation">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              <span>Export</span>
+            </button>
+            <button class="topbar__action-btn" id="clearChatBtn" type="button" title="Clear current messages" aria-label="Clear chat">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+              <span>Clear</span>
+            </button>
+          </div>
+        </header>
+
+        <!-- Capabilities & Skills Bar -->
+        <div class="skillsbar" id="skills" aria-label="Interactive intelligence skills"></div>
+
+        <!-- Chat Area with Left Navigation Rail -->
+        <div class="chat-layout" id="chatLayout">
+          <!-- Left Navigation Rail (Message Tracker) -->
+          <nav class="chat-rail" id="chatRail" aria-label="Conversation message jump rail" hidden>
+            <div class="chat-rail__head" title="User message navigation">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="8" y1="6" x2="21" y2="6"/>
+                <line x1="8" y1="12" x2="21" y2="12"/>
+                <line x1="8" y1="18" x2="21" y2="18"/>
+                <circle cx="3" cy="6" r="1.5" fill="currentColor"/>
+                <circle cx="3" cy="12" r="1.5" fill="currentColor"/>
+                <circle cx="3" cy="18" r="1.5" fill="currentColor"/>
+              </svg>
+              <span class="chat-rail__count" id="chatRailCount" title="Total user prompts">0</span>
+            </div>
+            <div class="chat-rail__track" id="chatRailTrack" role="list"></div>
+            <button class="chat-rail__jump" id="chatRailBottomBtn" type="button" title="Jump to latest message" aria-label="Jump to latest">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 5v14M19 12l-7 7-7-7"/>
+              </svg>
+            </button>
+          </nav>
+
+          <!-- Chat Stream -->
+          <section class="chat" id="chat" aria-live="polite" aria-label="Conversation stream"></section>
+        </div>
+
+        <!-- Suggestions (Quick Starters) -->
+        <div class="suggestions" id="suggestions" aria-label="Prompt suggestions" hidden>
+          <!-- Rendered with SVGs in JS -->
+        </div>
+
+        <!-- Message Composer -->
+        <form class="composer-container" id="composer" autocomplete="off" onsubmit="return false;">
+          <div class="composer__attachments" id="attachments" aria-live="polite"></div>
+
+          <!-- Quick Connectors Tool Menu (Dropdown) -->
+          <div class="connectors-menu" id="connectorsMenu" hidden>
+            <div class="connectors-menu__header">
+              <span>MCP Tools &amp; Actions</span>
+              <button class="connectors-menu__cfg-btn" type="button" id="connectorsMenuCfgBtn">Settings</button>
+            </div>
+            <div class="connectors-menu__items">
+              <button class="connectors-menu__item" type="button" data-connector-cmd="/search ">
+                <span class="connectors-menu__item-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                </span>
+                <div class="connectors-menu__item-info">
+                  <div class="connectors-menu__item-name">Web Search</div>
+                  <div class="connectors-menu__item-desc">Live internet search with citations</div>
+                </div>
+                <span class="connectors-menu__item-cmd">/search</span>
+              </button>
+              <button class="connectors-menu__item" type="button" data-connector-cmd="/sql ">
+                <span class="connectors-menu__item-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+                </span>
+                <div class="connectors-menu__item-info">
+                  <div class="connectors-menu__item-name">Database (SQL)</div>
+                  <div class="connectors-menu__item-desc">Run queries on relational tables</div>
+                </div>
+                <span class="connectors-menu__item-cmd">/sql</span>
+              </button>
+              <button class="connectors-menu__item" type="button" data-connector-cmd="/github ">
+                <span class="connectors-menu__item-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.1-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2z"/></svg>
+                </span>
+                <div class="connectors-menu__item-info">
+                  <div class="connectors-menu__item-name">GitHub</div>
+                  <div class="connectors-menu__item-desc">Inspect repos, files &amp; pull requests</div>
+                </div>
+                <span class="connectors-menu__item-cmd">/github</span>
+              </button>
+              <button class="connectors-menu__item" type="button" data-connector-cmd="/figma ">
+                <span class="connectors-menu__item-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M8 2h4a4 4 0 0 1 0 8H8V2zm0 8h4a4 4 0 1 1-4 4v-4zm-4 4a4 4 0 1 1 4-4v4H4zm0-8a4 4 0 0 1 4-4v8H4V6zm0 12a4 4 0 0 1 4-4v4a4 4 0 0 1-4 0z"/></svg>
+                </span>
+                <div class="connectors-menu__item-info">
+                  <div class="connectors-menu__item-name">Figma MCP</div>
+                  <div class="connectors-menu__item-desc">Inspect design files &amp; extract SVGs</div>
+                </div>
+                <span class="connectors-menu__item-cmd">/figma</span>
+              </button>
+              <button class="connectors-menu__item" type="button" data-connector-cmd="/slack ">
+                <span class="connectors-menu__item-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M6 15a2 2 0 0 1-2-2V7a2 2 0 1 1 4 0v6a2 2 0 0 1-2 2zm0-6a2 2 0 1 1-2-2 2 2 0 0 1 2 2zm9-3a2 2 0 0 1 2 2v6a2 2 0 1 1-4 0V8a2 2 0 0 1 2-2zm0 6a2 2 0 1 1 2 2 2 2 0 0 1-2-2zm-6 9a2 2 0 0 1-2-2v-6a2 2 0 1 1 4 0v6a2 2 0 0 1-2 2zm6-3a2 2 0 0 1 2 2 2 2 0 1 1-2 2v-4z"/></svg>
+                </span>
+                <div class="connectors-menu__item-info">
+                  <div class="connectors-menu__item-name">Slack</div>
+                  <div class="connectors-menu__item-desc">Send message to Slack channel</div>
+                </div>
+                <span class="connectors-menu__item-cmd">/slack</span>
+              </button>
+              <button class="connectors-menu__item" type="button" data-connector-cmd="/calendar ">
+                <span class="connectors-menu__item-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                </span>
+                <div class="connectors-menu__item-info">
+                  <div class="connectors-menu__item-name">Google Calendar</div>
+                  <div class="connectors-menu__item-desc">Generate .ics &amp; calendar invite</div>
+                </div>
+                <span class="connectors-menu__item-cmd">/calendar</span>
+              </button>
+              <button class="connectors-menu__item" type="button" data-connector-cmd="/chart ">
+                <span class="connectors-menu__item-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                </span>
+                <div class="connectors-menu__item-info">
+                  <div class="connectors-menu__item-name">Analytics &amp; Charts</div>
+                  <div class="connectors-menu__item-desc">Plot bar, line, donut &amp; metrics</div>
+                </div>
+                <span class="connectors-menu__item-cmd">/chart</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="composer">
+            <button type="button" class="composer__icon" id="connectorsBtn" aria-label="MCP Connectors &amp; Tools" title="MCP Connectors &amp; Tools (/search, /sql, /github, /slack, /calendar, /chart)">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
+            </button>
+            <button type="button" class="composer__icon" id="attachBtn" aria-label="Attach code or document" title="Attach file or code">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+            </button>
+            <input type="file" id="fileInput" hidden multiple accept="image/*,.txt,.md,.json,.csv,.log,.py,.js,.ts,.tsx,.jsx,.html,.css,.java,.c,.cpp,.go,.rs,.rb,.sh,.xml,.yml,.yaml" />
+            
+            <textarea
+              class="composer__input"
+              id="input"
+              name="msg"
+              placeholder="Ask anything, debug code, draft an artifact, generate a PDF..."
+              aria-label="Message input"
+              rows="1"
+            ></textarea>
+
+            <button type="button" class="composer__icon" id="micBtn" aria-label="Speech to text" title="Voice Input">
+              <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+            </button>
+            <button type="button" class="composer__icon composer__icon--stop" id="stopBtn" aria-label="Stop generation" title="Stop stream" hidden>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+            </button>
+            <button class="composer__send" id="sendBtn" type="button" aria-label="Send message" title="Send (Enter)">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+            <button type="button" class="composer__icon composer__icon--thinking" id="thinkingBtn" aria-label="Thinking level: Balanced" title="Thinking: Balanced" aria-haspopup="dialog" aria-expanded="false" data-thinking-level="2">
+              <span class="thinking-btn__icon-wrap">
+                <svg class="thinking-icon-svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path class="brain-lobe brain-lobe--left" d="M9.5 4.2a3.3 3.3 0 0 0-3.3 3.3c0 .4.1.8.2 1.2A3.3 3.3 0 0 0 4.2 12a3.3 3.3 0 0 0 1.9 3 3.3 3.3 0 0 0 3.4 3.2c.6 0 1.2-.2 1.7-.5.4.4.9.6 1.5.6" />
+                  <path class="brain-lobe brain-lobe--right" d="M14.5 4.2a3.3 3.3 0 0 1 3.3 3.3c0 .4-.1.8-.2 1.2A3.3 3.3 0 0 1 19.8 12a3.3 3.3 0 0 1-1.9 3 3.3 3.3 0 0 1-3.4 3.2c-.6 0-1.2-.2-1.7-.5-.4.4-.9.6-1.5.6" />
+                  <path class="brain-stem" d="M12 5.5v13.5" stroke-dasharray="1.5 2" />
+                  <circle class="thinking-synapse syn-1" cx="8" cy="9.5" r="1.1" />
+                  <circle class="thinking-synapse syn-2" cx="16" cy="9.5" r="1.1" />
+                  <circle class="thinking-synapse syn-3" cx="8" cy="14" r="1.1" />
+                  <circle class="thinking-synapse syn-4" cx="16" cy="14" r="1.1" />
+                </svg>
+              </span>
+              <span class="thinking-level-meter" aria-hidden="true">
+                <span class="meter-pip" data-pip="1"></span>
+                <span class="meter-pip" data-pip="2"></span>
+                <span class="meter-pip" data-pip="3"></span>
+                <span class="meter-pip" data-pip="4"></span>
+              </span>
+            </button>
+
+            <!-- CODEX-STYLE THINKING DROPDOWN -->
+            <div class="thinking-dropdown" id="thinkingDropdown" hidden>
+              <div class="thinking-card" id="thinkingControl" role="dialog" aria-label="Thinking level controls">
+                <!-- Header: Faster / Smarter -->
+                <div class="thinking-card__header">
+                  <span class="thinking-card__header-label">Faster</span>
+                  <span class="thinking-card__header-label">Smarter</span>
+                </div>
+
+                <!-- Thick Slider taking most card estate -->
+                <div class="thinking-slider" id="thinkingSlider" data-thinking-level="2" role="slider" aria-valuemin="0" aria-valuemax="4" aria-valuenow="2" aria-valuetext="Balanced" tabindex="0">
+                  <div class="thinking-slider__track" id="thinkingSliderTrack">
+                    <!-- Brand pink gradient fill that intensifies -->
+                    <div class="thinking-slider__fill" id="thinkingSliderFill"></div>
+                    <!-- Procedural tactile grain overlay -->
+                    <div class="thinking-slider__grain"></div>
+                    <!-- Discrete step dots aligned with stop positions -->
+                    <div class="thinking-slider__dots">
+                      <span class="thinking-slider__dot" data-step="0"></span>
+                      <span class="thinking-slider__dot" data-step="1"></span>
+                      <span class="thinking-slider__dot" data-step="2"></span>
+                      <span class="thinking-slider__dot" data-step="3"></span>
+                      <span class="thinking-slider__dot" data-step="4"></span>
+                    </div>
+                    <!-- Draggable squircle thumb -->
+                    <div class="thinking-slider__thumb" id="thinkingSliderThumb"></div>
+                  </div>
+                </div>
+
+                <!-- Codex Style Menu Rows -->
+                <div class="thinking-card__divider"></div>
+                <div class="thinking-card__menu">
+                  <button type="button" class="thinking-card__item" id="thinkingCardModelBtn" title="Change active model">
+                    <span class="thinking-card__item-label" id="thinkingCardModelName">OpenAI GPT</span>
+                    <svg class="thinking-card__chevron" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                  </button>
+                  <div class="thinking-card__item thinking-card__item--static">
+                    <span class="thinking-card__item-label">Speed</span>
+                    <span class="thinking-card__item-badge" id="thinkingLevelLabel">Balanced</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+
+        <footer class="app__foot">
+          <span id="footStatus">Private &amp; local-first • Running directly in your browser</span>
+        </footer>
+      </main>
+    </div>
+
+    <!-- SETTINGS MODAL -->
+    <div class="modal" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle" hidden>
+      <div class="modal__scrim" data-close></div>
+      <div class="modal__panel" role="document">
+        <header class="modal__head">
+          <div class="modal__title-group">
+            <h2 id="settingsTitle">Settings</h2>
+          </div>
+          <button class="iconbtn" type="button" data-close aria-label="Close dialog">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
+        </header>
+
+        <!-- Settings Tab Bar -->
+        <nav class="settings-tabs" id="settingsTabs" role="tablist">
+          <button class="settings-tab is-active" type="button" data-tab="providers" role="tab">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            <span>Providers</span>
+          </button>
+          <button class="settings-tab" type="button" data-tab="model" role="tab">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+            <span>Model</span>
+          </button>
+          <button class="settings-tab" type="button" data-tab="chat" role="tab">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span>Chat</span>
+          </button>
+          <button class="settings-tab" type="button" data-tab="connectors" role="tab">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
+            <span>Connectors</span>
+          </button>
+          <button class="settings-tab" type="button" data-tab="data" role="tab">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            <span>Data</span>
+          </button>
+        </nav>
+
+        <div class="modal__body">
+
+          <!-- ============ TAB: PROVIDERS ============ -->
+          <div class="settings-pane is-active" id="settingsPane-providers" data-pane="providers">
+
+            <!-- Built-in Cloud Providers Section -->
+            <div class="settings-section">
+              <div class="settings-section__label">Cloud Providers</div>
+              <div class="provider-list" role="radiogroup" aria-label="Cloud Providers">
+
+                <!-- Pollinations Provider Card -->
+                <div class="provider-item" id="providerItem-pollinations">
+                  <label class="provider-item__head">
+                    <input type="radio" name="provider" value="pollinations" />
+                    <div class="provider-item__info">
+                      <div class="provider-item__title-row">
+                        <span class="provider-item__name">Pollinations</span>
+                        <span class="badge badge--green">Free / Instant</span>
+                      </div>
+                      <span class="provider-item__desc">Immediate access without registration. Supports Vision &amp; OpenAI/Gemini endpoints.</span>
+                    </div>
+                  </label>
+                  <div class="provider-item__body">
+                    <div class="api-key-row" id="pollinationsKeyBox">
+                      <div class="api-key-row__head">
+                        <span class="api-key-row__name">API Key</span>
+                        <span class="api-key-row__optional">Optional</span>
+                        <a href="https://enter.pollinations.ai" target="_blank" rel="noopener" class="api-key-row__link">Get Free Key ↗</a>
+                      </div>
+                      <div class="api-key-row__field">
+                        <input type="password" id="pollinationsApiKeyInput" placeholder="pk_... or sk_..." autocomplete="off" spellcheck="false" />
+                        <button class="api-key-row__toggle toggle-key-btn" type="button" data-for="pollinationsApiKeyInput">Show</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Groq Provider Card -->
+                <div class="provider-item" id="providerItem-groq">
+                  <label class="provider-item__head">
+                    <input type="radio" name="provider" value="groq" />
+                    <div class="provider-item__info">
+                      <div class="provider-item__title-row">
+                        <span class="provider-item__name">Groq</span>
+                        <span class="badge badge--orange">Ultra Fast</span>
+                      </div>
+                      <span class="provider-item__desc">Lightning speed inference on Llama 3.3 70B via LPUs. Requires free API key.</span>
+                    </div>
+                  </label>
+                  <div class="provider-item__body">
+                    <div class="api-key-row" id="groqKeyBox">
+                      <div class="api-key-row__head">
+                        <span class="api-key-row__name">API Key</span>
+                        <a href="https://console.groq.com/keys" target="_blank" rel="noopener" class="api-key-row__link">Get Free Key ↗</a>
+                      </div>
+                      <div class="api-key-row__field">
+                        <input type="password" id="groqApiKeyInput" placeholder="gsk_..." autocomplete="off" spellcheck="false" />
+                        <button class="api-key-row__toggle toggle-key-btn" type="button" data-for="groqApiKeyInput">Show</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- OpenRouter Provider Card -->
+                <div class="provider-item" id="providerItem-openrouter">
+                  <label class="provider-item__head">
+                    <input type="radio" name="provider" value="openrouter" />
+                    <div class="provider-item__info">
+                      <div class="provider-item__title-row">
+                        <span class="provider-item__name">OpenRouter</span>
+                        <span class="badge badge--purple">Broadest Models</span>
+                      </div>
+                      <span class="provider-item__desc">Access hundreds of open &amp; commercial models (DeepSeek, Claude, GPT, Qwen).</span>
+                    </div>
+                  </label>
+                  <div class="provider-item__body">
+                    <div class="api-key-row" id="openrouterKeyBox">
+                      <div class="api-key-row__head">
+                        <span class="api-key-row__name">API Key</span>
+                        <a href="https://openrouter.ai/settings/keys" target="_blank" rel="noopener" class="api-key-row__link">Get Free Key ↗</a>
+                      </div>
+                      <div class="api-key-row__field">
+                        <input type="password" id="openrouterApiKeyInput" placeholder="sk-or-v1-..." autocomplete="off" spellcheck="false" />
+                        <button class="api-key-row__toggle toggle-key-btn" type="button" data-for="openrouterApiKeyInput">Show</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Custom Providers Section -->
+            <div class="settings-section" id="customProvidersSection">
+              <div class="settings-section__label-row">
+                <div>
+                  <div class="settings-section__label">Custom Endpoints (OpenAI-Compatible)</div>
+                  <p class="settings-section__hint">Add endpoints like Kilo Gateway, Ollama, LM Studio, vLLM, DeepSeek</p>
+                </div>
+                <button type="button" class="settings-section__action" id="addCustomProviderBtn" title="Add another provider">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                  Add Provider
+                </button>
+              </div>
+              <div class="custom-providers-list" id="customProvidersList">
+                <!-- Dynamically rendered by JS -->
+              </div>
+            </div>
+
+          </div>
+
+          <!-- ============ TAB: MODEL ============ -->
+          <div class="settings-pane" id="settingsPane-model" data-pane="model">
+            <div class="settings-section">
+              <div class="settings-section__label-row">
+                <div class="settings-section__label">Select Model</div>
+                <button class="settings-section__action" type="button" id="fetchModelsBtn" title="Fetch latest models from API">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
+                  <span id="fetchModelsBtnText">Refresh</span>
+                </button>
+              </div>
+
+              <div class="custom-select" id="modelDropdown">
+                <button type="button" class="custom-select__trigger" id="modelSelectTrigger" aria-haspopup="listbox" aria-expanded="false">
+                  <div class="custom-select__value">
+                    <span class="custom-select__title" id="selectedModelLabel">Loading models…</span>
+                    <span class="custom-select__badge" id="selectedModelBadge">Active</span>
+                  </div>
+                  <svg class="custom-select__chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+
+                <div class="custom-select__panel" id="modelSelectPanel" hidden>
+                  <div class="custom-select__search">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                    <input type="text" id="modelSearchInput" placeholder="Search models…" autocomplete="off" />
+                    <button type="button" id="modelSearchClear" class="custom-select__search-clear" aria-label="Clear search" hidden>&times;</button>
+                  </div>
+                  <div class="custom-select__options" id="modelOptionsList" role="listbox"></div>
+                  <div class="custom-select__foot">
+                    <span id="modelCountLabel">0 models</span>
+                    <span id="modelCapabilitiesNotice">Vision & Markdown</span>
+                  </div>
+                </div>
+              </div>
+              <p class="hint" id="modelHint"></p>
+            </div>
+          </div>
+
+          <!-- ============ TAB: CHAT ============ -->
+          <div class="settings-pane" id="settingsPane-chat" data-pane="chat">
+
+            <div class="settings-section">
+              <div class="settings-section__label">Behavior</div>
+              <div class="settings-toggle-grid">
+                <label class="check-toggle">
+                  <input type="checkbox" id="streamToggle" checked />
+                  <span class="toggle-slider"></span>
+                  <div class="toggle-info">
+                    <span class="toggle-text">Streaming</span>
+                    <span class="toggle-desc">Show tokens as they arrive</span>
+                  </div>
+                </label>
+                <label class="check-toggle">
+                  <input type="checkbox" id="memoryToggle" checked />
+                  <span class="toggle-slider"></span>
+                  <div class="toggle-info">
+                    <span class="toggle-text">Memory</span>
+                    <span class="toggle-desc">Persist conversation history</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+            
+            <div class="settings-section">
+              <div class="settings-section__label">Temperature</div>
+              <div class="slider-box">
+                <div class="slider-header">
+                  <span class="slider-title">Sampling</span>
+                  <span class="slider-value" id="tempVal">0.70</span>
+                </div>
+                <input type="range" id="tempRange" min="0" max="1.4" step="0.05" value="0.7" />
+                <div class="slider-ticks">
+                  <span>Focused</span>
+                  <span>Balanced</span>
+                  <span>Creative</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <div class="settings-section__label">Persona</div>
+              <p class="settings-section__hint">Custom instructions for this chat only.</p>
+              <textarea id="systemPromptInput" rows="3" placeholder="e.g. &quot;Senior TypeScript architect&quot;, &quot;Explain like Feynman&quot;..."></textarea>
+            </div>
+          </div>
+
+          <!-- ============ TAB: DATA ============ -->
+          <div class="settings-pane" id="settingsPane-data" data-pane="data">
+            <div class="settings-section">
+              <div class="settings-section__label">Backup & Export</div>
+              <p class="settings-section__hint">All data lives in your browser. Export to keep a backup, or import from a previous session.</p>
+              <div class="data-actions">
+                <button class="data-action-btn" type="button" id="exportAllBtn">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                  <div>
+                    <span class="data-action-btn__title">Export All</span>
+                    <span class="data-action-btn__desc">Download conversations & settings as JSON</span>
+                  </div>
+                </button>
+                <button class="data-action-btn" type="button" id="importBtn">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                  <div>
+                    <span class="data-action-btn__title">Import</span>
+                    <span class="data-action-btn__desc">Restore from a previous backup</span>
+                  </div>
+                </button>
+                <input type="file" id="importInput" accept="application/json" hidden />
+                <button class="data-action-btn data-action-btn--danger" type="button" id="wipeBtn">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  <div>
+                    <span class="data-action-btn__title">Reset Everything</span>
+                    <span class="data-action-btn__desc">Erase all conversations, settings & cached models</span>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ============ TAB: CONNECTORS (MCP INTEGRATIONS) ============ -->
+          <div class="settings-pane" id="settingsPane-connectors" data-pane="connectors">
+            <div class="settings-section">
+              <div class="connectors-header">
+                <div>
+                  <div class="settings-section__label">MCP Integrations &amp; External Tools</div>
+                  <p class="settings-section__desc">Connect design suites, productivity tools, developer environments, and live web data.</p>
+                </div>
+                <div class="connectors-tier-badge">
+                  <span class="badge badge--green">All Connectors Enabled</span>
+                </div>
+              </div>
+
+              <!-- Group: Design Tools -->
+              <div class="connectors-group">
+                <div class="connectors-group__title">
+                  <span class="connectors-group__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><circle cx="6.5" cy="12.5" r="2.5"/><path d="M12 2a10 10 0 0 0-7.5 17 10 10 0 0 0 15 0 10 10 0 0 0 7.5-17"/></svg>
+                  </span>
+                  <span>Design &amp; Visual Tools</span>
+                </div>
+                <div class="connectors-grid">
+                  <!-- Figma MCP -->
+                  <div class="connector-card" data-connector="figma">
+                    <div class="connector-card__head">
+                      <div class="connector-card__icon" style="background:rgba(242, 78, 30, 0.12); color:#f24e1e;">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M8 2h4a4 4 0 0 1 0 8H8V2zm0 8h4a4 4 0 1 1-4 4v-4zm-4 4a4 4 0 1 1 4-4v4H4zm0-8a4 4 0 0 1 4-4v8H4V6zm0 12a4 4 0 0 1 4-4v4a4 4 0 0 1-4 0z"/></svg>
+                      </div>
+                      <div class="connector-card__info">
+                        <div class="connector-card__name">Figma MCP <span class="badge badge--subtle">beta</span></div>
+                        <div class="connector-card__desc">Read/write designs, extract components &amp; SVG vector assets</div>
+                      </div>
+                      <label class="toggle-switch">
+                        <input type="checkbox" id="connectorToggle-figma" data-connector-toggle="figma" />
+                        <span class="toggle-switch__slider"></span>
+                      </label>
+                    </div>
+                    <div class="connector-card__body">
+                      <div class="connector-card__fields">
+                        <div class="custom-field">
+                          <label class="field-label">Personal Access Token</label>
+                          <input type="password" id="connectorKey-figma" placeholder="figd_..." data-connector-key="figma" />
+                          <span class="field-hint">Figma &rarr; Settings &rarr; Personal Access Tokens</span>
+                        </div>
+                        <div class="connector-card__actions">
+                          <button class="btn btn--subtle btn--sm" type="button" data-connector-test="figma">Test Connection</button>
+                          <button class="btn btn--subtle btn--sm" type="button" data-connector-try="figma">Inspect File</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Canva MCP -->
+                  <div class="connector-card" data-connector="canva">
+                    <div class="connector-card__head">
+                      <div class="connector-card__icon" style="background:rgba(0, 196, 204, 0.12); color:#00c4cc;">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M10 8l4 4-4 4"/></svg>
+                      </div>
+                      <div class="connector-card__info">
+                        <div class="connector-card__name">Canva MCP</div>
+                        <div class="connector-card__desc">Template access, presentation &amp; brand editing</div>
+                      </div>
+                      <label class="toggle-switch">
+                        <input type="checkbox" id="connectorToggle-canva" data-connector-toggle="canva" />
+                        <span class="toggle-switch__slider"></span>
+                      </label>
+                    </div>
+                    <div class="connector-card__body">
+                      <div class="connector-card__fields">
+                        <div class="custom-field">
+                          <label class="field-label">Connect API Token</label>
+                          <input type="password" id="connectorKey-canva" placeholder="canva_..." data-connector-key="canva" />
+                        </div>
+                        <div class="connector-card__actions">
+                          <button class="btn btn--subtle btn--sm" type="button" data-connector-test="canva">Test Connection</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Sketch -->
+                  <div class="connector-card" data-connector="sketch">
+                    <div class="connector-card__head">
+                      <div class="connector-card__icon" style="background:rgba(253, 189, 57, 0.12); color:#f59e0b;">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l9 7-9 13-9-13 9-7z"/></svg>
+                      </div>
+                      <div class="connector-card__info">
+                        <div class="connector-card__name">Sketch</div>
+                        <div class="connector-card__desc">Artboard inspection &amp; symbol asset export</div>
+                      </div>
+                      <label class="toggle-switch">
+                        <input type="checkbox" id="connectorToggle-sketch" data-connector-toggle="sketch" />
+                        <span class="toggle-switch__slider"></span>
+                      </label>
+                    </div>
+                    <div class="connector-card__body">
+                      <div class="connector-card__fields">
+                        <div class="custom-field">
+                          <label class="field-label">Cloud Token</label>
+                          <input type="password" id="connectorKey-sketch" placeholder="sketch_..." data-connector-key="sketch" />
+                        </div>
+                        <div class="connector-card__actions">
+                          <button class="btn btn--subtle btn--sm" type="button" data-connector-test="sketch">Test Connection</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Group: Productivity -->
+              <div class="connectors-group">
+                <div class="connectors-group__title">
+                  <span class="connectors-group__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                  </span>
+                  <span>Productivity &amp; Collaboration</span>
+                </div>
+                <div class="connectors-grid">
+                  <!-- Slack -->
+                  <div class="connector-card" data-connector="slack">
+                    <div class="connector-card__head">
+                      <div class="connector-card__icon" style="background:rgba(74, 21, 75, 0.12); color:#7c3aed;">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M6 15a2 2 0 0 1-2-2V7a2 2 0 1 1 4 0v6a2 2 0 0 1-2 2zm0-6a2 2 0 1 1-2-2 2 2 0 0 1 2 2zm9-3a2 2 0 0 1 2 2v6a2 2 0 1 1-4 0V8a2 2 0 0 1 2-2zm0 6a2 2 0 1 1 2 2 2 2 0 0 1-2-2zm-6 9a2 2 0 0 1-2-2v-6a2 2 0 1 1 4 0v6a2 2 0 0 1-2 2zm6-3a2 2 0 0 1 2 2 2 2 0 1 1-2 2v-4z"/></svg>
+                      </div>
+                      <div class="connector-card__info">
+                        <div class="connector-card__name">Slack</div>
+                        <div class="connector-card__desc">Send messages, channel notifications &amp; read updates</div>
+                      </div>
+                      <label class="toggle-switch">
+                        <input type="checkbox" id="connectorToggle-slack" data-connector-toggle="slack" />
+                        <span class="toggle-switch__slider"></span>
+                      </label>
+                    </div>
+                    <div class="connector-card__body">
+                      <div class="connector-card__fields">
+                        <div class="custom-field">
+                          <label class="field-label">Incoming Webhook URL</label>
+                          <input type="password" id="connectorKey-slack" placeholder="https://hooks.slack.com/services/..." data-connector-key="slack" />
+                          <span class="field-hint">Paste your Slack Webhook URL to dispatch messages to channels</span>
+                        </div>
+                        <div class="connector-card__actions">
+                          <button class="btn btn--subtle btn--sm" type="button" data-connector-test="slack">Send Test Ping</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Gmail -->
+                  <div class="connector-card" data-connector="gmail">
+                    <div class="connector-card__head">
+                      <div class="connector-card__icon" style="background:rgba(234, 67, 53, 0.12); color:#ea4335;">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                      </div>
+                      <div class="connector-card__info">
+                        <div class="connector-card__name">Gmail</div>
+                        <div class="connector-card__desc">Read, draft, and compose emails seamlessly</div>
+                      </div>
+                      <label class="toggle-switch">
+                        <input type="checkbox" id="connectorToggle-gmail" data-connector-toggle="gmail" />
+                        <span class="toggle-switch__slider"></span>
+                      </label>
+                    </div>
+                    <div class="connector-card__body">
+                      <div class="connector-card__fields">
+                        <div class="custom-field">
+                          <label class="field-label">Default Email Address</label>
+                          <input type="email" id="connectorKey-gmail" placeholder="you@gmail.com" data-connector-key="gmail" />
+                        </div>
+                        <div class="connector-card__actions">
+                          <button class="btn btn--subtle btn--sm" type="button" data-connector-try="gmail">Open Composer</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Google Calendar -->
+                  <div class="connector-card" data-connector="googleCalendar">
+                    <div class="connector-card__head">
+                      <div class="connector-card__icon" style="background:rgba(66, 133, 244, 0.12); color:#2563eb;">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                      </div>
+                      <div class="connector-card__info">
+                        <div class="connector-card__name">Google Calendar</div>
+                        <div class="connector-card__desc">Schedule meetings, check events &amp; create .ics calendar files</div>
+                      </div>
+                      <label class="toggle-switch">
+                        <input type="checkbox" id="connectorToggle-googleCalendar" data-connector-toggle="googleCalendar" checked />
+                        <span class="toggle-switch__slider"></span>
+                      </label>
+                    </div>
+                    <div class="connector-card__body">
+                      <div class="connector-card__fields">
+                        <div class="connector-card__actions">
+                          <button class="btn btn--subtle btn--sm" type="button" data-connector-try="googleCalendar">Generate Sample Event</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Google Drive -->
+                  <div class="connector-card" data-connector="googleDrive">
+                    <div class="connector-card__head">
+                      <div class="connector-card__icon" style="background:rgba(52, 168, 83, 0.12); color:#16a34a;">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                      </div>
+                      <div class="connector-card__info">
+                        <div class="connector-card__name">Google Drive</div>
+                        <div class="connector-card__desc">Read docs, sheets, slides &amp; shared files</div>
+                      </div>
+                      <label class="toggle-switch">
+                        <input type="checkbox" id="connectorToggle-googleDrive" data-connector-toggle="googleDrive" />
+                        <span class="toggle-switch__slider"></span>
+                      </label>
+                    </div>
+                    <div class="connector-card__body">
+                      <div class="connector-card__fields">
+                        <div class="connector-card__actions">
+                          <button class="btn btn--subtle btn--sm" type="button" data-connector-try="googleDrive">New Google Doc</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Notion -->
+                  <div class="connector-card" data-connector="notion">
+                    <div class="connector-card__head">
+                      <div class="connector-card__icon" style="background:rgba(0, 0, 0, 0.08); color:var(--ink-900);">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4v16h16V4H4zm4 4h8v2H8V8zm0 4h8v2H8v-2zm0 4h5v2H8v-2z"/></svg>
+                      </div>
+                      <div class="connector-card__info">
+                        <div class="connector-card__name">Notion</div>
+                        <div class="connector-card__desc">Query databases, sync pages &amp; workspace documentation</div>
+                      </div>
+                      <label class="toggle-switch">
+                        <input type="checkbox" id="connectorToggle-notion" data-connector-toggle="notion" />
+                        <span class="toggle-switch__slider"></span>
+                      </label>
+                    </div>
+                    <div class="connector-card__body">
+                      <div class="connector-card__fields">
+                        <div class="custom-field">
+                          <label class="field-label">Integration Secret</label>
+                          <input type="password" id="connectorKey-notion" placeholder="secret_..." data-connector-key="notion" />
+                          <span class="field-hint">notion.so/my-integrations &rarr; Create integration</span>
+                        </div>
+                        <div class="connector-card__actions">
+                          <button class="btn btn--subtle btn--sm" type="button" data-connector-test="notion">Test Connection</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Group: Development -->
+              <div class="connectors-group">
+                <div class="connectors-group__title">
+                  <span class="connectors-group__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                  </span>
+                  <span>Development &amp; Cloud</span>
+                </div>
+                <div class="connectors-grid">
+                  <!-- GitHub -->
+                  <div class="connector-card" data-connector="github">
+                    <div class="connector-card__head">
+                      <div class="connector-card__icon" style="background:rgba(36, 41, 46, 0.12); color:var(--ink-900);">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.1-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2z"/></svg>
+                      </div>
+                      <div class="connector-card__info">
+                        <div class="connector-card__name">GitHub</div>
+                        <div class="connector-card__desc">Inspect repos, pull requests, issues &amp; browse code files</div>
+                      </div>
+                      <label class="toggle-switch">
+                        <input type="checkbox" id="connectorToggle-github" data-connector-toggle="github" checked />
+                        <span class="toggle-switch__slider"></span>
+                      </label>
+                    </div>
+                    <div class="connector-card__body">
+                      <div class="connector-card__fields">
+                        <div class="custom-field">
+                          <label class="field-label">Personal Access Token (optional)</label>
+                          <input type="password" id="connectorKey-github" placeholder="ghp_..." data-connector-key="github" />
+                          <span class="field-hint">Public repositories can be inspected with zero configuration!</span>
+                        </div>
+                        <div class="connector-card__actions">
+                          <button class="btn btn--subtle btn--sm" type="button" data-connector-test="github">Test User</button>
+                          <button class="btn btn--subtle btn--sm" type="button" data-connector-try="github">Inspect Sample Repo</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Database Tools -->
+                  <div class="connector-card" data-connector="database">
+                    <div class="connector-card__head">
+                      <div class="connector-card__icon" style="background:rgba(2, 132, 199, 0.12); color:#0284c7;">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+                      </div>
+                      <div class="connector-card__info">
+                        <div class="connector-card__name">Database Tools (SQL)</div>
+                        <div class="connector-card__desc">Relational query runner, schema inspector &amp; data tables</div>
+                      </div>
+                      <label class="toggle-switch">
+                        <input type="checkbox" id="connectorToggle-database" data-connector-toggle="database" checked />
+                        <span class="toggle-switch__slider"></span>
+                      </label>
+                    </div>
+                    <div class="connector-card__body">
+                      <div class="connector-card__fields">
+                        <div class="connector-card__actions">
+                          <button class="btn btn--subtle btn--sm" type="button" data-connector-test="database">Inspect Schema</button>
+                          <button class="btn btn--subtle btn--sm" type="button" data-connector-try="database">Run Sample Query</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Cloud Platforms -->
+                  <div class="connector-card" data-connector="cloud">
+                    <div class="connector-card__head">
+                      <div class="connector-card__icon" style="background:rgba(255, 153, 0, 0.12); color:#f59e0b;">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+                      </div>
+                      <div class="connector-card__info">
+                        <div class="connector-card__name">Cloud Platforms (AWS, GCP, Azure)</div>
+                        <div class="connector-card__desc">Cloud infrastructure, bucket inspection &amp; deploy status</div>
+                      </div>
+                      <label class="toggle-switch">
+                        <input type="checkbox" id="connectorToggle-cloud" data-connector-toggle="cloud" />
+                        <span class="toggle-switch__slider"></span>
+                      </label>
+                    </div>
+                    <div class="connector-card__body">
+                      <div class="connector-card__fields">
+                        <div class="custom-fields-grid">
+                          <div class="custom-field">
+                            <label class="field-label">Provider</label>
+                            <select id="connectorCloudProvider" class="select-input">
+                              <option value="aws">Amazon Web Services (AWS)</option>
+                              <option value="gcp">Google Cloud Platform (GCP)</option>
+                              <option value="azure">Microsoft Azure</option>
+                            </select>
+                          </div>
+                          <div class="custom-field">
+                            <label class="field-label">Region</label>
+                            <input type="text" id="connectorCloudRegion" value="us-east-1" />
+                          </div>
+                        </div>
+                        <div class="connector-card__actions">
+                          <button class="btn btn--subtle btn--sm" type="button" data-connector-test="cloud">Ping Endpoint</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Group: Research & Data -->
+              <div class="connectors-group">
+                <div class="connectors-group__title">
+                  <span class="connectors-group__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  </span>
+                  <span>Research, Search &amp; Analytics</span>
+                </div>
+                <div class="connectors-grid">
+                  <!-- Web Search -->
+                  <div class="connector-card" data-connector="webSearch">
+                    <div class="connector-card__head">
+                      <div class="connector-card__icon" style="background:rgba(16, 185, 129, 0.12); color:#10b981;">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                      </div>
+                      <div class="connector-card__info">
+                        <div class="connector-card__name">Web Search (Live Engine)</div>
+                        <div class="connector-card__desc">Real-time live search with source citations &amp; snippet cards</div>
+                      </div>
+                      <label class="toggle-switch">
+                        <input type="checkbox" id="connectorToggle-webSearch" data-connector-toggle="webSearch" checked />
+                        <span class="toggle-switch__slider"></span>
+                      </label>
+                    </div>
+                    <div class="connector-card__body">
+                      <div class="connector-card__fields">
+                        <div class="connector-card__actions">
+                          <button class="btn btn--subtle btn--sm" type="button" data-connector-test="webSearch">Run Live Search</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Analytics Tools -->
+                  <div class="connector-card" data-connector="analytics">
+                    <div class="connector-card__head">
+                      <div class="connector-card__icon" style="background:rgba(139, 92, 246, 0.12); color:#8b5cf6;">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                      </div>
+                      <div class="connector-card__info">
+                        <div class="connector-card__name">Analytics &amp; Charting Tools</div>
+                        <div class="connector-card__desc">Interactive bar, line, donut &amp; metric visual plots</div>
+                      </div>
+                      <label class="toggle-switch">
+                        <input type="checkbox" id="connectorToggle-analytics" data-connector-toggle="analytics" checked />
+                        <span class="toggle-switch__slider"></span>
+                      </label>
+                    </div>
+                    <div class="connector-card__body">
+                      <div class="connector-card__fields">
+                        <div class="connector-card__actions">
+                          <button class="btn btn--subtle btn--sm" type="button" data-connector-test="analytics">Render Sample Chart</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+        <footer class="modal__foot">
+          <div class="modal__foot-status">
+            <span class="dot" id="modalProviderDot"></span>
+            <span id="modalProviderLabel">Pollinations</span>
+          </div>
+          <button class="btn btn--primary" type="button" data-close>Done</button>
+        </footer>
+      </div>
+    </div>
+
+    <!-- IMAGE PREVIEW MODAL -->
+    <div class="modal" id="imageModal" role="dialog" aria-modal="true" hidden>
+      <div class="modal__scrim" data-close></div>
+      <div class="modal__panel modal__panel--image">
+        <button class="iconbtn modal__close" type="button" data-close aria-label="Close image">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+        <img id="imagePreview" alt="Attachment Preview" />
+      </div>
+    </div>
+
+    <!-- CANVAS / ARTIFACT PREVIEW MODAL -->
+    <div class="modal" id="canvasModal" role="dialog" aria-modal="true" hidden>
+      <div class="modal__scrim" data-close></div>
+      <div class="modal__panel modal__panel--canvas" role="document">
+        <header class="modal__head">
+          <div class="modal__title-group">
+            <h2 id="canvasTitle">Artifact Preview</h2>
+            <span class="canvas__info" id="canvasInfo">Interactive HTML / SVG / Document</span>
+          </div>
+          <div class="canvas__actions">
+            <button class="chip" type="button" id="canvasCopyBtn">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+              <span>Copy Code</span>
+            </button>
+            <button class="chip" type="button" id="canvasPrintBtn" title="Print / Save PDF" hidden>
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+              <span>Print PDF</span>
+            </button>
+            <button class="chip" type="button" id="canvasDownloadBtn">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              <span>Download</span>
+            </button>
+            <button class="chip" type="button" id="canvasNewTabBtn">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/></svg>
+              <span>Open in Tab</span>
+            </button>
+            <button class="iconbtn" type="button" data-close aria-label="Close canvas">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
+        </header>
+        <div class="canvas__body" id="canvasBody">
+          <iframe id="canvasFrame" sandbox="allow-scripts allow-same-origin" title="Live Preview Canvas"></iframe>
+        </div>
+      </div>
+    </div>
+
+    <!-- SIDEBAR CONVERSATION CONTEXT MENU -->
+    <div class="conv-context-menu" id="convContextMenu" hidden role="menu" aria-label="Conversation options">
+      <button class="conv-context-item" data-action="rename" type="button" role="menuitem">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+        </svg>
+        <span>Rename</span>
+      </button>
+      <button class="conv-context-item" data-action="pin" type="button" role="menuitem">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6l1.3 1.3 1.3-1.3v-6H19v-2l-2-2z"/>
+        </svg>
+        <span class="conv-context-item__pin-label">Pin to top</span>
+      </button>
+      <button class="conv-context-item" data-action="duplicate" type="button" role="menuitem">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+        </svg>
+        <span>Duplicate</span>
+      </button>
+      <button class="conv-context-item" data-action="export" type="button" role="menuitem">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+        </svg>
+        <span>Export (.md)</span>
+      </button>
+      <div class="conv-context-divider" role="separator"></div>
+      <button class="conv-context-item conv-context-item--danger" data-action="delete" type="button" role="menuitem">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 6 5 6 21 6"/>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+          <line x1="10" y1="11" x2="10" y2="17"/>
+          <line x1="14" y1="11" x2="14" y2="17"/>
+        </svg>
+        <span>Delete chat</span>
+      </button>
+    </div>
+
+    <!-- Global Drag & Drop Overlay -->
+    <div id="dragDropOverlay" class="drag-drop-overlay" hidden>
+      <div class="drag-drop-modal">
+        <div class="drag-drop-icon">
+          <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+        </div>
+        <h3>Drop Files or Images Here</h3>
+        <p>Images will be analyzed with Vision • Documents attached as code</p>
+      </div>
+    </div>
+
+    <!-- External scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@13.0.3/marked.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" defer></script>
+    <script src="app.js?v=4" defer></script>
+  </body>
+</html>
