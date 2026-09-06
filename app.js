@@ -56,37 +56,37 @@
       id: 'chat', label: 'Chat', tabTitle: 'Chat',
       tabSub: 'Thoughtful, coherent AI conversation',
       sys: 'You are Sage, a thoughtful, precise, and sophisticated AI assistant. Always identify as Sage when asked about your identity or name. Be clear, concise, and helpful. Use markdown.',
-      icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+      icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8M8 13h4" opacity="0.6"/></svg>',
     },
     {
       id: 'code', label: 'Code', tabTitle: 'Code',
       tabSub: 'Write, review, and refactor code with precision',
       sys: 'You are Sage, an expert senior software engineer. Always identify as Sage. Answer with concise, correct code. Prefer modern idioms and explain tradeoffs in 1-2 sentences. Wrap code in fenced blocks with the right language tag.',
-      icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',
+      icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/><path d="M12 12v4" opacity="0.6"/></svg>',
     },
     {
       id: 'study', label: 'Study', tabTitle: 'Study',
       tabSub: 'Learn anything, step by step',
       sys: 'You are Sage, a patient tutor. Always identify as Sage. Break topics into small steps, use analogies, and end each response with a quick recap.',
-      icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>',
+      icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/><path d="M6 8h6M6 12h4" opacity="0.6"/></svg>',
     },
     {
       id: 'write', label: 'Write', tabTitle: 'Write',
       tabSub: 'Draft, edit, and polish any text',
       sys: 'You are Sage, an expert writing partner. Always identify as Sage. Match the requested tone, suggest improvements, and offer a short, punchy version when asked.',
-      icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
+      icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/><path d="M6 12h6" opacity="0.6"/></svg>',
     },
     {
       id: 'summarize', label: 'Summarize', tabTitle: 'Summarize',
       tabSub: 'Distill long text into key points',
       sys: 'You are Sage, an expert summarizer. Always identify as Sage. Produce a tight summary with bullet points, then a one-sentence TL;DR. Stay faithful to the source.',
-      icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M6 12h12M9 18h6"/></svg>',
+      icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M6 12h12M9 18h6"/><circle cx="6" cy="6" r="1" fill="currentColor" opacity="0.6"/><circle cx="6" cy="12" r="1" fill="currentColor" opacity="0.6"/><circle cx="6" cy="18" r="1" fill="currentColor" opacity="0.6"/></svg>',
     },
     {
       id: 'translate', label: 'Translate', tabTitle: 'Translate',
       tabSub: 'Faithful translation between languages',
       sys: 'You are Sage, an expert translator. Always identify as Sage. Detect the source language and translate to the user’s target language (default: English). Preserve formatting, idioms, and tone.',
-      icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14M9 4v4M7 20l3-7 3 7M8 17h4"/><path d="M14 12h7M17.5 9 21 15M14 15l3.5 6"/></svg>',
+      icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14M9 4v4M7 20l3-7 3 7M8 17h4"/><path d="M14 12h7M17.5 9 21 15M14 15l3.5 6"/><circle cx="6" cy="4" r="1" fill="currentColor" opacity="0.6"/></svg>',
     },
   ];
 
@@ -1728,25 +1728,25 @@
     const activeM = MODES.find(m => m.id === state.currentMode) || MODES[0];
     const starterPrompts = [
       {
-        icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',
+        icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/><path d="M12 12v4" opacity="0.6"/></svg>',
         title: 'Code & Architecture',
         desc: 'Draft an async crawler with retries & rate limiting',
         prompt: 'Write an async Python web crawler with retry handling and rate limiting.',
       },
       {
-        icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+        icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/><circle cx="12" cy="12" r="3" opacity="0.6"/></svg>',
         title: 'Deep Thinking',
         desc: 'Analyze transformer attention mechanisms in detail',
         prompt: 'Explain how transformer self-attention mechanisms compute weights in plain terms.',
       },
       {
-        icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>',
+        icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/><path d="M6 12h6" opacity="0.6"/></svg>',
         title: 'Writing & Synthesis',
         desc: 'Draft an executive briefing on open source models',
         prompt: 'Draft an executive briefing on the evolution and efficiency of modern reasoning models.',
       },
       {
-        icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h10M7 12h10M7 17h10"/></svg>',
+        icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h10M7 12h10M7 17h10"/><circle cx="6" cy="6" r="1" fill="currentColor" opacity="0.6"/></svg>',
         title: 'Canvas & UI Artifacts',
         desc: 'Build an interactive dashboard component with live preview',
         prompt: 'Create an interactive HTML/CSS dashboard widget with live preview and smooth animations.',
