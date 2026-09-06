@@ -367,6 +367,8 @@
       think: true,
       canvas: true,
       pdf: true,
+      ppt: true,
+      project: true,
       memory: true,
       location: true,
     },
@@ -414,6 +416,8 @@
 
   // Each conversation has its own session — independent provider/model/etc.
   function ensureSession(conv) {
+    if (!conv) return null;
+    if (!conv.files || typeof conv.files !== 'object') conv.files = {};
     if (!conv.session) {
       conv.session = {
         provider: state.settings.provider,
@@ -482,6 +486,7 @@
     if (c && Array.isArray(c.list)) {
       state.conversations = c.list;
       for (const conv of state.conversations) {
+        if (!conv.files || typeof conv.files !== 'object') conv.files = {};
         if (conv.session) {
           if (conv.session.provider === 'pollinations' && (!conv.session.model || conv.session.model === 'openai-fast')) {
             conv.session.model = 'openai';
@@ -1117,15 +1122,58 @@
   // System prompt builder
   // Combines: base mode prompt + per-chat override + active skills.
   // -----------------------------------------------------------------------
-  // Core artifact generation capabilities always enabled
+  // Core artifact generation capabilities with Apple & Notion design guide
   const ARTIFACT_INSTRUCTIONS = [
-    '# Artifact, Document & Graphic Generation:',
-    'You are equipped with a live interactive artifact canvas and printable document viewer.',
-    'When asked to generate documents, web pages, tools, diagrams, or illustrations, produce COMPLETE standalone code in fenced code blocks:',
-    '1. **Interactive Web Apps / HTML / Games / Dashboards**: Use language tag ```html or ```canvas with a complete, self-contained HTML5 document (including embedded <style> and <script>). Include a descriptive <title> tag.',
-    '2. **Vector Graphics & Illustrations (SVG)**: Use language tag ```svg containing valid standalone <svg xmlns="http://www.w3.org/2000/svg" viewBox="...">...</svg> markup with clean styling.',
-    '3. **Printable Documents / Resumes / Invoices / Reports (PDF)**: Use language tag ```pdf containing a complete, beautifully designed HTML document formatted with clean typography, print-friendly layout, and CSS @media print styling. The application provides instant preview and print-to-PDF functionality.',
-    '4. Always deliver 100% complete files with zero placeholders, omissions, or "TODO" comments. Introduce the artifact with 1-2 brief sentences before the code block.'
+    '# Tooling & High-End Artifact Creation Suite (Apple & Notion Design Standards):',
+    'You are equipped with a suite of non-generic, premium creation tools that adhere to top-notch Notion and Apple design aesthetics.',
+    'When asked to build documents, slides, illustrations, micro-tools, or web apps, generate COMPLETE, production-grade files in fenced code blocks.',
+    '',
+    '## 1. Interactive Slide Decks & Keynote Presentations (create_ppt):',
+    '- Language tag: ```ppt or ```html (with class="deck" and class="slide")',
+    '- Design Aesthetic: Apple Keynote 16:9 widescreen layout. Editorial typography, high contrast, generous whitespace, punchy headlines (-0.025em tracking), stat callouts, and clean card containers.',
+    '- Slide Deck Structure:',
+    '  <div class="deck">',
+    '    <section class="slide active" data-slide="1">',
+    '      <div class="slide-content">',
+    '        <span class="eyebrow">KEYNOTE PRESENTATION</span>',
+    '        <h1>Editorial Hero Title</h1>',
+    '        <p class="subtitle">Concise, impactful narrative subtitle</p>',
+    '        <div class="slide-grid">',
+    '          <div class="slide-card"><div class="stat-callout">99.8%</div><div class="stat-label">System Reliability</div></div>',
+    '          <div class="slide-card"><div class="stat-callout">&lt; 12ms</div><div class="stat-label">Sub-Second Latency</div></div>',
+    '        </div>',
+    '      </div>',
+    '      <footer class="slide-footer"><span>Sage Keynote</span><span>01 / 05</span></footer>',
+    '    </section>',
+    '    <section class="slide" data-slide="2">...</section>',
+    '  </div>',
+    '- Include 4-8 complete slides per deck with clean transitions.',
+    '',
+    '## 2. Executive Documents, Resumes, Invoices & Reports (create_pdf):',
+    '- Language tag: ```pdf or ```html (with class="printable-doc")',
+    '- Design Aesthetic: Notion-like editorial minimalism on an A4 page container (@page { size: A4; margin: 20mm; }).',
+    '- Typography: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", sans-serif. Subtle hairline borders (rgba(0,0,0,0.06)), pill status tags, structured data tables, and print styles (@media print).',
+    '',
+    '## 3. Scalable Vector Graphics & Brand Marks (create_svg):',
+    '- Language tag: ```svg',
+    '- Design Aesthetic: Sophisticated solid & gradient palettes (Obsidian Slate #0f172a, Emerald Pine #064e3b, Burnt Terracotta #9a3412, Cupertino Frost). Clean geometric precision, viewBox with proper aspect ratio, subtle drop shadow filters. No generic cheesy clip-art.',
+    '',
+    '## 4. Interactive Web Applications & Micro-Tools (create_html):',
+    '- Language tag: ```html or ```canvas',
+    '- Design Aesthetic: Polished glassmorphism, responsive CSS grid, tactile micro-interactions, dark/light coherence.',
+    '',
+    '## 5. Iterative Refinement & Diff Editing (edit_file):',
+    '- Language tag: ```edit_file:<filename> or ```diff',
+    '- Format:',
+    '  <<<<<<< SEARCH',
+    '  [exact snippet from the existing artifact to modify]',
+    '  =======',
+    '  [new replacement snippet]',
+    '  >>>>>>>',
+    '- CRITICAL RULE: When the user asks for tweaks, improvements, color changes, or copy updates to an existing artifact, NEVER rewrite the entire file from scratch! Use edit_file with targeted SEARCH/REPLACE blocks. This preserves token context and enables long-run continuous project iteration.',
+    '',
+    '## 6. General Project File Creation (create_file):',
+    '- Language tag: ```file:<filename> (e.g. ```file:config.json or ```file:dashboard.html)'
   ].join('\n');
 
   function buildSystemPrompt(targetConv) {
@@ -1158,6 +1206,22 @@
     }
 
     parts.push(ARTIFACT_INSTRUCTIONS);
+
+    // Active project files workspace awareness
+    const convForFiles = targetConv || activeConv();
+    if (convForFiles && convForFiles.files) {
+      const fileList = Object.values(convForFiles.files);
+      if (fileList.length > 0) {
+        const fileSummary = fileList.map(f => `- ${f.path} (${f.type}, v${f.version || 1}, "${f.title || f.name}")`).join('\n');
+        parts.push([
+          '# Active Project Files Workspace:',
+          'The current conversation workspace contains the following registered artifacts and project files:',
+          fileSummary,
+          '',
+          'IMPORTANT: When iterating on, updating, or fixing any of the files listed above, ALWAYS use the `edit_file` tool with SEARCH/REPLACE diff blocks instead of rewriting the entire file from scratch. This enables seamless long-term project development.'
+        ].join('\n'));
+      }
+    }
 
     // Thinking level instruction
     const isThinkingCap = state.settings.capabilities?.think !== false;
@@ -1351,6 +1415,7 @@
     if (sp && state.personaScope === 'conversation') {
       sp.value = activeSession()?.systemPromptOverride || '';
     }
+    updateProjectFilesBadge();
 
     const sidebar = document.getElementById('sidebar');
     const scrim = document.getElementById('sidebarScrim');
@@ -1626,6 +1691,7 @@
       id: uid(),
       title: 'New chat',
       messages: [],
+      files: {},
       createdAt: Date.now(),
       session: null, // populated by ensureSession
     };
@@ -1727,6 +1793,296 @@
   // -----------------------------------------------------------------------
   // Canvas Artifact Preview Modal Handlers
   // -----------------------------------------------------------------------
+  // -----------------------------------------------------------------------
+  // Project Files Workspace & Iterative Diff Editing
+  // -----------------------------------------------------------------------
+  function getConvFiles(conv) {
+    if (!conv) return {};
+    if (!conv.files || typeof conv.files !== 'object') conv.files = {};
+    return conv.files;
+  }
+
+  function saveConvFile(conv, { path, name, title, content, type }) {
+    if (!conv) return null;
+    if (!conv.files || typeof conv.files !== 'object') conv.files = {};
+    const key = (path || name || '').trim() || ('artifact_' + Date.now() + '.' + (type === 'svg' ? 'svg' : type === 'pdf' ? 'html' : type === 'ppt' ? 'html' : 'html'));
+    const existing = conv.files[key];
+    const version = existing ? ((existing.version || 1) + 1) : 1;
+    const fileRecord = {
+      path: key,
+      name: name || key.split('/').pop(),
+      title: title || existing?.title || key,
+      content: content || '',
+      type: type || existing?.type || 'html',
+      version,
+      updatedAt: Date.now()
+    };
+    conv.files[key] = fileRecord;
+    persist();
+    updateProjectFilesBadge();
+    return fileRecord;
+  }
+
+  function applyFileEdit(conv, rawEditBlock, preferredTarget) {
+    if (!conv) return { success: false, error: 'No active conversation' };
+    const files = getConvFiles(conv);
+    const fileKeys = Object.keys(files);
+
+    // 1. Identify target file
+    let targetKey = preferredTarget;
+    if (!targetKey) {
+      const matchTag = rawEditBlock.match(/(?:edit_file|file|target|path)\s*[:=]\s*([^\s\n\r]+)/i);
+      if (matchTag && matchTag[1]) {
+        targetKey = matchTag[1].trim();
+      }
+    }
+    if (!targetKey) {
+      // Use the most recently updated file
+      if (fileKeys.length > 0) {
+        const sorted = fileKeys.map(k => files[k]).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+        targetKey = sorted[0].path;
+      }
+    }
+
+    if (!targetKey || !files[targetKey]) {
+      if (targetKey && fileKeys.length > 0) {
+        const found = fileKeys.find(k => k.endsWith(targetKey) || targetKey.endsWith(k));
+        if (found) targetKey = found;
+      }
+      if (!files[targetKey]) {
+        if (fileKeys.length > 0) {
+          targetKey = fileKeys[0];
+        } else {
+          targetKey = targetKey || 'document.html';
+          files[targetKey] = {
+            path: targetKey,
+            name: targetKey,
+            title: 'Project Document',
+            content: '',
+            type: targetKey.endsWith('.svg') ? 'svg' : targetKey.endsWith('.pdf') ? 'pdf' : targetKey.endsWith('.ppt') ? 'ppt' : 'html',
+            version: 1,
+            updatedAt: Date.now()
+          };
+        }
+      }
+    }
+
+    const targetRecord = files[targetKey];
+    let content = targetRecord.content || '';
+    let addedCount = 0;
+    let delCount = 0;
+    let appliedBlocks = 0;
+    const diffLines = [];
+
+    // Parse SEARCH / REPLACE blocks
+    const blockRegex = /<{7}\s*SEARCH\r?\n([\s\S]*?)\r?\n={7}\r?\n([\s\S]*?)\r?\n>{7}/g;
+    let match;
+    const replacements = [];
+
+    while ((match = blockRegex.exec(rawEditBlock)) !== null) {
+      replacements.push({ searchStr: match[1], replaceStr: match[2] });
+    }
+
+    if (!replacements.length && rawEditBlock.includes('<<<<<<<') && rawEditBlock.includes('=======')) {
+      const parts = rawEditBlock.split(/={7}/);
+      if (parts.length >= 2) {
+        const searchPart = parts[0].replace(/^[\s\S]*?<{7}\s*SEARCH\r?\n?/, '');
+        const replacePart = parts[1].replace(/\r?\n?>{7}[\s\S]*$/, '');
+        replacements.push({ searchStr: searchPart, replaceStr: replacePart });
+      }
+    }
+
+    for (const { searchStr, replaceStr } of replacements) {
+      const searchLines = searchStr.split(/\r?\n/);
+      const replaceLines = replaceStr.split(/\r?\n/);
+
+      if (content.includes(searchStr)) {
+        content = content.replace(searchStr, replaceStr);
+        appliedBlocks++;
+        delCount += searchLines.length;
+        addedCount += replaceLines.length;
+        for (const l of searchLines) diffLines.push({ type: 'del', text: l });
+        for (const l of replaceLines) diffLines.push({ type: 'add', text: l });
+      } else {
+        const trimmedSearch = searchStr.trim();
+        if (trimmedSearch && content.includes(trimmedSearch)) {
+          content = content.replace(trimmedSearch, replaceStr.trim());
+          appliedBlocks++;
+          delCount += searchLines.length;
+          addedCount += replaceLines.length;
+          for (const l of searchLines) diffLines.push({ type: 'del', text: l });
+          for (const l of replaceLines) diffLines.push({ type: 'add', text: l });
+        } else {
+          for (const l of replaceLines) diffLines.push({ type: 'add', text: l });
+          addedCount += replaceLines.length;
+          if (!content) content = replaceStr;
+          appliedBlocks++;
+        }
+      }
+    }
+
+    targetRecord.content = content;
+    targetRecord.version = (targetRecord.version || 1) + 1;
+    targetRecord.updatedAt = Date.now();
+    persist();
+    updateProjectFilesBadge();
+
+    return {
+      success: true,
+      fileRecord: targetRecord,
+      stats: { added: addedCount, deleted: delCount, blocks: appliedBlocks },
+      diffLines
+    };
+  }
+
+  function updateProjectFilesBadge() {
+    const badge = document.getElementById('projectFilesBadge');
+    if (!badge) return;
+    const conv = activeConv();
+    const files = conv && conv.files ? Object.values(conv.files) : [];
+    const count = files.length;
+    badge.textContent = String(count);
+    badge.hidden = count === 0;
+  }
+
+  function openProjectFilesModal() {
+    const modal = document.getElementById('projectFilesModal');
+    const empty = document.getElementById('projectFilesEmpty');
+    const list = document.getElementById('projectFilesList');
+    if (!modal) return;
+
+    const conv = activeConv();
+    const files = conv && conv.files ? Object.values(conv.files) : [];
+
+    if (empty && list) {
+      if (!files.length) {
+        empty.hidden = false;
+        list.hidden = true;
+        list.innerHTML = '';
+      } else {
+        empty.hidden = true;
+        list.hidden = false;
+        list.innerHTML = files.map(f => {
+          const type = f.type || 'html';
+          const isPpt = type === 'ppt';
+          const isPdf = type === 'pdf';
+          const isSvg = type === 'svg';
+          const icon = isPpt
+            ? `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`
+            : isPdf
+            ? `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`
+            : isSvg
+            ? `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>`
+            : `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>`;
+
+          const timeStr = f.updatedAt ? new Date(f.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now';
+
+          return `
+            <div class="project-file-row" data-path="${escapeHTML(f.path)}">
+              <div class="project-file-info">
+                <div class="project-file-icon" aria-hidden="true">${icon}</div>
+                <div class="project-file-texts">
+                  <div class="project-file-title-row">
+                    <span class="project-file-name">${escapeHTML(f.name || f.path)}</span>
+                    <span class="edit-card__version-pill">v${f.version || 1}</span>
+                  </div>
+                  <span class="project-file-meta">${escapeHTML(f.title || f.name)} · Updated ${timeStr}</span>
+                </div>
+              </div>
+              <div class="project-file-actions">
+                <button type="button" class="btn-artifact-primary btn-file-preview" data-path="${escapeHTML(f.path)}" title="Open and preview artifact">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+                  <span>${isPpt ? 'Present' : isPdf ? 'Print' : 'Preview'}</span>
+                </button>
+                <button type="button" class="btn-artifact-secondary btn-file-download" data-path="${escapeHTML(f.path)}" title="Download file">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                </button>
+                <button type="button" class="btn-artifact-secondary btn-file-copy" data-path="${escapeHTML(f.path)}" title="Copy source">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        list.querySelectorAll('.btn-file-preview').forEach(b => {
+          on(b, 'click', (e) => {
+            e.stopPropagation();
+            const p = b.dataset.path;
+            const file = conv.files[p];
+            if (file) {
+              closeProjectFilesModal();
+              openCanvas(file.content, file.title, file.type);
+            }
+          });
+        });
+
+        list.querySelectorAll('.btn-file-download').forEach(b => {
+          on(b, 'click', (e) => {
+            e.stopPropagation();
+            const p = b.dataset.path;
+            const file = conv.files[p];
+            if (!file) return;
+            const ext = file.type === 'svg' ? 'svg' : 'html';
+            const mime = file.type === 'svg' ? 'image/svg+xml' : 'text/html;charset=utf-8';
+            const blob = new Blob([file.content], { type: mime });
+            const u = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = u;
+            a.download = file.name || `file.${ext}`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(u), 1000);
+          });
+        });
+
+        list.querySelectorAll('.btn-file-copy').forEach(b => {
+          on(b, 'click', async (e) => {
+            e.stopPropagation();
+            const p = b.dataset.path;
+            const file = conv.files[p];
+            if (!file) return;
+            try {
+              await navigator.clipboard.writeText(file.content);
+              toast('Source copied to clipboard', 'ok');
+            } catch {
+              toast('Could not copy to clipboard', 'err');
+            }
+          });
+        });
+      }
+    }
+
+    modal.hidden = false;
+    modal.removeAttribute('hidden');
+    requestAnimationFrame(() => modal.classList.add('is-open'));
+  }
+
+  function closeProjectFilesModal() {
+    const modal = document.getElementById('projectFilesModal');
+    if (!modal) return;
+    modal.classList.remove('is-open');
+    setTimeout(() => {
+      modal.hidden = true;
+      modal.setAttribute('hidden', '');
+    }, 160);
+  }
+
+  function setupProjectFilesModal() {
+    const modal = document.getElementById('projectFilesModal');
+    if (!modal) return;
+    modal.querySelectorAll('[data-close]').forEach(b => on(b, 'click', closeProjectFilesModal));
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !modal.hidden && modal.classList.contains('is-open')) {
+        closeProjectFilesModal();
+      }
+    });
+  }
+
+  // -----------------------------------------------------------------------
+  // Canvas Artifact Preview Modal Handlers
+  // -----------------------------------------------------------------------
   let canvasCurrentHtml = '';
   let canvasCurrentSrc = '';
   let canvasCurrentType = 'html';
@@ -1738,30 +2094,216 @@
     if (!m || !f) return;
     canvasCurrentHtml = html || '';
     const trimmed = canvasCurrentHtml.trim();
-    canvasCurrentType = type || (trimmed.startsWith('<svg') ? 'svg' : 'html');
-    canvasCurrentTitle = title || (canvasCurrentType === 'pdf' ? 'Printable Document (PDF)' : canvasCurrentType === 'svg' ? 'Scalable Vector Graphic (SVG)' : 'Artifact Preview');
+
+    const isSlideDeck = type === 'ppt' || trimmed.includes('class="slide') || trimmed.includes('class="deck') || trimmed.includes('data-slide') || trimmed.includes('slide-deck');
+
+    canvasCurrentType = isSlideDeck ? 'ppt' : (type || (trimmed.startsWith('<svg') ? 'svg' : (trimmed.includes('printable-doc') ? 'pdf' : 'html')));
+    canvasCurrentTitle = title || (canvasCurrentType === 'ppt' ? 'Presentation Deck (Keynote)' : canvasCurrentType === 'pdf' ? 'Printable Document (PDF)' : canvasCurrentType === 'svg' ? 'Scalable Vector Graphic (SVG)' : 'Artifact Preview');
 
     const titleEl = document.getElementById('canvasTitle');
     const infoEl  = document.getElementById('canvasInfo');
     const printBtn = document.getElementById('canvasPrintBtn');
+    const slideControls = document.getElementById('canvasSlideControls');
+    const slideCounter  = document.getElementById('canvasSlideCounter');
+
     if (titleEl) titleEl.textContent = canvasCurrentTitle;
     if (infoEl) {
-      infoEl.textContent = canvasCurrentType === 'pdf'
+      infoEl.textContent = canvasCurrentType === 'ppt'
+        ? 'Presentation Deck (16:9) · Interactive Slides'
+        : canvasCurrentType === 'pdf'
         ? 'Printable Document / PDF'
         : canvasCurrentType === 'svg'
         ? 'Scalable Vector Graphic (SVG)'
         : 'Interactive HTML / Canvas';
     }
     if (printBtn) {
-      printBtn.hidden = canvasCurrentType !== 'pdf';
+      printBtn.hidden = canvasCurrentType !== 'pdf' && canvasCurrentType !== 'ppt';
+    }
+    if (slideControls) {
+      slideControls.hidden = !isSlideDeck;
+    }
+    if (slideCounter) {
+      slideCounter.textContent = '1 / 1';
     }
 
-    // Wrap partial HTML if needed (e.g. if AI returned raw SVG or raw fragment)
+    // Wrap partial HTML if needed
     let doc = html || '';
     if (trimmed.startsWith('<svg') && !doc.includes('<html')) {
       doc = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#181825;overflow:auto;}svg{max-width:95vw;max-height:95vh;box-shadow:0 8px 30px rgba(0,0,0,0.5);border-radius:8px;}</style></head><body>${doc}</body></html>`;
+    } else if (isSlideDeck) {
+      if (!doc.toLowerCase().includes('<html') && !doc.toLowerCase().includes('<!doctype')) {
+        doc = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>${escapeHTML(canvasCurrentTitle)}</title></head><body><div class="deck">${doc}</div></body></html>`;
+      }
     } else if (!doc.toLowerCase().includes('<html') && !doc.toLowerCase().includes('<!doctype')) {
       doc = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body{font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;margin:24px;color:#222;line-height:1.5;background:#fff;}</style></head><body>${doc}</body></html>`;
+    }
+
+    // Keynote slide deck styling and controller script injection
+    if (isSlideDeck) {
+      const keynoteStyles = `
+        <style id="cc-keynote-engine-styles">
+          html, body {
+            margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
+            background: #0b0e14;
+            color: #f1f5f9;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Inter', system-ui, sans-serif;
+            -webkit-font-smoothing: antialiased;
+          }
+          .deck {
+            width: 100%; height: 100%; position: relative;
+            display: flex; align-items: center; justify-content: center;
+          }
+          .slide, section[data-slide], section {
+            width: 100%; height: 100%;
+            box-sizing: border-box;
+            display: none;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: clamp(24px, 5vw, 64px) clamp(28px, 6vw, 80px);
+            position: absolute;
+            inset: 0;
+            background: #0f141f;
+            opacity: 0;
+            transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            transform: scale(0.985);
+          }
+          .slide.active, section[data-slide].active, section.active {
+            display: flex !important;
+            opacity: 1 !important;
+            transform: scale(1) !important;
+            z-index: 10;
+          }
+          .slide-content, .slide-body {
+            display: flex; flex-direction: column; gap: 14px;
+            max-width: 900px;
+          }
+          .eyebrow {
+            font-size: 11px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.12em; color: #818cf8;
+          }
+          h1, .slide h1 {
+            font-size: clamp(28px, 4.5vw, 52px);
+            font-weight: 800; letter-spacing: -0.025em; line-height: 1.1; margin: 0;
+            color: #ffffff;
+          }
+          h2, .slide h2 {
+            font-size: clamp(22px, 3.2vw, 36px);
+            font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; margin: 0;
+            color: #ffffff;
+          }
+          p, .slide p {
+            font-size: clamp(14px, 1.8vw, 19px);
+            line-height: 1.6; color: #94a3b8; margin: 0;
+          }
+          .subtitle {
+            font-size: clamp(16px, 2vw, 22px);
+            color: #94a3b8; font-weight: 400; line-height: 1.5;
+          }
+          .slide-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px; margin-top: 24px;
+          }
+          .slide-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px; padding: 20px;
+            backdrop-filter: blur(10px);
+          }
+          .slide-card h3 {
+            font-size: 16px; font-weight: 700; margin: 0 0 8px; color: #fff;
+          }
+          .slide-card p {
+            font-size: 13px; color: #94a3b8; line-height: 1.5; margin: 0;
+          }
+          .stat-callout {
+            font-size: clamp(32px, 5vw, 56px);
+            font-weight: 900; letter-spacing: -0.03em; color: #38bdf8; line-height: 1;
+          }
+          .stat-label {
+            font-size: 13px; font-weight: 600; color: #94a3b8; margin-top: 6px;
+          }
+          .slide-footer {
+            display: flex; align-items: center; justify-content: space-between;
+            font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
+            color: rgba(255, 255, 255, 0.4); text-transform: uppercase;
+            padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.06);
+          }
+          @media print {
+            html, body { overflow: visible !important; height: auto !important; background: #fff !important; color: #000 !important; }
+            .deck { display: block !important; height: auto !important; }
+            .slide, section {
+              display: flex !important; position: static !important; opacity: 1 !important;
+              transform: none !important; page-break-after: always !important;
+              height: 100vh !important; background: #fff !important; color: #000 !important;
+            }
+            h1, h2, .slide-card h3 { color: #000 !important; }
+            p, .subtitle, .slide-card p { color: #444 !important; }
+            .slide-card { border-color: #ddd !important; background: #fafafa !important; }
+          }
+        </style>
+      `;
+
+      const keynoteScript = `
+        <script id="cc-keynote-engine-script">
+          (function() {
+            var slides = Array.from(document.querySelectorAll('.slide, section, [data-slide]'));
+            if (!slides.length) {
+              var sections = Array.from(document.body.children).filter(function(el) {
+                return el.tagName === 'DIV' || el.tagName === 'SECTION';
+              });
+              if (sections.length > 1) slides = sections;
+            }
+            if (!slides.length) return;
+            var curIdx = 0;
+            function notify() {
+              window.parent.postMessage({ type: 'slideChange', current: curIdx + 1, total: slides.length }, '*');
+            }
+            function showSlide(idx) {
+              if (idx < 0) idx = 0;
+              if (idx >= slides.length) idx = slides.length - 1;
+              curIdx = idx;
+              slides.forEach(function(s, i) {
+                if (i === curIdx) {
+                  s.classList.add('active');
+                } else {
+                  s.classList.remove('active');
+                }
+              });
+              notify();
+            }
+            window.addEventListener('message', function(e) {
+              if (!e.data || typeof e.data !== 'object') return;
+              if (e.data.type === 'nextSlide') showSlide(curIdx + 1);
+              if (e.data.type === 'prevSlide') showSlide(curIdx - 1);
+              if (e.data.type === 'gotoSlide') showSlide(e.data.index);
+            });
+            window.addEventListener('keydown', function(e) {
+              if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'ArrowDown' || e.key === 'PageDown') {
+                e.preventDefault();
+                showSlide(curIdx + 1);
+              } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'PageUp' || e.key === 'Backspace') {
+                e.preventDefault();
+                showSlide(curIdx - 1);
+              } else if (e.key.toLowerCase() === 'f') {
+                e.preventDefault();
+                window.parent.postMessage({ type: 'toggleFullscreen' }, '*');
+              }
+            });
+            setTimeout(function() { showSlide(0); }, 50);
+          })();
+        </script>
+      `;
+
+      if (doc.includes('</head>')) {
+        doc = doc.replace('</head>', keynoteStyles + '</head>');
+      } else {
+        doc = keynoteStyles + doc;
+      }
+      if (doc.includes('</body>')) {
+        doc = doc.replace('</body>', keynoteScript + '</body>');
+      } else {
+        doc = doc + keynoteScript;
+      }
     }
 
     // Inject custom minimalist scrollbar styling
@@ -1796,7 +2338,6 @@
       doc = iframeScrollbarCSS + doc;
     }
 
-    // Ensure style persists upon frame load
     f.onload = () => {
       try {
         const idoc = f.contentDocument || f.contentWindow?.document;
@@ -1815,10 +2356,8 @@
       } catch {}
     };
 
-    // Set srcdoc directly for instant execution inside sandboxed iframe
     f.srcdoc = doc;
 
-    // Also prepare a blob URL for downloading / opening in new tab
     try {
       if (canvasCurrentSrc) URL.revokeObjectURL(canvasCurrentSrc);
       const mime = canvasCurrentType === 'svg' ? 'image/svg+xml' : 'text/html;charset=utf-8';
@@ -1835,6 +2374,9 @@
     const m = document.getElementById('canvasModal');
     if (!m) return;
     m.classList.remove('is-open');
+    if (document.fullscreenElement) {
+      try { document.exitFullscreen(); } catch {}
+    }
     setTimeout(() => {
       m.hidden = true;
       m.setAttribute('hidden', '');
@@ -1843,6 +2385,8 @@
         f.srcdoc = '';
         f.src = 'about:blank';
       }
+      const slideControls = document.getElementById('canvasSlideControls');
+      if (slideControls) slideControls.hidden = true;
       if (canvasCurrentSrc) {
         try { URL.revokeObjectURL(canvasCurrentSrc); } catch {}
         canvasCurrentSrc = '';
@@ -2716,16 +3260,24 @@
       const rawText = (code.textContent || '').trim();
       const isSvg = lang === 'svg' || (rawText.startsWith('<svg') && rawText.includes('</svg>'));
       const isPdf = lang === 'pdf' || (rawText.includes('printable-doc') || rawText.includes('window.print') || /<body[^>]*printable/i.test(rawText) || /Sample Project Summary/i.test(rawText));
-      const isHtmlContent = (rawText.startsWith('<!DOCTYPE') || rawText.startsWith('<html')) && !isSvg;
-      const isCanvas = lang === 'canvas' || lang === 'html' || lang === 'htm' || isSvg || isHtmlContent;
+      const isPpt = lang === 'ppt' || lang === 'slides' || lang === 'presentation' || rawText.includes('class="deck') || (rawText.includes('class="slide') && (rawText.includes('</section>') || rawText.includes('data-slide'))) || rawText.includes('slide-deck');
+      const isEdit = lang === 'edit_file' || lang === 'diff' || (rawText.includes('<<<<<<< SEARCH') && rawText.includes('=======') && rawText.includes('>>>>>>>'));
+      const isCreateFile = lang.startsWith('file:') || lang.startsWith('create_file:');
+      const isHtmlContent = (rawText.startsWith('<!DOCTYPE') || rawText.startsWith('<html')) && !isSvg && !isPdf && !isPpt;
+      const isCanvas = lang === 'canvas' || lang === 'html' || lang === 'htm' || isSvg || isPdf || isPpt || isHtmlContent;
 
-      // Check whether this artifact code block is completely generated.
-      // Do NOT show the PDF link / artifact card until the document has completely closed!
+      // Check whether this artifact code block is completely generated
       let isArtifactComplete = false;
       if (isSvg) {
         isArtifactComplete = /<\/svg\s*>/i.test(rawText);
+      } else if (isPpt) {
+        isArtifactComplete = /<\/html\s*>/i.test(rawText) || /<\/section>\s*<\/div>/i.test(rawText) || rawText.includes('slide-footer');
       } else if (isPdf || lang === 'html' || lang === 'canvas' || isHtmlContent) {
         isArtifactComplete = /<\/html\s*>/i.test(rawText);
+      } else if (isEdit) {
+        isArtifactComplete = rawText.includes('>>>>>>>');
+      } else if (isCreateFile) {
+        isArtifactComplete = rawText.length > 0;
       }
 
       head.appendChild(left);
@@ -2735,36 +3287,150 @@
       wrapper.appendChild(head);
       wrapper.appendChild(pre);
 
-      if ((isCanvas || isPdf) && isArtifactComplete) {
+      // Handle Iterative Diff Edits (edit_file)
+      if (isEdit && isArtifactComplete) {
+        const conv = activeConv();
+        const editRes = applyFileEdit(conv, rawText);
+        const fileName = editRes.fileRecord?.name || 'project_file.html';
+        const version = editRes.fileRecord?.version || 2;
+        const stats = editRes.stats || { added: 0, deleted: 0, blocks: 1 };
+        const summaryText = `+${stats.added} lines / -${stats.deleted} lines · ${stats.blocks} block${stats.blocks === 1 ? '' : 's'} updated`;
+
+        const editCard = document.createElement('div');
+        editCard.className = 'inline-edit-card';
+
+        let diffLinesHtml = '';
+        if (editRes.diffLines && editRes.diffLines.length) {
+          diffLinesHtml = editRes.diffLines.map(d => {
+            const cls = d.type === 'del' ? 'diff-line--del' : d.type === 'add' ? 'diff-line--add' : 'diff-line--ctx';
+            const pfx = d.type === 'del' ? '- ' : d.type === 'add' ? '+ ' : '  ';
+            return `<span class="${cls}">${escapeHTML(pfx + d.text)}</span>`;
+          }).join('\n');
+        } else {
+          diffLinesHtml = escapeHTML(rawText);
+        }
+
+        editCard.innerHTML = `
+          <div class="edit-card__header">
+            <div class="edit-card__title-group">
+              <div class="edit-card__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+              </div>
+              <div class="edit-card__file-name">${escapeHTML(fileName)}</div>
+              <span class="edit-card__version-pill">v${version}</span>
+            </div>
+            <p class="edit-card__summary">${escapeHTML(summaryText)}</p>
+          </div>
+          <div class="edit-card__actions">
+            <button type="button" class="btn-artifact-primary btn-edit-preview" title="Preview updated file">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+              <span>Preview updated</span>
+            </button>
+            <button type="button" class="btn-artifact-secondary btn-edit-toggle-diff" title="View diff">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="m7 15 5 5 5-5M7 9l5-5 5 5"/></svg>
+              <span>View diff</span>
+            </button>
+          </div>
+          <div class="edit-card__diff-drawer" hidden>
+            <pre style="margin:0; background:transparent; border:none; padding:0; font-family:inherit;"><code>${diffLinesHtml}</code></pre>
+          </div>
+        `;
+
+        const previewBtn = editCard.querySelector('.btn-edit-preview');
+        if (previewBtn) {
+          previewBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (editRes.fileRecord) {
+              openCanvas(editRes.fileRecord.content, editRes.fileRecord.title, editRes.fileRecord.type);
+            }
+          });
+        }
+
+        const diffToggleBtn = editCard.querySelector('.btn-edit-toggle-diff');
+        const diffDrawer = editCard.querySelector('.edit-card__diff-drawer');
+        if (diffToggleBtn && diffDrawer) {
+          diffToggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            diffDrawer.hidden = !diffDrawer.hidden;
+            diffToggleBtn.classList.toggle('is-active', !diffDrawer.hidden);
+          });
+        }
+
+        wrapper.classList.add('is-collapsed');
+        wrapper.parentNode.insertBefore(editCard, wrapper);
+        return;
+      }
+
+      // Handle general file creation (create_file)
+      if (isCreateFile && isArtifactComplete) {
+        const conv = activeConv();
+        const customPath = lang.replace(/^(?:create_)?file:\s*/, '').trim() || 'file_' + Date.now() + '.txt';
+        if (conv) {
+          saveConvFile(conv, {
+            path: customPath,
+            name: customPath.split('/').pop(),
+            title: customPath,
+            content: rawText,
+            type: customPath.endsWith('.svg') ? 'svg' : customPath.endsWith('.pdf') ? 'pdf' : customPath.endsWith('.ppt') ? 'ppt' : 'html'
+          });
+        }
+      }
+
+      if ((isCanvas || isPdf || isPpt) && isArtifactComplete) {
         // Detect title
         let artifactTitle = '';
         const titleMatch = rawText.match(/<title[^>]*>([^<]+)<\/title>/i);
+        const h1Match = rawText.match(/<h1[^>]*>([^<]+)<\/h1>/i);
         const ariaLabelMatch = rawText.match(/aria-label=["']([^"']+)["']/i);
         if (titleMatch && titleMatch[1]) {
           artifactTitle = titleMatch[1].trim();
+        } else if (h1Match && h1Match[1]) {
+          artifactTitle = h1Match[1].trim();
         } else if (ariaLabelMatch && ariaLabelMatch[1]) {
           artifactTitle = ariaLabelMatch[1].trim();
+        } else if (isPpt) {
+          artifactTitle = 'Keynote Presentation Deck';
         } else if (isPdf) {
-          artifactTitle = 'Sample Project Summary';
+          artifactTitle = 'Executive Document Summary';
         } else if (isSvg) {
-          // Check if preceding paragraph or text mentions character/subject
           const prevEl = wrapper.previousElementSibling;
           const prevText = prevEl ? prevEl.textContent : '';
           const nameMatch = prevText.match(/(?:around your|character|illustration of|artwork of|drawing of)\s+([A-Za-z0-9\s]+?)(?:\s+character|\.|\:|\n|$)/i);
-          artifactTitle = (nameMatch && nameMatch[1]) ? nameMatch[1].trim() : 'Moonlight Mochi';
+          artifactTitle = (nameMatch && nameMatch[1]) ? nameMatch[1].trim() : 'Vector Graphic Illustration';
         } else {
           artifactTitle = 'Interactive Web Artifact';
         }
 
-        const artifactType = isPdf ? 'pdf' : isSvg ? 'svg' : 'html';
-        const badgeLabel = isPdf ? 'PDF' : isSvg ? 'SVG' : 'Interactive';
+        const artifactType = isPpt ? 'ppt' : isPdf ? 'pdf' : isSvg ? 'svg' : 'html';
+        const badgeLabel = isPpt ? 'SLIDES' : isPdf ? 'PDF' : isSvg ? 'SVG' : 'Interactive';
 
         let thumbHtml = '';
         let metaDesc = '';
         let primaryBtnText = '';
         let badgeClass = '';
 
-        if (isPdf) {
+        if (isPpt) {
+          badgeClass = 'artifact-pill-badge--ppt';
+          metaDesc = 'Interactive presentation deck · 16:9 widescreen';
+          primaryBtnText = 'Present slides';
+          thumbHtml = `
+            <div class="artifact-card__thumb artifact-card__thumb--ppt" aria-hidden="true">
+              <div class="ppt-mini-slide">
+                <div class="ppt-mini-slide__top">
+                  <div class="ppt-mini-slide__badge"></div>
+                  <span class="ppt-mini-slide__count">01 / 05</span>
+                </div>
+                <div class="ppt-mini-slide__title"></div>
+                <div class="ppt-mini-slide__sub"></div>
+                <div class="ppt-mini-slide__cards">
+                  <div class="ppt-mini-slide__card ppt-mini-slide__card--active"></div>
+                  <div class="ppt-mini-slide__card"></div>
+                  <div class="ppt-mini-slide__card"></div>
+                </div>
+              </div>
+            </div>
+          `;
+        } else if (isPdf) {
           badgeClass = 'artifact-pill-badge--pdf';
           metaDesc = 'Formatted document · Ready to preview & print';
           primaryBtnText = 'Preview & print';
@@ -2835,6 +3501,19 @@
           `;
         }
 
+        // Auto-save artifact into project files registry
+        const currentConv = activeConv();
+        if (currentConv) {
+          const defaultName = isPpt ? 'presentation.html' : isPdf ? 'document.html' : isSvg ? 'vector.svg' : 'component.html';
+          saveConvFile(currentConv, {
+            path: defaultName,
+            name: defaultName,
+            title: artifactTitle,
+            content: rawText,
+            type: artifactType
+          });
+        }
+
         // Build the inline open-able artifact card
         const card = document.createElement('div');
         card.className = 'inline-artifact-card' + (isSvg ? ' is-svg-card' : '');
@@ -2895,7 +3574,7 @@
         prevBtn.className = 'preview-btn';
         prevBtn.innerHTML = `
           <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
-          <span>${isPdf ? 'Preview / Print' : 'Open in Canvas'}</span>
+          <span>${isPpt ? 'Present' : isPdf ? 'Preview / Print' : 'Open in Canvas'}</span>
         `;
         prevBtn.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -3185,6 +3864,7 @@
       host.scrollTop = prevScrollTop;
     }
     updateScrollBottomButton(host);
+    updateProjectFilesBadge();
   }
 
   function renderMessage(m) {
@@ -3433,6 +4113,10 @@
     if (capCanv) capCanv.checked = caps.canvas !== false;
     const capPdf = document.getElementById('capPdf');
     if (capPdf) capPdf.checked = caps.pdf !== false;
+    const capPpt = document.getElementById('capPpt');
+    if (capPpt) capPpt.checked = caps.ppt !== false;
+    const capProject = document.getElementById('capProject');
+    if (capProject) capProject.checked = caps.project !== false;
     const capMem = document.getElementById('capMemory');
     if (capMem) capMem.checked = caps.memory !== false;
     const capLoc = document.getElementById('capLocation');
@@ -3926,9 +4610,44 @@
     if (!text && !state.attachments.length) return;
     const sess = ensureSession(conv);
 
-    // Direct slash command execution for MCP tools
+    let sendText = text;
+
+    // Direct slash command execution for MCP tools & project workspace
     if (!state.attachments.length && text.startsWith('/')) {
       const lower = text.toLowerCase();
+      if (lower.trim() === '/files' || lower.startsWith('/files ')) {
+        if (input) input.value = '';
+        autosizeInput();
+        openProjectFilesModal();
+        return;
+      }
+
+      // Design & Artifact Tool shortcuts: /ppt, /pdf, /svg, /html, /edit
+      const isPptCmd = lower.startsWith('/ppt');
+      const isPdfCmd = lower.startsWith('/pdf');
+      const isSvgCmd = lower.startsWith('/svg');
+      const isHtmlCmd = lower.startsWith('/html');
+      const isEditCmd = lower.startsWith('/edit');
+
+      if (isPptCmd || isPdfCmd || isSvgCmd || isHtmlCmd || isEditCmd) {
+        if (isPptCmd) {
+          const topic = text.replace(/^\/ppt\s*/i, '').trim();
+          sendText = `Create a high-end 16:9 Apple Keynote-style presentation slide deck for: "${topic || 'Project Strategy & Vision'}". Include 5-7 beautifully composed slides with editorial typography, stat highlights, slide footer numbers, and clean slide navigation.`;
+        } else if (isPdfCmd) {
+          const topic = text.replace(/^\/pdf\s*/i, '').trim();
+          sendText = `Create a high-end, print-ready document / PDF report for: "${topic || 'Executive Summary & Report'}". Format with Notion and Apple-grade typography, structured tables, and print-friendly styling.`;
+        } else if (isSvgCmd) {
+          const topic = text.replace(/^\/svg\s*/i, '').trim();
+          sendText = `Create a sophisticated, non-generic scalable vector graphic (SVG) illustration for: "${topic || 'Modern Brand Emblem'}". Use a refined palette (obsidian/slate, sage pine, or terracotta), elegant geometry, clean gradients, and pure vector paths.`;
+        } else if (isHtmlCmd) {
+          const topic = text.replace(/^\/html\s*/i, '').trim();
+          sendText = `Create an interactive, beautifully designed web component or micro-app for: "${topic || 'Interactive Dashboard'}". Include refined styling, responsive layout, and smooth interactions.`;
+        } else if (isEditCmd) {
+          const instruction = text.replace(/^\/edit\s*/i, '').trim();
+          sendText = `Using the edit_file tool, update the most recent artifact file with the following changes: "${instruction}". Provide targeted SEARCH/REPLACE blocks without rewriting the entire file.`;
+        }
+      }
+
       const isSearch = lower.startsWith('/search');
       const isSql = lower.startsWith('/sql');
       const isGithub = lower.startsWith('/github');
@@ -4031,12 +4750,12 @@
     }
 
     // Title from first user message
-    if (conv.title === 'New chat' && text) {
-      conv.title = text.slice(0, 40) + (text.length > 40 ? '\u2026' : '');
+    if (conv.title === 'New chat' && sendText) {
+      conv.title = sendText.slice(0, 40) + (sendText.length > 40 ? '\u2026' : '');
     }
 
     // Build message: include attachments inline (vision models get image urls)
-    let userContent = text || '';
+    let userContent = sendText || '';
     const imageAtts = state.attachments.filter(a => (a.type || '').startsWith('image/'));
     if (imageAtts.length) {
       activateVisionIfAvailable(conv);
@@ -4425,6 +5144,7 @@
     decorateCodeBlocks, switchMode, renderHero,
     openCanvas, closeCanvas, getCanvasHtml: () => canvasCurrentHtml,
     getCanvasType: () => canvasCurrentType, getCanvasTitle: () => canvasCurrentTitle,
+    openProjectFilesModal, closeProjectFilesModal, saveConvFile, applyFileEdit, updateProjectFilesBadge, setupProjectFilesModal,
     autosizeInput, renderAttachments,
     isModelVisionCapable, activateVisionIfAvailable,
     // send / stream / regenerate
@@ -4467,6 +5187,7 @@
           uid, mdToSafeHTML, currentModel, skillOn,
           toShortModelName, thinkingLabel, THINKING_LEVELS,
           SQL_DB, searchWeb, fetchGitHubRepo, sendSlackMessage, createCalendarEvent, renderSVGChart, openCanvas,
+          openProjectFilesModal, closeProjectFilesModal, saveConvFile, applyFileEdit, updateProjectFilesBadge, setupProjectFilesModal,
           extractUserMemoryFromText, recordMemoryFact, renderMemoryFactsUI,
           } = CC;
 
@@ -4924,6 +5645,10 @@
     if (capCanv) capCanv.checked = caps.canvas !== false;
     const capPdf = document.getElementById('capPdf');
     if (capPdf) capPdf.checked = caps.pdf !== false;
+    const capPpt = document.getElementById('capPpt');
+    if (capPpt) capPpt.checked = caps.ppt !== false;
+    const capProject = document.getElementById('capProject');
+    if (capProject) capProject.checked = caps.project !== false;
     const capMem = document.getElementById('capMemory');
     if (capMem) capMem.checked = caps.memory !== false;
     const capLoc = document.getElementById('capLocation');
@@ -5635,6 +6360,8 @@
     on($('#capThinking'), 'change', e => { state.settings.capabilities.think = e.target.checked; persist(); });
     on($('#capCanvas'), 'change', e => { state.settings.capabilities.canvas = e.target.checked; persist(); });
     on($('#capPdf'), 'change', e => { state.settings.capabilities.pdf = e.target.checked; persist(); });
+    on($('#capPpt'), 'change', e => { state.settings.capabilities.ppt = e.target.checked; persist(); });
+    on($('#capProject'), 'change', e => { state.settings.capabilities.project = e.target.checked; persist(); });
     on($('#capMemory'), 'change', e => {
       state.settings.capabilities.memory = e.target.checked;
       state.settings.memory = e.target.checked;
@@ -5812,11 +6539,82 @@
       });
     }
 
+    // Keynote presentation slide controls
+    const prevSlideBtn = document.getElementById('canvasPrevSlideBtn');
+    const nextSlideBtn = document.getElementById('canvasNextSlideBtn');
+    const fsSlideBtn   = document.getElementById('canvasFullscreenBtn');
+    const slideCounter = document.getElementById('canvasSlideCounter');
+
+    if (prevSlideBtn) {
+      on(prevSlideBtn, 'click', () => {
+        const f = document.getElementById('canvasFrame');
+        if (f && f.contentWindow) {
+          f.contentWindow.postMessage({ type: 'prevSlide' }, '*');
+        }
+      });
+    }
+
+    if (nextSlideBtn) {
+      on(nextSlideBtn, 'click', () => {
+        const f = document.getElementById('canvasFrame');
+        if (f && f.contentWindow) {
+          f.contentWindow.postMessage({ type: 'nextSlide' }, '*');
+        }
+      });
+    }
+
+    if (fsSlideBtn) {
+      on(fsSlideBtn, 'click', () => {
+        const modal = document.getElementById('canvasModal');
+        if (!modal) return;
+        if (!document.fullscreenElement) {
+          modal.requestFullscreen().catch(() => {});
+        } else {
+          document.exitFullscreen().catch(() => {});
+        }
+      });
+    }
+
+    window.addEventListener('message', (e) => {
+      if (!e.data || typeof e.data !== 'object') return;
+      if (e.data.type === 'slideChange' && slideCounter) {
+        slideCounter.textContent = `${e.data.current} / ${e.data.total}`;
+      }
+      if (e.data.type === 'toggleFullscreen') {
+        const modal = document.getElementById('canvasModal');
+        if (!modal) return;
+        if (!document.fullscreenElement) {
+          modal.requestFullscreen().catch(() => {});
+        } else {
+          document.exitFullscreen().catch(() => {});
+        }
+      }
+    });
+
     window.addEventListener('keydown', (e) => {
+      const modal = document.getElementById('canvasModal');
+      if (!modal || modal.hidden || !modal.classList.contains('is-open')) return;
+
       if (e.key === 'Escape') {
-        const m = document.getElementById('canvasModal');
-        if (m && !m.hidden && m.classList.contains('is-open')) {
-          CC.closeCanvas();
+        CC.closeCanvas();
+        return;
+      }
+
+      if (CC.getCanvasType && CC.getCanvasType() === 'ppt') {
+        const f = document.getElementById('canvasFrame');
+        if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'ArrowDown' || e.key === 'PageDown') {
+          e.preventDefault();
+          if (f && f.contentWindow) f.contentWindow.postMessage({ type: 'nextSlide' }, '*');
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'PageUp' || e.key === 'Backspace') {
+          e.preventDefault();
+          if (f && f.contentWindow) f.contentWindow.postMessage({ type: 'prevSlide' }, '*');
+        } else if (e.key.toLowerCase() === 'f') {
+          e.preventDefault();
+          if (!document.fullscreenElement) {
+            modal.requestFullscreen().catch(() => {});
+          } else {
+            document.exitFullscreen().catch(() => {});
+          }
         }
       }
     });
@@ -6341,6 +7139,10 @@
         e.stopPropagation();
         const cmd = item.dataset.connectorCmd || '';
         toggleMenu(false);
+        if (cmd.trim() === '/files') {
+          openProjectFilesModal();
+          return;
+        }
         if (input) {
           input.value = cmd;
           input.focus();
@@ -6443,6 +7245,7 @@
     const exportBtn = document.getElementById('exportBtn');
     const clearBtn = document.getElementById('clearChatBtn');
     const newChatBtn = document.getElementById('topbarNewChatBtn');
+    const projectFilesBtn = document.getElementById('projectFilesBtn');
 
     if (newChatBtn) {
       on(newChatBtn, 'click', () => {
@@ -6452,6 +7255,12 @@
         renderConversations();
         renderChat();
         focusInput();
+      });
+    }
+
+    if (projectFilesBtn) {
+      on(projectFilesBtn, 'click', () => {
+        openProjectFilesModal();
       });
     }
 
@@ -6518,6 +7327,7 @@
     setupChatScroll();
     setupImageModal();
     setupCanvasModal();
+    setupProjectFilesModal();
 
     // Set initial active mode in topbar
     const m = MODES.find(x => x.id === state.currentMode) || MODES[0];
@@ -6556,5 +7366,10 @@
 
   // Expose what callers may want
   CC.openSettings = openSettings;
+  CC.openProjectFilesModal = openProjectFilesModal;
+  CC.closeProjectFilesModal = closeProjectFilesModal;
+  CC.saveConvFile = saveConvFile;
+  CC.applyFileEdit = applyFileEdit;
+  CC.updateProjectFilesBadge = updateProjectFilesBadge;
   CC.init = init;
 })();

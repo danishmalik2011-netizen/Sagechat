@@ -6511,3 +6511,379 @@ details[open] > .steps-block__summary .steps-block__chevron {
   color: var(--primary);
   border-color: var(--primary);
 }
+
+/* =========================================================
+   PROJECT FILES TOPBAR BADGE & PPT ARTIFACT CARD
+   ========================================================= */
+.project-files-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--primary);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+  margin-left: 2px;
+}
+.project-files-badge[hidden] {
+  display: none !important;
+}
+
+/* REAL THUMBNAIL: PPT PRESENTATION SLIDE (16:9) */
+.artifact-card__thumb--ppt {
+  width: 114px;
+  height: 72px;
+  background: #11141d;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  flex-shrink: 0;
+  position: relative;
+}
+.ppt-mini-slide {
+  width: 100%;
+  height: 100%;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+  background: radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.25), transparent 60%), #11141d;
+}
+.ppt-mini-slide__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.ppt-mini-slide__badge {
+  width: 16px;
+  height: 3px;
+  border-radius: 1.5px;
+  background: #f43f5e;
+}
+.ppt-mini-slide__count {
+  font-size: 8px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.05em;
+}
+.ppt-mini-slide__title {
+  height: 4px;
+  width: 75%;
+  background: #ffffff;
+  border-radius: 2px;
+  margin: 3px 0 2px;
+}
+.ppt-mini-slide__sub {
+  height: 2.5px;
+  width: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 1.5px;
+}
+.ppt-mini-slide__cards {
+  display: flex;
+  gap: 3px;
+  margin-top: auto;
+}
+.ppt-mini-slide__card {
+  flex: 1;
+  height: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 0.5px solid rgba(255, 255, 255, 0.12);
+  border-radius: 2px;
+}
+.ppt-mini-slide__card--active {
+  background: rgba(99, 102, 241, 0.35);
+  border-color: #818cf8;
+}
+
+.artifact-pill-badge--ppt {
+  background: #f5f3ff;
+  color: #6d28d9;
+}
+[data-theme="dark"] .artifact-pill-badge--ppt {
+  background: #2e1065;
+  color: #c4b5fd;
+}
+.artifact-pill-badge--edit {
+  background: #f0fdf4;
+  color: #15803d;
+}
+[data-theme="dark"] .artifact-pill-badge--edit {
+  background: #052e16;
+  color: #86efac;
+}
+
+/* Canvas Slide Player Controls */
+.canvas__slide-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.canvas__slide-controls[hidden] {
+  display: none !important;
+}
+.chip--slide {
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+.canvas__slide-counter {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-700);
+  padding: 2px 8px;
+  background: var(--paper-elevated);
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  min-width: 48px;
+  text-align: center;
+  font-family: var(--font-mono);
+}
+.chip--slide-fs {
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--primary-subtle);
+  color: var(--primary);
+  border-color: var(--primary-border);
+}
+.chip--slide-fs:hover {
+  background: var(--primary);
+  color: #ffffff;
+}
+
+/* =========================================================
+   ITERATIVE EDIT FILE CARD & DIFF VIEWER
+   ========================================================= */
+.inline-edit-card {
+  margin: 16px 0 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: hidden;
+  transition: all 0.15s ease;
+}
+[data-theme="dark"] .inline-edit-card {
+  border-color: #2e303d;
+  background: var(--surface);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
+}
+.edit-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.edit-card__title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.edit-card__icon {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+  flex-shrink: 0;
+}
+[data-theme="dark"] .edit-card__icon {
+  background: #064e3b;
+  color: #6ee7b7;
+  border-color: #047857;
+}
+.edit-card__file-name {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--ink-900);
+  font-family: var(--font-mono);
+}
+.edit-card__version-pill {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 1.5px 7px;
+  border-radius: 999px;
+  background: var(--primary-subtle);
+  color: var(--primary);
+  border: 1px solid var(--primary-border);
+}
+.edit-card__summary {
+  font-size: 12.5px;
+  color: var(--ink-700);
+  margin: 0;
+  line-height: 1.4;
+}
+.edit-card__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-light, #f1f3f5);
+  flex-wrap: wrap;
+}
+.edit-card__diff-drawer {
+  background: #0f172a;
+  border-radius: 10px;
+  padding: 12px 14px;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  color: #cbd5e1;
+  border: 1px solid #334155;
+}
+.edit-card__diff-drawer[hidden] {
+  display: none !important;
+}
+.diff-line--del {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  display: block;
+  padding: 1px 4px;
+  border-radius: 2px;
+}
+.diff-line--add {
+  background: rgba(34, 197, 94, 0.2);
+  color: #86efac;
+  display: block;
+  padding: 1px 4px;
+  border-radius: 2px;
+}
+.diff-line--ctx {
+  display: block;
+  padding: 1px 4px;
+  opacity: 0.7;
+}
+
+/* =========================================================
+   PROJECT FILES WORKSPACE MODAL
+   ========================================================= */
+.modal__panel--files {
+  width: 680px;
+  max-width: min(720px, calc(100vw - 28px));
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
+.project-files__body {
+  padding: 16px 22px 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.project-files__empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--ink-500);
+}
+.project-files__empty[hidden] {
+  display: none !important;
+}
+.project-files__empty-icon {
+  margin-bottom: 12px;
+  color: var(--ink-400);
+}
+.project-files__empty h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  color: var(--ink-900);
+}
+.project-files__empty p {
+  margin: 0 auto;
+  max-width: 400px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-600);
+}
+.project-files__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.project-file-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--paper-elevated);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  gap: 12px;
+  transition: all 0.15s ease;
+}
+.project-file-row:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-hover);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+.project-file-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+}
+.project-file-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--primary);
+  flex-shrink: 0;
+}
+.project-file-texts {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.project-file-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.project-file-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-900);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.project-file-meta {
+  font-size: 12px;
+  color: var(--ink-600);
+}
+.project-file-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
