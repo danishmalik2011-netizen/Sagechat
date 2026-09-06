@@ -699,7 +699,24 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 14px 10px;
+  padding: 14px 12px 10px;
+}
+
+.brand-zone {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  border-radius: var(--radius-md);
+  padding: 4px 6px 4px 4px;
+  cursor: pointer;
+  transition: background 0.16s ease;
+  user-select: none;
+}
+
+.brand-zone:hover {
+  background: var(--surface-2);
 }
 
 .brand {
@@ -714,20 +731,64 @@ html, body {
   place-items: center;
   width: 32px;
   height: 32px;
-  border-radius: var(--radius-md);
-  background: var(--primary);
-  color: #ffffff;
+  border-radius: 9px;
+  background: var(--surface-3);
+  border: 1px solid var(--surface-border);
   flex-shrink: 0;
-  box-shadow: 0 2px 8px var(--primary-glow);
+  box-shadow: var(--shadow-sm);
+  transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1), transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.brand__avatar svg {
-  color: #ffffff;
+
+.brand-zone__collapser {
+  position: absolute;
+  left: 4px;
+  top: 50%;
+  transform: translateY(-50%) scale(0.85);
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: var(--surface-3);
+  border: 1px solid var(--surface-border);
+  color: var(--ink-800);
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  pointer-events: none;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1), transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), background 0.14s ease, color 0.14s ease;
+}
+
+/* Desktop hover swap: when hovering near or over the brand header, logo is replaced by collapser */
+@media (hover: hover) and (min-width: 769px) {
+  .brand-zone:hover .brand__avatar {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  .brand-zone:hover .brand-zone__collapser {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(-50%) scale(1);
+  }
+  .brand-zone__collapser:hover {
+    background: var(--surface-hover);
+    color: var(--primary);
+  }
+  #closeSidebarBtn {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .brand-zone__collapser {
+    display: none !important;
+  }
 }
 
 .brand__name {
   font-weight: 800;
-  font-size: 15px;
-  letter-spacing: -0.01em;
+  font-size: 15.5px;
+  letter-spacing: -0.02em;
   color: var(--ink-900);
 }
 
@@ -1276,22 +1337,60 @@ html, body {
 }
 
 .topbar__toggle {
+  position: relative;
   display: grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   padding: 0;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  border: 1px solid transparent;
-  color: var(--ink-500);
+  border-radius: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--surface-border);
+  color: var(--ink-600);
   cursor: pointer;
-  transition: all 0.12s ease;
+  overflow: hidden;
+  transition: all 0.15s ease;
 }
-.topbar__toggle:hover {
-  background: var(--surface-hover);
-  border-color: var(--border);
+
+.topbar__toggle-glyph,
+.topbar__toggle-icon {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1), transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.topbar__toggle-glyph {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.topbar__toggle-icon {
+  opacity: 0;
+  transform: scale(0.85);
   color: var(--ink-900);
+}
+
+@media (hover: hover) and (min-width: 769px) {
+  .topbar__toggle:hover {
+    background: var(--surface-3);
+    border-color: var(--ink-200);
+  }
+  .topbar__toggle:hover .topbar__toggle-glyph {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  .topbar__toggle:hover .topbar__toggle-icon {
+    opacity: 1;
+    transform: scale(1);
+    color: var(--primary);
+  }
+
+  /* When sidebar is OPEN on desktop, hide the topbar toggle */
+  .sidebar:not(.is-collapsed) ~ .main .topbar__toggle {
+    display: none;
+  }
 }
 
 .topbar__title {
@@ -5309,6 +5408,14 @@ input[type="range"] { width: 100%; accent-color: var(--primary); }
 
   .topbar__toggle {
     display: grid !important;
+  }
+  .topbar__toggle-glyph {
+    display: none !important;
+  }
+  .topbar__toggle-icon {
+    opacity: 1 !important;
+    transform: scale(1) !important;
+    position: static !important;
   }
 
   .provider-cards {

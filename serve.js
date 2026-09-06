@@ -84,37 +84,49 @@ http.createServer((req, res) => {
     }
 
     const lib = targetParsed.protocol === 'https:' ? https : http;
-    const fwdHeaders = { ...req.headers };
-    delete fwdHeaders['host'];
-    delete fwdHeaders['origin'];
-    delete fwdHeaders['referer'];
-    fwdHeaders['host'] = targetParsed.host;
-
-    const proxyReq = lib.request(targetUrl, {
-      method: req.method,
-      headers: fwdHeaders,
-    }, (proxyRes) => {
-      const resHeaders = { ...proxyRes.headers };
-      delete resHeaders['transfer-encoding'];
-      resHeaders['access-control-allow-origin'] = '*';
-      resHeaders['access-control-allow-methods'] = 'GET, POST, OPTIONS';
-      resHeaders['access-control-allow-headers'] = '*';
-      res.writeHead(proxyRes.statusCode, resHeaders);
-      proxyRes.pipe(res);
-    });
-
-    proxyReq.on('error', (err) => {
-      if (!res.headersSent) {
-        res.writeHead(502, { 'Content-Type': 'application/json', 'access-control-allow-origin': '*' });
+    const chunks = [];
+    req.on('data', chunk => chunks.push(chunk));
+    req.on('end', () => {
+      const bodyBuf = Buffer.concat(chunks);
+      const fwdHeaders = {};
+      for (const [k, v] of Object.entries(req.headers)) {
+        const lower = k.toLowerCase();
+        if (!lower.startsWith('sec-') && !lower.startsWith('cf-') &&
+            lower !== 'host' && lower !== 'origin' && lower !== 'referer' &&
+            lower !== 'cookie' && lower !== 'content-length') {
+          fwdHeaders[lower] = v;
+        }
       }
-      res.end(JSON.stringify({ error: 'Proxy request failed: ' + err.message }));
-    });
+      fwdHeaders['host'] = targetParsed.host;
+      if (req.method !== 'GET' && req.method !== 'HEAD') {
+        fwdHeaders['content-length'] = bodyBuf.length;
+      }
 
-    if (req.method === 'GET' || req.method === 'HEAD') {
+      const proxyReq = lib.request(targetUrl, {
+        method: req.method,
+        headers: fwdHeaders,
+      }, (proxyRes) => {
+        const resHeaders = { ...proxyRes.headers };
+        delete resHeaders['transfer-encoding'];
+        resHeaders['access-control-allow-origin'] = '*';
+        resHeaders['access-control-allow-methods'] = 'GET, POST, OPTIONS';
+        resHeaders['access-control-allow-headers'] = '*';
+        res.writeHead(proxyRes.statusCode, resHeaders);
+        proxyRes.pipe(res);
+      });
+
+      proxyReq.on('error', (err) => {
+        if (!res.headersSent) {
+          res.writeHead(502, { 'Content-Type': 'application/json', 'access-control-allow-origin': '*' });
+        }
+        res.end(JSON.stringify({ error: 'Proxy request failed: ' + err.message }));
+      });
+
+      if (req.method !== 'GET' && req.method !== 'HEAD') {
+        proxyReq.write(bodyBuf);
+      }
       proxyReq.end();
-    } else {
-      req.pipe(proxyReq);
-    }
+    });
     return;
   }
 

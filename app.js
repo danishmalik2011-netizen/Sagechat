@@ -569,54 +569,80 @@
       cleanMessages.push({ role: 'user', content: sys || 'Hello' });
     }
 
-    // Try posting to anonymous endpoint
+    // Helper to read SSE stream
+    async function readSSEStream(response) {
+      const reader = response.body.getReader();
+      const dec = new TextDecoder();
+      let buf = '';
+      let receivedAny = false;
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        let idx;
+        while ((idx = buf.indexOf('\n')) >= 0) {
+          const line = buf.slice(0, idx).trim();
+          buf = buf.slice(idx + 1);
+          if (!line.startsWith('data:')) continue;
+          const data = line.slice(5).trim();
+          if (data === '[DONE]') return true;
+          try {
+            const json = JSON.parse(data);
+            const delta = json.choices?.[0]?.delta;
+            const isReasoning = !!(delta?.reasoning || delta?.reasoning_content);
+            const piece = delta?.reasoning || delta?.reasoning_content || delta?.content || json.choices?.[0]?.message?.content || '';
+            if (piece && onChunk) {
+              receivedAny = true;
+              onChunk(piece, isReasoning);
+            }
+          } catch { /* ignore malformed SSE line */ }
+        }
+      }
+      return receivedAny;
+    }
+
+    const payload = JSON.stringify({
+      model: targetModel,
+      messages: cleanMessages,
+      stream: true,
+    });
+
+    // 1. Try direct fetch
     try {
       const res = await fetch('https://text.pollinations.ai/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: targetModel,
-          messages: cleanMessages,
-          stream: true,
-        }),
+        body: payload,
         signal,
       });
 
       if (res.ok && res.body) {
-        const reader = res.body.getReader();
-        const dec = new TextDecoder();
-        let buf = '';
-        let receivedAny = false;
-        while (true) {
-          const { value, done } = await reader.read();
-          if (done) break;
-          buf += dec.decode(value, { stream: true });
-          let idx;
-          while ((idx = buf.indexOf('\n')) >= 0) {
-            const line = buf.slice(0, idx).trim();
-            buf = buf.slice(idx + 1);
-            if (!line.startsWith('data:')) continue;
-            const data = line.slice(5).trim();
-            if (data === '[DONE]') return;
-            try {
-              const json = JSON.parse(data);
-              const delta = json.choices?.[0]?.delta;
-              const isReasoning = !!(delta?.reasoning || delta?.reasoning_content);
-              const piece = delta?.reasoning || delta?.reasoning_content || delta?.content || json.choices?.[0]?.message?.content || '';
-              if (piece && onChunk) {
-                receivedAny = true;
-                onChunk(piece, isReasoning);
-              }
-            } catch { /* ignore malformed SSE line */ }
-          }
-        }
-        if (receivedAny) return;
+        const ok = await readSSEStream(res);
+        if (ok) return;
       }
     } catch (e) {
       if (e.name === 'AbortError') throw e;
     }
 
-    // If anonymous call failed (due to 402 pollen requirement or 429), trigger helpful action card
+    // 2. If direct call was blocked (403 Cloudflare Turnstile token or network block), route through server proxy
+    try {
+      const proxyUrl = `/api/proxy?url=${encodeURIComponent('https://text.pollinations.ai/')}`;
+      const res = await fetch(proxyUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: payload,
+        signal,
+      });
+
+      if (res.ok && res.body) {
+        const ok = await readSSEStream(res);
+        if (ok) return;
+      }
+    } catch (e) {
+      if (e.name === 'AbortError') throw e;
+    }
+
+    // If both failed (due to 402 pollen requirement or 429), trigger helpful action card
     throw new Error('__POLLINATIONS_AUTH_HELP__');
   }
 
@@ -1645,15 +1671,19 @@
       <div class="hero">
         <div class="hero__brand">
           <div class="hero__avatar">
-            <svg viewBox="0 0 32 32" width="24" height="24" fill="none">
-              <rect width="32" height="32" rx="8" fill="currentColor" fill-opacity="0.15"/>
-              <path d="M16 6L18.2 12.8L25 15L18.2 17.2L16 24L13.8 17.2L7 15L13.8 12.8L16 6Z" fill="currentColor"/>
-              <circle cx="23" cy="9" r="1.5" fill="currentColor"/>
+            <svg class="sage-logo-hero" viewBox="0 0 32 32" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="32" height="32" rx="9" fill="var(--surface-3, #222228)" stroke="var(--surface-border)" stroke-width="1"/>
+              <path d="M16 5.5L23.5 12.5L16 16.5L12.5 11.5L16 5.5Z" fill="var(--primary, #E06853)"/>
+              <path d="M16 26.5L8.5 19.5L16 15.5L19.5 20.5L16 26.5Z" fill="var(--ink-700, #2B2D42)"/>
+              <path d="M5.5 16L12.5 11.5L16 15.5L11.5 20.5L5.5 16Z" fill="var(--primary-hover, #D97757)"/>
+              <path d="M26.5 16L19.5 20.5L16 16.5L20.5 11.5L26.5 16Z" fill="var(--ink-400, #717688)"/>
+              <path d="M16 13L19 16L16 19L13 16L16 13Z" fill="#FFFFFF"/>
+              <circle cx="16" cy="16" r="1.2" fill="var(--primary, #E06853)"/>
             </svg>
           </div>
           <div class="hero__brand-text">
-            <h2 class="hero__title">Welcome to <span class="hero__name">cute chat</span></h2>
-            <p class="hero__sub">Fast, private, delightful assistant. Current mode: <strong>${escapeHTML(activeM.tabTitle)}</strong></p>
+            <h2 class="hero__title">Welcome to <span class="hero__name">Sage</span></h2>
+            <p class="hero__sub">Clarity, deep reasoning, and live tools. Mode: <strong>${escapeHTML(activeM.tabTitle)}</strong></p>
           </div>
         </div>
 
@@ -3721,6 +3751,73 @@
   }
 
   // -----------------------------------------------------------------------
+  // Real User Memory & Context Extraction
+  // -----------------------------------------------------------------------
+  function extractUserMemoryFromText(rawText) {
+    if (!rawText || typeof rawText !== 'string') return;
+    if (state.settings.capabilities?.memory === false) return;
+    const text = rawText.trim();
+    if (text.length < 5 || text.startsWith('/')) return;
+
+    // Name detection: "My name is John", "Call me Alice"
+    const nameMatch = text.match(/(?:my name is|call me|i am called)\s+([A-Z][a-zA-Z]+)/i);
+    if (nameMatch && nameMatch[1]) {
+      recordMemoryFact(`User's name is ${nameMatch[1]}`);
+    }
+
+    // Role / Profession detection: "I am a software engineer", "I work as a designer"
+    const roleMatch = text.match(/(?:i work as an?|i am an?|my job is)\s+([a-zA-Z\s]{3,35})(?:[.,\n]|$)/i);
+    if (roleMatch && roleMatch[1]) {
+      const cleanRole = roleMatch[1].trim();
+      if (!/user|assistant|human|thinking|model/i.test(cleanRole)) {
+        recordMemoryFact(`User works as a ${cleanRole}`);
+      }
+    }
+
+    // Location detection: "I live in Berlin", "I'm located in Tokyo"
+    const locMatch = text.match(/(?:i live in|i'm located in|i am based in)\s+([a-zA-Z\s,]{3,40})(?:[.,\n]|$)/i);
+    if (locMatch && locMatch[1]) {
+      recordMemoryFact(`User is based in ${locMatch[1].trim()}`);
+    }
+  }
+
+  function recordMemoryFact(fact) {
+    if (!state.settings.userMemory) state.settings.userMemory = { notes: '', facts: [] };
+    if (!Array.isArray(state.settings.userMemory.facts)) state.settings.userMemory.facts = [];
+    const clean = fact.trim();
+    if (clean && !state.settings.userMemory.facts.includes(clean)) {
+      state.settings.userMemory.facts.push(clean);
+      if (state.settings.userMemory.facts.length > 30) {
+        state.settings.userMemory.facts.shift();
+      }
+      persist();
+      renderMemoryFactsUI();
+    }
+  }
+
+  function renderMemoryFactsUI() {
+    const box = document.getElementById('memoryFactsBox');
+    if (!box) return;
+    const facts = state.settings.userMemory?.facts || [];
+    if (!facts.length) {
+      box.innerHTML = '<span style="font-size:11.5px; color:var(--ink-400);">No conversation memory facts recorded yet.</span>';
+      return;
+    }
+    box.innerHTML = '';
+    facts.forEach((fact, idx) => {
+      const chip = document.createElement('div');
+      chip.className = 'memory-fact-chip';
+      chip.innerHTML = `<span>${escapeHTML(fact)}</span><button type="button" title="Delete memory fact" aria-label="Delete fact">&times;</button>`;
+      chip.querySelector('button').addEventListener('click', () => {
+        state.settings.userMemory.facts.splice(idx, 1);
+        persist();
+        renderMemoryFactsUI();
+      });
+      box.appendChild(chip);
+    });
+  }
+
+  // -----------------------------------------------------------------------
   // Send / regenerate (streaming)
   // -----------------------------------------------------------------------
   async function sendMessage() {
@@ -3858,7 +3955,13 @@
         .join('\n\n');
       conv.messages.push({ role: 'user', content: userContent + (userContent ? '\n\n' : '') + txt, ts: Date.now() });
     } else {
-      extractUserMemoryFromText(userContent);
+      try {
+        if (typeof extractUserMemoryFromText === 'function') {
+          extractUserMemoryFromText(userContent);
+        }
+      } catch (memErr) {
+        console.warn('Non-fatal memory extraction error:', memErr);
+      }
       conv.messages.push({ role: 'user', content: userContent, ts: Date.now() });
     }
 
@@ -3900,6 +4003,16 @@
     );
     if (hasImageInConv) {
       activateVisionIfAvailable(conv);
+    }
+
+    // Auto-heal empty or placeholder model if default exists
+    if (!sess.model || sess.model === '__placeholder__') {
+      const fallback = (state.settings.model && state.settings.model[sess.provider]) ||
+                       (MODELS[sess.provider] && MODELS[sess.provider][0]?.id) ||
+                       (sess.provider === 'pollinations' ? 'openai' : '');
+      if (fallback && fallback !== '__placeholder__') {
+        sess.model = fallback;
+      }
     }
 
     // Validate provider/model
@@ -4219,6 +4332,7 @@
     isModelVisionCapable, activateVisionIfAvailable,
     // send / stream / regenerate
     sendMessage, streamAssistant, regenerateLast, stopStream, setStreamingUI, updateStreamingUI, switchConversation, isConvStreaming,
+    extractUserMemoryFromText, recordMemoryFact, renderMemoryFactsUI,
     // MCP tools & connectors
     SQL_DB, searchWeb, formatSearchResultsHTML, fetchGitHubRepo, formatGitHubRepoHTML,
     sendSlackMessage, createCalendarEvent, formatCalendarEventHTML, renderSVGChart, parseChartSpec, formatChartHTML,
@@ -4256,6 +4370,7 @@
           uid, mdToSafeHTML, currentModel, skillOn,
           toShortModelName, thinkingLabel, THINKING_LEVELS,
           SQL_DB, searchWeb, fetchGitHubRepo, sendSlackMessage, createCalendarEvent, renderSVGChart, openCanvas,
+          extractUserMemoryFromText, recordMemoryFact, renderMemoryFactsUI,
           } = CC;
 
   // -----------------------------------------------------------------------
@@ -4458,6 +4573,8 @@
     const sidebar = document.getElementById('sidebar');
     const scrim = document.getElementById('sidebarScrim');
     const collapseBtn = document.getElementById('collapseSidebarBtn');
+    const headerCollapseBtn = document.getElementById('headerCollapseBtn');
+    const brandZone = document.getElementById('sidebarBrandZone');
     const openBtn = document.getElementById('openSidebarBtn');
     const closeBtn = document.getElementById('closeSidebarBtn');
 
@@ -4467,11 +4584,31 @@
       sidebar.classList.add('is-collapsed');
     }
 
+    function toggleDesktopSidebar(forceState) {
+      if (!sidebar) return;
+      if (typeof forceState === 'boolean') {
+        sidebar.classList.toggle('is-collapsed', forceState);
+      } else {
+        sidebar.classList.toggle('is-collapsed');
+      }
+      LS.set('cc.sidebar.collapsed', sidebar.classList.contains('is-collapsed'));
+    }
+
+    // Header hover collapse button (sidebar head)
+    on(headerCollapseBtn, 'click', (e) => {
+      e.stopPropagation();
+      toggleDesktopSidebar(true);
+    });
+
+    on(brandZone, 'click', (e) => {
+      if (window.innerWidth > 768) {
+        toggleDesktopSidebar(true);
+      }
+    });
+
     // Collapse button (sidebar foot)
     on(collapseBtn, 'click', () => {
-      if (!sidebar) return;
-      sidebar.classList.add('is-collapsed');
-      LS.set('cc.sidebar.collapsed', true);
+      toggleDesktopSidebar(true);
     });
 
     // Toggle/Open button (topbar)
@@ -4481,8 +4618,20 @@
         const open = sidebar.classList.toggle('is-open');
         if (scrim) scrim.classList.toggle('is-open', open);
       } else {
-        const collapsed = sidebar.classList.toggle('is-collapsed');
-        LS.set('cc.sidebar.collapsed', collapsed);
+        toggleDesktopSidebar();
+      }
+    });
+
+    // Global keyboard shortcut: Ctrl+[ or Cmd+[ or Ctrl+\ to toggle sidebar
+    window.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && (e.key === '[' || e.key === '\\')) {
+        e.preventDefault();
+        if (window.innerWidth <= 768) {
+          const open = sidebar.classList.toggle('is-open');
+          if (scrim) scrim.classList.toggle('is-open', open);
+        } else {
+          toggleDesktopSidebar();
+        }
       }
     });
 
@@ -4593,72 +4742,7 @@
     }
   }
 
-  // -----------------------------------------------------------------------
-  // Real User Memory & Context Extraction
-  // -----------------------------------------------------------------------
-  function extractUserMemoryFromText(rawText) {
-    if (!rawText || typeof rawText !== 'string') return;
-    if (state.settings.capabilities?.memory === false) return;
-    const text = rawText.trim();
-    if (text.length < 5 || text.startsWith('/')) return;
-
-    // Name detection: "My name is John", "Call me Alice"
-    const nameMatch = text.match(/(?:my name is|call me|i am called)\s+([A-Z][a-zA-Z]+)/i);
-    if (nameMatch && nameMatch[1]) {
-      recordMemoryFact(`User's name is ${nameMatch[1]}`);
-    }
-
-    // Role / Profession detection: "I am a software engineer", "I work as a designer"
-    const roleMatch = text.match(/(?:i work as an?|i am an?|my job is)\s+([a-zA-Z\s]{3,35})(?:[.,\n]|$)/i);
-    if (roleMatch && roleMatch[1]) {
-      const cleanRole = roleMatch[1].trim();
-      if (!/user|assistant|human|thinking|model/i.test(cleanRole)) {
-        recordMemoryFact(`User works as a ${cleanRole}`);
-      }
-    }
-
-    // Location detection: "I live in Berlin", "I'm located in Tokyo"
-    const locMatch = text.match(/(?:i live in|i'm located in|i am based in)\s+([a-zA-Z\s,]{3,40})(?:[.,\n]|$)/i);
-    if (locMatch && locMatch[1]) {
-      recordMemoryFact(`User is based in ${locMatch[1].trim()}`);
-    }
-  }
-
-  function recordMemoryFact(fact) {
-    if (!state.settings.userMemory) state.settings.userMemory = { notes: '', facts: [] };
-    if (!Array.isArray(state.settings.userMemory.facts)) state.settings.userMemory.facts = [];
-    const clean = fact.trim();
-    if (clean && !state.settings.userMemory.facts.includes(clean)) {
-      state.settings.userMemory.facts.push(clean);
-      if (state.settings.userMemory.facts.length > 30) {
-        state.settings.userMemory.facts.shift();
-      }
-      persist();
-      renderMemoryFactsUI();
-    }
-  }
-
-  function renderMemoryFactsUI() {
-    const box = document.getElementById('memoryFactsBox');
-    if (!box) return;
-    const facts = state.settings.userMemory?.facts || [];
-    if (!facts.length) {
-      box.innerHTML = '<span style="font-size:11.5px; color:var(--ink-400);">No conversation memory facts recorded yet.</span>';
-      return;
-    }
-    box.innerHTML = '';
-    facts.forEach((fact, idx) => {
-      const chip = document.createElement('div');
-      chip.className = 'memory-fact-chip';
-      chip.innerHTML = `<span>${escapeHTML(fact)}</span><button type="button" title="Delete memory fact" aria-label="Delete fact">&times;</button>`;
-      chip.querySelector('button').addEventListener('click', () => {
-        state.settings.userMemory.facts.splice(idx, 1);
-        persist();
-        renderMemoryFactsUI();
-      });
-      box.appendChild(chip);
-    });
-  }
+  // User Memory functions are defined in Part 4 and imported via CC above.
 
   // -----------------------------------------------------------------------
   // Real Approximate Location via IP Geolocation

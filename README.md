@@ -54,10 +54,12 @@ Engineered from the ground up for phone viewports:
 - **Collapsible Tool Steps**: All MCP executions (Web Search, Charts, Calendar, SQLite) render cleanly inside a collapsible `Steps` pill, so the main chat stays distraction-free.
 - **Dedicated Thought Process Toggle**: Model chain-of-thought (e.g. `<think>` blocks or leading reasoning) is automatically isolated inside an expandable `Thought Process` block, ensuring only the polished final answer appears in the chat stream.
 
-### 🎭 Appearance & Accessibility Customizer
-- **5 Curated Color Palettes**: Choose between *Cute Pink*, *Obsidian Slate*, *Nord Polar*, *Matcha Sage*, and *Cyber Midnight*.
+### 🎭 Appearance & Premium UX
+- **5 Sophisticated Matte Palettes**: Refined non-generic themes crafted for deep focus: *Blossom (Warm Rose)*, *Studio Slate (Neutral Gray)*, *Warm Sandstone (Oyster/Earthy)*, *Forest Moss (Calm Sage)*, and *Deep Ocean (Abyssal Slate)*.
+- **Desktop Sidebar Hover-Swap**: Hovering near the top-left brand logo smoothly cross-fades into the professional dual-pane collapser button (`Ctrl+[` shortcut). When collapsed, the brand glyph anchors the topbar and swaps to the expand icon on hover.
 - **Dyslexia-Friendly Typography**: Toggle between *Plus Jakarta Sans*, *OpenDyslexic* (specialized reading ease), *Lexend*, *JetBrains Mono*, and *Editorial Serif*.
-- **Font Sizing**: Scale body typography smoothly across Small, Medium, Large, and Extra Large tokens.
+- **Dynamic Font Scaling**: Real-time message body and composer text scaling across Small, Medium, Large, and Extra Large tokens.
+- **Real Personalization & Memory**: Automatic approximate IP geolocation and automatic long-term memory extraction without server persistence.
 
 ### 🔌 Multi-Provider & BYOK Infrastructure
 Seamlessly switch between providers:
