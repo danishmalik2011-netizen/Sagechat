@@ -2498,9 +2498,9 @@ details[open] > .thinking-block__summary .thinking-block__chevron {
 /* High-End Minimalist Streaming Spinner (Apple / Vercel / Linear Aesthetic) */
 .streaming-spinner {
   display: inline-block;
-  width: 14px;
-  height: 14px;
-  border: 1.8px solid var(--primary-border, rgba(224, 104, 83, 0.25));
+  width: 12px;
+  height: 12px;
+  border: 1.6px solid var(--primary-border, rgba(224, 104, 83, 0.25));
   border-top-color: var(--primary, #ff3366);
   border-radius: 50%;
   animation: streamSpin 0.72s cubic-bezier(0.4, 0.1, 0.3, 1) infinite;
@@ -2508,9 +2508,9 @@ details[open] > .thinking-block__summary .thinking-block__chevron {
   flex-shrink: 0;
 }
 .streaming-spinner--mini {
-  width: 9.5px;
-  height: 9.5px;
-  border-width: 1.4px;
+  width: 9px;
+  height: 9px;
+  border-width: 1.3px;
 }
 @keyframes streamSpin {
   0% { transform: rotate(0deg); }
@@ -2521,8 +2521,8 @@ details[open] > .thinking-block__summary .thinking-block__chevron {
 .typing-indicator {
   display: inline-flex;
   align-items: center;
-  gap: 7.5px;
-  padding: 6px 12px;
+  gap: 7px;
+  padding: 5px 10px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -2530,7 +2530,7 @@ details[open] > .thinking-block__summary .thinking-block__chevron {
   box-shadow: var(--shadow-sm);
 }
 .typing-indicator__label {
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--ink-500);
   letter-spacing: -0.01em;
