@@ -2,7 +2,7 @@
 <html lang="en" data-theme="light">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#fcfaf8" />
     <title>cute chat — premium AI assistant</title>
     <meta name="description" content="A fast, polished, elegant AI assistant. Real-time coding, deep thinking, research, document rendering, and PDF generation with Groq, OpenRouter, or Pollinations." />
@@ -24,7 +24,7 @@
       id="hljs-dark"
       disabled
     />
-    <link rel="stylesheet" href="styles.css?v=4" />
+    <link rel="stylesheet" href="styles.css?v=5" />
   </head>
   <body>
     <div class="app" id="app" role="application" aria-label="Cute Chat Assistant">
@@ -275,52 +275,62 @@
             </div>
           </div>
 
-          <div class="composer">
-            <button type="button" class="composer__icon" id="connectorsBtn" aria-label="MCP Connectors &amp; Tools" title="MCP Connectors &amp; Tools (/search, /sql, /github, /slack, /calendar, /chart)">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
-            </button>
-            <button type="button" class="composer__icon" id="attachBtn" aria-label="Attach code or document" title="Attach file or code">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-            </button>
-            <input type="file" id="fileInput" hidden multiple accept="image/*,.txt,.md,.json,.csv,.log,.py,.js,.ts,.tsx,.jsx,.html,.css,.java,.c,.cpp,.go,.rs,.rb,.sh,.xml,.yml,.yaml" />
-            
-            <textarea
-              class="composer__input"
-              id="input"
-              name="msg"
-              placeholder="Ask anything, debug code, draft an artifact, generate a PDF..."
-              aria-label="Message input"
-              rows="1"
-            ></textarea>
+          <div class="composer" id="composer">
+            <div class="composer__main">
+              <div class="composer__input-wrap">
+                <textarea
+                  class="composer__input"
+                  id="input"
+                  name="msg"
+                  placeholder="Ask anything, debug code, draft artifacts..."
+                  aria-label="Message input"
+                  rows="1"
+                ></textarea>
+              </div>
 
-            <button type="button" class="composer__icon" id="micBtn" aria-label="Speech to text" title="Voice Input">
-              <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
-            </button>
-            <button type="button" class="composer__icon composer__icon--stop" id="stopBtn" aria-label="Stop generation" title="Stop stream" hidden>
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
-            </button>
-            <button class="composer__send" id="sendBtn" type="button" aria-label="Send message" title="Send (Enter)">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-            </button>
-            <button type="button" class="composer__icon composer__icon--thinking" id="thinkingBtn" aria-label="Thinking level: Balanced" title="Thinking: Balanced" aria-haspopup="dialog" aria-expanded="false" data-thinking-level="2">
-              <span class="thinking-btn__icon-wrap">
-                <svg class="thinking-icon-svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <path class="brain-lobe brain-lobe--left" d="M9.5 4.2a3.3 3.3 0 0 0-3.3 3.3c0 .4.1.8.2 1.2A3.3 3.3 0 0 0 4.2 12a3.3 3.3 0 0 0 1.9 3 3.3 3.3 0 0 0 3.4 3.2c.6 0 1.2-.2 1.7-.5.4.4.9.6 1.5.6" />
-                  <path class="brain-lobe brain-lobe--right" d="M14.5 4.2a3.3 3.3 0 0 1 3.3 3.3c0 .4-.1.8-.2 1.2A3.3 3.3 0 0 1 19.8 12a3.3 3.3 0 0 1-1.9 3 3.3 3.3 0 0 1-3.4 3.2c-.6 0-1.2-.2-1.7-.5-.4.4-.9.6-1.5.6" />
-                  <path class="brain-stem" d="M12 5.5v13.5" stroke-dasharray="1.5 2" />
-                  <circle class="thinking-synapse syn-1" cx="8" cy="9.5" r="1.1" />
-                  <circle class="thinking-synapse syn-2" cx="16" cy="9.5" r="1.1" />
-                  <circle class="thinking-synapse syn-3" cx="8" cy="14" r="1.1" />
-                  <circle class="thinking-synapse syn-4" cx="16" cy="14" r="1.1" />
-                </svg>
-              </span>
-              <span class="thinking-level-meter" aria-hidden="true">
-                <span class="meter-pip" data-pip="1"></span>
-                <span class="meter-pip" data-pip="2"></span>
-                <span class="meter-pip" data-pip="3"></span>
-                <span class="meter-pip" data-pip="4"></span>
-              </span>
-            </button>
+              <div class="composer__toolbar">
+                <div class="composer__toolbar-left">
+                  <button type="button" class="composer__icon" id="connectorsBtn" aria-label="MCP Connectors &amp; Tools" title="MCP Connectors &amp; Tools (/search, /sql, /github, /slack, /calendar, /chart)">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
+                  </button>
+                  <button type="button" class="composer__icon" id="attachBtn" aria-label="Attach code or document" title="Attach file or code">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                  </button>
+                  <input type="file" id="fileInput" hidden multiple accept="image/*,.txt,.md,.json,.csv,.log,.py,.js,.ts,.tsx,.jsx,.html,.css,.java,.c,.cpp,.go,.rs,.rb,.sh,.xml,.yml,.yaml" />
+                </div>
+
+                <div class="composer__toolbar-right">
+                  <button type="button" class="composer__icon" id="micBtn" aria-label="Speech to text" title="Voice Input">
+                    <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+                  </button>
+                  <button type="button" class="composer__icon composer__icon--thinking" id="thinkingBtn" aria-label="Thinking level: Balanced" title="Thinking: Balanced" aria-haspopup="dialog" aria-expanded="false" data-thinking-level="2">
+                    <span class="thinking-btn__icon-wrap">
+                      <svg class="thinking-icon-svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path class="brain-lobe brain-lobe--left" d="M9.5 4.2a3.3 3.3 0 0 0-3.3 3.3c0 .4.1.8.2 1.2A3.3 3.3 0 0 0 4.2 12a3.3 3.3 0 0 0 1.9 3 3.3 3.3 0 0 0 3.4 3.2c.6 0 1.2-.2 1.7-.5.4.4.9.6 1.5.6" />
+                        <path class="brain-lobe brain-lobe--right" d="M14.5 4.2a3.3 3.3 0 0 1 3.3 3.3c0 .4-.1.8-.2 1.2A3.3 3.3 0 0 1 19.8 12a3.3 3.3 0 0 1-1.9 3 3.3 3.3 0 0 1-3.4 3.2c-.6 0-1.2-.2-1.7-.5-.4.4-.9.6-1.5.6" />
+                        <path class="brain-stem" d="M12 5.5v13.5" stroke-dasharray="1.5 2" />
+                        <circle class="thinking-synapse syn-1" cx="8" cy="9.5" r="1.1" />
+                        <circle class="thinking-synapse syn-2" cx="16" cy="9.5" r="1.1" />
+                        <circle class="thinking-synapse syn-3" cx="8" cy="14" r="1.1" />
+                        <circle class="thinking-synapse syn-4" cx="16" cy="14" r="1.1" />
+                      </svg>
+                    </span>
+                    <span class="thinking-level-meter" aria-hidden="true">
+                      <span class="meter-pip" data-pip="1"></span>
+                      <span class="meter-pip" data-pip="2"></span>
+                      <span class="meter-pip" data-pip="3"></span>
+                      <span class="meter-pip" data-pip="4"></span>
+                    </span>
+                  </button>
+                  <button type="button" class="composer__icon composer__icon--stop" id="stopBtn" aria-label="Stop generation" title="Stop stream" hidden>
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+                  </button>
+                  <button class="composer__send" id="sendBtn" type="button" aria-label="Send message" title="Send (Enter)">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
 
             <!-- CODEX-STYLE THINKING DROPDOWN -->
             <div class="thinking-dropdown" id="thinkingDropdown" hidden>
@@ -1178,6 +1188,6 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@13.0.3/marked.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" defer></script>
-    <script src="app.js?v=4" defer></script>
+    <script src="app.js?v=5" defer></script>
   </body>
 </html>

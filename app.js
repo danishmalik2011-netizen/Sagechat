@@ -4212,6 +4212,38 @@
 
     // Search conversations
     on($('#searchInput'), 'input', renderConversations);
+
+    // Setup collapsible sections: Modes Accordion
+    const toggleModesBtn = document.getElementById('toggleModesBtn');
+    const modesBody = document.getElementById('modesBody');
+    if (toggleModesBtn && modesBody) {
+      const isCollapsed = !!LS.get('cc.sidebar.modes.collapsed', false);
+      if (isCollapsed) {
+        modesBody.classList.add('is-collapsed');
+        toggleModesBtn.setAttribute('aria-expanded', 'false');
+      }
+      on(toggleModesBtn, 'click', () => {
+        const collapsed = modesBody.classList.toggle('is-collapsed');
+        toggleModesBtn.setAttribute('aria-expanded', (!collapsed).toString());
+        LS.set('cc.sidebar.modes.collapsed', collapsed);
+      });
+    }
+
+    // Setup collapsible sections: Chats Accordion
+    const toggleChatsBtn = document.getElementById('toggleChatsBtn');
+    const chatsBody = document.getElementById('chatsBody');
+    if (toggleChatsBtn && chatsBody) {
+      const isCollapsed = !!LS.get('cc.sidebar.chats.collapsed', false);
+      if (isCollapsed) {
+        chatsBody.classList.add('is-collapsed');
+        toggleChatsBtn.setAttribute('aria-expanded', 'false');
+      }
+      on(toggleChatsBtn, 'click', () => {
+        const collapsed = chatsBody.classList.toggle('is-collapsed');
+        toggleChatsBtn.setAttribute('aria-expanded', (!collapsed).toString());
+        LS.set('cc.sidebar.chats.collapsed', collapsed);
+      });
+    }
   }
 
   // -----------------------------------------------------------------------
@@ -5267,7 +5299,7 @@
       }
 
       thinkingSlider.addEventListener('pointerdown', (e) => {
-        if (e.button !== 0) return;
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
         e.preventDefault();
         isDragging = true;
         thinkingSlider.classList.add('is-dragging');
@@ -5688,6 +5720,12 @@
   } else {
     init();
   }
+
+  // Once all deferred scripts (including highlight.js) are fully loaded, ensure code blocks are decorated
+  window.addEventListener('load', () => {
+    const host = document.getElementById('chatMessages');
+    if (host) decorateCodeBlocks(host);
+  });
 
   // Expose what callers may want
   CC.openSettings = openSettings;

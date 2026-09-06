@@ -1,0 +1,15 @@
+# Temporary & Cache Directories
+chrome-temp/
+.aios/
+.apex/
+node_modules/
+.vercel/
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Secrets & Local Env
+.env
+.env.local
+*.log
