@@ -2175,9 +2175,18 @@ html, body {
 .msg--assistant .msg__content {
   color: var(--ink-900);
   font-size: 14.5px;
-  line-height: 1.7;
+  line-height: 1.65;
   word-break: break-word;
   width: 100%;
+}
+
+/* Message entrance */
+.msg {
+  animation: msgIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes msgIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* Message Action Buttons (Copy, Regenerate, etc.) */
@@ -2349,6 +2358,28 @@ html, body {
 /* Hide actions when message is actively streaming */
 .msg.is-streaming .msg__actions {
   display: none !important;
+}
+
+/* Streaming skeleton placeholder */
+.msg__skeleton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0;
+}
+.msg__skeleton-line {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--border);
+  flex: 1;
+  animation: skeletonPulse 1.2s ease-in-out infinite;
+}
+.msg__skeleton-line:nth-child(2) { flex: 0.7; }
+.msg__skeleton-line:nth-child(3) { flex: 0.5; }
+
+@keyframes skeletonPulse {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
 }
 
 /* Pinned message styling */
@@ -3284,7 +3315,6 @@ details[open] > .thinking-block__summary .thinking-block__chevron {
   inset: 0;
   z-index: 9999;
   background: rgba(15, 23, 42, 0.65);
-  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3475,6 +3505,50 @@ details[open] > .thinking-block__summary .thinking-block__chevron {
 }
 .composer__send:active {
   transform: translateY(0) scale(0.96);
+}
+
+/* Composer micro-interactions */
+.composer__icon:hover {
+  background: var(--paper-elevated);
+  color: var(--primary);
+}
+.composer__icon:active {
+  transform: scale(0.94);
+}
+.composer__icon--stop:hover {
+  background: var(--primary-hover);
+  color: #ffffff;
+}
+.composer__icon--stop:active {
+  transform: scale(0.96);
+}
+
+/* Composer polish: tighter spacing and subtle motion */
+.composer {
+  gap: 6px;
+  padding: 9px 12px 9px 14px;
+}
+.composer:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-subtle);
+}
+.composer__input {
+  font-size: 15px;
+  line-height: 1.5;
+  min-height: 24px;
+}
+.composer__toolbar-left,
+.composer__toolbar-right {
+  gap: 4px;
+}
+.composer__icon {
+  width: 32px;
+  height: 32px;
+}
+.composer__icon--stop,
+.composer__send {
+  width: 34px;
+  height: 34px;
 }
 
 /* =========================================================
@@ -5306,31 +5380,23 @@ input[type="range"] { width: 100%; accent-color: var(--primary); }
 }
 
 /* Switches & Sliders */
-.settings-toggle-grid { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
-.check-toggle { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.check-toggle { display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 8px 12px; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--paper-elevated); transition: border-color 0.12s ease; }
+.check-toggle:hover { border-color: var(--primary-border); }
 .check-toggle input { display: none; }
 .toggle-slider {
-  width: 32px;
-  height: 18px;
-  background: var(--ink-300);
-  border-radius: 999px;
-  position: relative;
-  transition: background 0.15s;
+  width: 32px; height: 18px; background: var(--ink-300);
+  border-radius: 999px; position: relative; transition: background 0.15s;
+  flex-shrink: 0;
 }
 .toggle-slider::after {
-  content: '';
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 14px;
-  height: 14px;
-  background: #ffffff;
-  border-radius: 50%;
-  transition: transform 0.15s;
+  content: ''; position: absolute; top: 2px; left: 2px;
+  width: 14px; height: 14px; background: var(--surface);
+  border-radius: 50%; transition: transform 0.15s;
 }
 .check-toggle input:checked + .toggle-slider { background: var(--primary); }
 .check-toggle input:checked + .toggle-slider::after { transform: translateX(14px); }
 .toggle-text { font-size: 13px; color: var(--ink-700); font-weight: 500; }
+.toggle-desc { font-size: 10.5px; color: var(--ink-400); }
 
 .slider-box {
   background: var(--paper-elevated);
@@ -7029,10 +7095,6 @@ input[type="range"] { width: 100%; accent-color: var(--primary); }
 .memory-fact-chip button:hover {
   color: var(--primary);
 }
-
-/* =========================================================
-   MINIMALIST STEPS & TOOLS TOGGLE
-   ========================================================= */
 .steps-block {
   margin: 6px 0 10px;
   border: 1px solid var(--border);
