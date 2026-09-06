@@ -1760,6 +1760,9 @@
           <div class="hero-starter__title">${escapeHTML(p.title)}</div>
           <div class="hero-starter__desc">${escapeHTML(p.desc)}</div>
         </div>
+        <div class="hero-starter__arrow" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </div>
       </button>
     `).join('');
 
@@ -1778,6 +1781,7 @@
             </svg>
           </div>
           <div class="hero__brand-text">
+            <div class="hero__eyebrow">INTELLIGENCE &amp; CLARITY</div>
             <h2 class="hero__title">Welcome to <span class="hero__name">Sage</span></h2>
             <p class="hero__sub">Clarity, deep reasoning, and live tools. Mode: <strong>${escapeHTML(activeM.tabTitle)}</strong></p>
           </div>
