@@ -46,6 +46,19 @@ Engineered from the ground up for phone viewports:
 - **Mac-Style Terminal Header**: Colored window control pips, detected language badge, and instant one-click copy button.
 - **Rich Palette**: High-contrast syntax theme with vibrant accents for tags, keywords, strings, and attributes.
 
+### 🌐 Autonomous Web Search MCP
+- **Multi-Source Real-Time Search**: Combines live public web querying across official documentation, news, and project sites with Wikipedia knowledge.
+- **Serverless & Resilient Fallback**: Powered by Vercel Serverless Function `/api/search` with zero external dependencies, backed by automatic client-side CORS failovers. Never 404s.
+
+### 🪜 Collapsible Steps & Polished Reasoning Toggles
+- **Collapsible Tool Steps**: All MCP executions (Web Search, Charts, Calendar, SQLite) render cleanly inside a collapsible `Steps` pill, so the main chat stays distraction-free.
+- **Dedicated Thought Process Toggle**: Model chain-of-thought (e.g. `<think>` blocks or leading reasoning) is automatically isolated inside an expandable `Thought Process` block, ensuring only the polished final answer appears in the chat stream.
+
+### 🎭 Appearance & Accessibility Customizer
+- **5 Curated Color Palettes**: Choose between *Cute Pink*, *Obsidian Slate*, *Nord Polar*, *Matcha Sage*, and *Cyber Midnight*.
+- **Dyslexia-Friendly Typography**: Toggle between *Plus Jakarta Sans*, *OpenDyslexic* (specialized reading ease), *Lexend*, *JetBrains Mono*, and *Editorial Serif*.
+- **Font Sizing**: Scale body typography smoothly across Small, Medium, Large, and Extra Large tokens.
+
 ### 🔌 Multi-Provider & BYOK Infrastructure
 Seamlessly switch between providers:
 - **Supported Providers**: OpenAI, Anthropic Claude, Google Gemini, Groq, Mistral AI, Ollama (Local LLMs), OpenRouter, DeepSeek, and Pollinations (Free out-of-the-box fallback).
@@ -91,6 +104,8 @@ Open `http://localhost:8766` in your browser.
 
 ```text
 Sagechat/
+├── api/
+│   └── search.js       # Vercel Serverless Function for multi-source web search
 ├── index.html          # Semantic application layout & template structures
 ├── styles.css          # Mobile-first responsive CSS, themes, & animations
 ├── app.js              # State management, SSE streaming, multi-provider engine, & UI handlers

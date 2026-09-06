@@ -10,9 +10,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Lexend:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
+    <link href="https://fonts.cdnfonts.com/css/open-dyslexic" rel="stylesheet" />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css"
@@ -411,6 +412,10 @@
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             <span>Chat</span>
           </button>
+          <button class="settings-tab" type="button" data-tab="appearance" role="tab">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.563-2.512 5.563-5.563C21.996 6.5 17.5 2 12 2z"/></svg>
+            <span>Appearance</span>
+          </button>
           <button class="settings-tab" type="button" data-tab="connectors" role="tab">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
             <span>Connectors</span>
@@ -615,6 +620,162 @@
               <p class="settings-section__hint">Custom instructions for this chat only.</p>
               <textarea id="systemPromptInput" rows="3" placeholder="e.g. &quot;Senior TypeScript architect&quot;, &quot;Explain like Feynman&quot;..."></textarea>
             </div>
+          </div>
+
+          <!-- ============ TAB: APPEARANCE ============ -->
+          <div class="settings-pane" id="settingsPane-appearance" data-pane="appearance">
+            
+            <!-- Color Palettes Section -->
+            <div class="settings-section">
+              <div class="settings-section__label">Theme &amp; Color Palette</div>
+              <p class="settings-section__hint">Handcrafted minimal aesthetics designed with harmonious surface, ink, and accent tokens.</p>
+              <div class="theme-palette-grid" id="themePaletteGrid" role="radiogroup" aria-label="Color Themes">
+                
+                <!-- Cute Pink (Signature) -->
+                <label class="theme-palette-card is-active" data-palette-val="cute-pink">
+                  <input type="radio" name="appearancePalette" value="cute-pink" checked />
+                  <div class="theme-palette-card__preview preview--pink">
+                    <span class="preview-swatch" style="background:#ff3366;"></span>
+                    <span class="preview-swatch" style="background:#ff7597;"></span>
+                    <span class="preview-swatch" style="background:#fff0f3;"></span>
+                  </div>
+                  <div class="theme-palette-card__meta">
+                    <span class="theme-palette-card__name">Cute Pink</span>
+                    <span class="theme-palette-card__tag">Signature</span>
+                  </div>
+                </label>
+
+                <!-- Obsidian Slate -->
+                <label class="theme-palette-card" data-palette-val="obsidian">
+                  <input type="radio" name="appearancePalette" value="obsidian" />
+                  <div class="theme-palette-card__preview preview--obsidian">
+                    <span class="preview-swatch" style="background:#0d1117;"></span>
+                    <span class="preview-swatch" style="background:#58a6ff;"></span>
+                    <span class="preview-swatch" style="background:#161b22;"></span>
+                  </div>
+                  <div class="theme-palette-card__meta">
+                    <span class="theme-palette-card__name">Obsidian Slate</span>
+                    <span class="theme-palette-card__tag">Deep Slate</span>
+                  </div>
+                </label>
+
+                <!-- Nord Polar -->
+                <label class="theme-palette-card" data-palette-val="nord">
+                  <input type="radio" name="appearancePalette" value="nord" />
+                  <div class="theme-palette-card__preview preview--nord">
+                    <span class="preview-swatch" style="background:#2e3440;"></span>
+                    <span class="preview-swatch" style="background:#88c0d0;"></span>
+                    <span class="preview-swatch" style="background:#d8dee9;"></span>
+                  </div>
+                  <div class="theme-palette-card__meta">
+                    <span class="theme-palette-card__name">Nord Polar</span>
+                    <span class="theme-palette-card__tag">Frost Blue</span>
+                  </div>
+                </label>
+
+                <!-- Matcha Sage -->
+                <label class="theme-palette-card" data-palette-val="matcha">
+                  <input type="radio" name="appearancePalette" value="matcha" />
+                  <div class="theme-palette-card__preview preview--matcha">
+                    <span class="preview-swatch" style="background:#204028;"></span>
+                    <span class="preview-swatch" style="background:#52b788;"></span>
+                    <span class="preview-swatch" style="background:#f4f7f4;"></span>
+                  </div>
+                  <div class="theme-palette-card__meta">
+                    <span class="theme-palette-card__name">Matcha Sage</span>
+                    <span class="theme-palette-card__tag">Zen Green</span>
+                  </div>
+                </label>
+
+                <!-- Cyber Midnight -->
+                <label class="theme-palette-card" data-palette-val="midnight">
+                  <input type="radio" name="appearancePalette" value="midnight" />
+                  <div class="theme-palette-card__preview preview--midnight">
+                    <span class="preview-swatch" style="background:#0b081a;"></span>
+                    <span class="preview-swatch" style="background:#a855f7;"></span>
+                    <span class="preview-swatch" style="background:#f43f5e;"></span>
+                  </div>
+                  <div class="theme-palette-card__meta">
+                    <span class="theme-palette-card__name">Cyber Midnight</span>
+                    <span class="theme-palette-card__tag">Neon Violet</span>
+                  </div>
+                </label>
+
+              </div>
+            </div>
+
+            <!-- Typography & Font Family -->
+            <div class="settings-section">
+              <div class="settings-section__label">Typography &amp; Fonts</div>
+              <p class="settings-section__hint">Tailor the reading experience, including certified dyslexia-friendly and reading-fluency typefaces.</p>
+              
+              <div class="font-selector-list" id="fontSelectorList" role="radiogroup" aria-label="Font Selection">
+                
+                <!-- Plus Jakarta Sans -->
+                <label class="font-item is-active" data-font-val="plus-jakarta">
+                  <input type="radio" name="appearanceFont" value="plus-jakarta" checked />
+                  <div class="font-item__info">
+                    <div class="font-item__name" style="font-family:'Plus Jakarta Sans', sans-serif;">Plus Jakarta Sans</div>
+                    <div class="font-item__preview" style="font-family:'Plus Jakarta Sans', sans-serif;">The quick brown fox jumps over the lazy dog.</div>
+                  </div>
+                  <span class="badge badge--subtle">Default</span>
+                </label>
+
+                <!-- OpenDyslexic (Dyslexia Friendly) -->
+                <label class="font-item" data-font-val="opendyslexic">
+                  <input type="radio" name="appearanceFont" value="opendyslexic" />
+                  <div class="font-item__info">
+                    <div class="font-item__name" style="font-family:'OpenDyslexic', 'Lexend', sans-serif;">OpenDyslexic</div>
+                    <div class="font-item__preview" style="font-family:'OpenDyslexic', 'Lexend', sans-serif;">Heavy weighted bottoms help prevent letter rotation and inversion.</div>
+                  </div>
+                  <span class="badge badge--green">Dyslexic Friendly</span>
+                </label>
+
+                <!-- Lexend (Reading Fluency) -->
+                <label class="font-item" data-font-val="lexend">
+                  <input type="radio" name="appearanceFont" value="lexend" />
+                  <div class="font-item__info">
+                    <div class="font-item__name" style="font-family:'Lexend', sans-serif;">Lexend</div>
+                    <div class="font-item__preview" style="font-family:'Lexend', sans-serif;">Engineered specifically to reduce visual crowding and boost reading flow.</div>
+                  </div>
+                  <span class="badge badge--blue">Fluency</span>
+                </label>
+
+                <!-- JetBrains Mono -->
+                <label class="font-item" data-font-val="jetbrains">
+                  <input type="radio" name="appearanceFont" value="jetbrains" />
+                  <div class="font-item__info">
+                    <div class="font-item__name" style="font-family:'JetBrains Mono', monospace;">JetBrains Mono</div>
+                    <div class="font-item__preview" style="font-family:'JetBrains Mono', monospace;">Crisp developer monospaced glyphs with distinct syntax contrast.</div>
+                  </div>
+                  <span class="badge badge--subtle">Code</span>
+                </label>
+
+                <!-- Editorial Serif -->
+                <label class="font-item" data-font-val="serif">
+                  <input type="radio" name="appearanceFont" value="serif" />
+                  <div class="font-item__info">
+                    <div class="font-item__name" style="font-family:Georgia, Cambria, serif;">Editorial Serif</div>
+                    <div class="font-item__preview" style="font-family:Georgia, Cambria, serif;">Classic book typography with high contrast letterforms for long reading.</div>
+                  </div>
+                  <span class="badge badge--subtle">Serif</span>
+                </label>
+
+              </div>
+            </div>
+
+            <!-- Font Size & Scale -->
+            <div class="settings-section">
+              <div class="settings-section__label">Font Size</div>
+              <p class="settings-section__hint">Scales message text and interface elements smoothly.</p>
+              <div class="font-size-buttons" id="fontSizeButtons" role="group" aria-label="Font Size">
+                <button type="button" class="font-size-btn" data-size="small">Small <small>(13.5px)</small></button>
+                <button type="button" class="font-size-btn is-active" data-size="medium">Medium <small>(15px)</small></button>
+                <button type="button" class="font-size-btn" data-size="large">Large <small>(16.5px)</small></button>
+                <button type="button" class="font-size-btn" data-size="xlarge">Extra Large <small>(18px)</small></button>
+              </div>
+            </div>
+
           </div>
 
           <!-- ============ TAB: DATA ============ -->

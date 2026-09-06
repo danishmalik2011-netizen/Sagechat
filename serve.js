@@ -30,75 +30,27 @@ http.createServer((req, res) => {
 
   // Live Web Search API endpoint (MCP Web Search Connector)
   if (req.url.startsWith('/api/search')) {
-    const parsed = new URL(req.url, `http://localhost:${PORT}`);
-    const query = (parsed.searchParams.get('q') || '').trim();
-    if (!query) {
-      res.writeHead(400, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
-      res.end(JSON.stringify({ error: 'Missing query parameter q' }));
-      return;
-    }
-
-    // Query Wikipedia search API + DuckDuckGo Instant Answer
-    const wikiUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&utf8=1&srlimit=6`;
-    https.get(wikiUrl, { headers: { 'User-Agent': 'CuteChat-Search/1.0' } }, (wikiRes) => {
-      let data = '';
-      wikiRes.on('data', chunk => data += chunk);
-      wikiRes.on('end', () => {
-        const results = [];
-        try {
-          const json = JSON.parse(data);
-          const list = json.query?.search || [];
-          for (const item of list) {
-            results.push({
-              title: item.title,
-              snippet: (item.snippet || '').replace(/<[^>]+>/g, '').replace(/&quot;/g, '"').replace(/&#39;/g, "'"),
-              url: `https://en.wikipedia.org/wiki/${encodeURIComponent(item.title.replace(/\s+/g, '_'))}`,
-              source: 'Wikipedia'
-            });
-          }
-        } catch {}
-
-        const ddgUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`;
-        https.get(ddgUrl, { headers: { 'User-Agent': 'CuteChat-Search/1.0' } }, (ddgRes) => {
-          let ddgData = '';
-          ddgRes.on('data', chunk => ddgData += chunk);
-          ddgRes.on('end', () => {
-            try {
-              const dj = JSON.parse(ddgData);
-              if (dj.AbstractText && dj.AbstractURL) {
-                results.unshift({
-                  title: dj.Heading || query,
-                  snippet: dj.AbstractText,
-                  url: dj.AbstractURL,
-                  source: dj.AbstractSource || 'DuckDuckGo'
-                });
-              }
-              if (Array.isArray(dj.RelatedTopics)) {
-                for (const top of dj.RelatedTopics.slice(0, 3)) {
-                  if (top.Text && top.FirstURL) {
-                    results.push({
-                      title: top.Text.split(' - ')[0] || query,
-                      snippet: top.Text,
-                      url: top.FirstURL,
-                      source: 'DuckDuckGo'
-                    });
-                  }
-                }
-              }
-            } catch {}
-
-            res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
-            res.end(JSON.stringify({ query, results: results.slice(0, 6) }));
-          });
-        }).on('error', () => {
-          res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
-          res.end(JSON.stringify({ query, results: results.slice(0, 6) }));
-        });
-      });
-    }).on('error', (err) => {
+    try {
+      const searchHandler = require('./api/search.js');
+      const parsed = new URL(req.url, `http://localhost:${PORT}`);
+      const mockRes = {
+        setHeader: (k, v) => res.setHeader(k, v),
+        status: (code) => {
+          res.statusCode = code;
+          return {
+            json: (data) => {
+              res.setHeader('Content-Type', 'application/json; charset=utf-8');
+              res.end(JSON.stringify(data));
+            },
+            end: () => res.end()
+          };
+        }
+      };
+      searchHandler({ url: req.url, query: Object.fromEntries(parsed.searchParams) }, mockRes);
+    } catch (err) {
       res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
-      res.end(JSON.stringify({ error: 'Search failed: ' + err.message }));
-    });
+      res.end(JSON.stringify({ error: err.message, results: [] }));
+    }
     return;
   }
 
