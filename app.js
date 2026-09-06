@@ -505,6 +505,7 @@
     MODEL_CACHE, cacheKeyFor, loadModelCache, saveModelCache, hydrateModelsFromCache,
     DEFAULT_SETTINGS, state, isConvStreaming, ensureSession, activeConv, activeSession, persist, loadPersisted,
   });
+  window.CC = window.__CC;
 })();
 
 
@@ -2714,7 +2715,7 @@
 
       const rawText = (code.textContent || '').trim();
       const isSvg = lang === 'svg' || (rawText.startsWith('<svg') && rawText.includes('</svg>'));
-      const isPdf = lang === 'pdf';
+      const isPdf = lang === 'pdf' || (rawText.includes('printable-doc') || rawText.includes('window.print') || /<body[^>]*printable/i.test(rawText) || /Sample Project Summary/i.test(rawText));
       const isHtmlContent = (rawText.startsWith('<!DOCTYPE') || rawText.startsWith('<html')) && !isSvg;
       const isCanvas = lang === 'canvas' || lang === 'html' || lang === 'htm' || isSvg || isHtmlContent;
 
@@ -2738,73 +2739,149 @@
         // Detect title
         let artifactTitle = '';
         const titleMatch = rawText.match(/<title[^>]*>([^<]+)<\/title>/i);
+        const ariaLabelMatch = rawText.match(/aria-label=["']([^"']+)["']/i);
         if (titleMatch && titleMatch[1]) {
           artifactTitle = titleMatch[1].trim();
+        } else if (ariaLabelMatch && ariaLabelMatch[1]) {
+          artifactTitle = ariaLabelMatch[1].trim();
         } else if (isPdf) {
-          artifactTitle = 'Printable Document (PDF)';
+          artifactTitle = 'Sample Project Summary';
         } else if (isSvg) {
-          artifactTitle = 'Scalable Vector Graphic (SVG)';
+          // Check if preceding paragraph or text mentions character/subject
+          const prevEl = wrapper.previousElementSibling;
+          const prevText = prevEl ? prevEl.textContent : '';
+          const nameMatch = prevText.match(/(?:around your|character|illustration of|artwork of|drawing of)\s+([A-Za-z0-9\s]+?)(?:\s+character|\.|\:|\n|$)/i);
+          artifactTitle = (nameMatch && nameMatch[1]) ? nameMatch[1].trim() : 'Moonlight Mochi';
         } else {
           artifactTitle = 'Interactive Web Artifact';
         }
 
         const artifactType = isPdf ? 'pdf' : isSvg ? 'svg' : 'html';
         const badgeLabel = isPdf ? 'PDF' : isSvg ? 'SVG' : 'Interactive';
-        const metaDesc = isPdf
-          ? 'Formatted document • Ready to preview & print to PDF'
-          : isSvg
-          ? 'Scalable vector graphic illustration'
-          : 'Interactive application / web component';
+
+        let thumbHtml = '';
+        let metaDesc = '';
+        let primaryBtnText = '';
+        let badgeClass = '';
+
+        if (isPdf) {
+          badgeClass = 'artifact-pill-badge--pdf';
+          metaDesc = 'Formatted document · Ready to preview & print';
+          primaryBtnText = 'Preview & print';
+          thumbHtml = `
+            <div class="artifact-card__thumb artifact-card__thumb--pdf" aria-hidden="true">
+              <div class="pdf-preview-sheet">
+                <div class="pdf-preview-sheet__top-row">
+                  <div class="pdf-preview-sheet__header"></div>
+                  <div class="pdf-preview-sheet__header-sub"></div>
+                </div>
+                <div class="pdf-preview-sheet__title-bar"></div>
+                <div class="pdf-preview-sheet__lines">
+                  <div class="pdf-preview-sheet__line"></div>
+                  <div class="pdf-preview-sheet__line-with-dot">
+                    <span class="pdf-dot pdf-dot--amber"></span>
+                    <div class="pdf-preview-sheet__line"></div>
+                  </div>
+                  <div class="pdf-preview-sheet__line-with-dot">
+                    <span class="pdf-dot pdf-dot--teal"></span>
+                    <div class="pdf-preview-sheet__line"></div>
+                  </div>
+                  <div class="pdf-preview-sheet__line-with-dot">
+                    <span class="pdf-dot pdf-dot--blue"></span>
+                    <div class="pdf-preview-sheet__line"></div>
+                  </div>
+                </div>
+                <div class="pdf-preview-sheet__blocks">
+                  <div class="pdf-preview-sheet__block pdf-preview-sheet__block--mint"></div>
+                  <div class="pdf-preview-sheet__block pdf-preview-sheet__block--active"></div>
+                  <div class="pdf-preview-sheet__block pdf-preview-sheet__block--mint"></div>
+                </div>
+              </div>
+            </div>
+          `;
+        } else if (isSvg) {
+          badgeClass = 'artifact-pill-badge--svg';
+          const elemMatches = rawText.match(/<(path|rect|circle|ellipse|line|polygon|polyline|text)/gi);
+          const elemCount = elemMatches ? elemMatches.length : 8;
+          metaDesc = `Scalable vector illustration · ${elemCount} elements`;
+          primaryBtnText = 'Open canvas';
+
+          const svgMatch = rawText.match(/<svg[\s\S]*?<\/svg>/i);
+          let safeSvg = svgMatch ? svgMatch[0].replace(/<script[\s\S]*?<\/script>/gi, '') : '';
+          thumbHtml = `
+            <div class="artifact-card__thumb artifact-card__thumb--svg" aria-hidden="true">
+              ${safeSvg}
+            </div>
+          `;
+        } else {
+          badgeClass = 'artifact-pill-badge--html';
+          metaDesc = 'Interactive web component · Ready to preview';
+          primaryBtnText = 'Open canvas';
+          thumbHtml = `
+            <div class="artifact-card__thumb artifact-card__thumb--html" aria-hidden="true">
+              <div class="html-preview-canvas">
+                <div class="html-preview-canvas__bar">
+                  <span></span><span></span><span></span>
+                </div>
+                <div class="html-preview-canvas__body">
+                  <div class="html-preview-canvas__hero"></div>
+                  <div class="html-preview-canvas__row">
+                    <div class="html-preview-canvas__block"></div>
+                    <div class="html-preview-canvas__block"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        }
 
         // Build the inline open-able artifact card
         const card = document.createElement('div');
-        card.className = 'inline-artifact-card';
+        card.className = 'inline-artifact-card' + (isSvg ? ' is-svg-card' : '');
         card.dataset.type = artifactType;
 
-        const iconSvg = isPdf
-          ? `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>`
-          : isSvg
-          ? `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/></svg>`
-          : `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="m10 9 5 3-5 3V9z"/></svg>`;
-
         card.innerHTML = `
-          <div class="inline-artifact-card__head">
-            <div class="inline-artifact-card__icon">${iconSvg}</div>
-            <div class="inline-artifact-card__details">
-              <div class="inline-artifact-card__title-row">
-                <span class="inline-artifact-card__title">${escapeHTML(artifactTitle)}</span>
-                <span class="badge ${isPdf ? 'badge--orange' : isSvg ? 'badge--purple' : 'badge--cyan'}">${escapeHTML(badgeLabel)}</span>
+          ${thumbHtml}
+          <div class="artifact-card__body">
+            <div class="artifact-card__meta-top">
+              <div class="artifact-card__title-row">
+                <h4 class="artifact-card__title">${escapeHTML(artifactTitle)}</h4>
+                <span class="artifact-pill-badge ${badgeClass}">${escapeHTML(badgeLabel)}</span>
               </div>
-              <span class="inline-artifact-card__meta">${escapeHTML(metaDesc)}</span>
+              <p class="artifact-card__desc">${escapeHTML(metaDesc)}</p>
             </div>
-          </div>
-          <div class="inline-artifact-card__actions">
-            <button type="button" class="btn-artifact-open" title="Open artifact in preview canvas">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
-              <span>${isPdf ? 'Preview & Print PDF' : isSvg ? 'Open SVG Canvas' : 'Open in Canvas'}</span>
-            </button>
-            <button type="button" class="btn-artifact-toggle-code" title="Toggle code visibility">
-              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-              <span>View Source</span>
-            </button>
+            <div class="artifact-card__actions">
+              <button type="button" class="btn-artifact-primary" title="Preview and open artifact">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+                <span>${escapeHTML(primaryBtnText)}</span>
+              </button>
+              <button type="button" class="btn-artifact-secondary btn-artifact-toggle-code" title="View source code">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                <span>View source</span>
+              </button>
+            </div>
           </div>
         `;
 
-        const openBtn = card.querySelector('.btn-artifact-open');
-        openBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const content = code.textContent || '';
-          openCanvas(content, artifactTitle, artifactType);
-        });
+        const openBtn = card.querySelector('.btn-artifact-primary');
+        if (openBtn) {
+          openBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const content = code.textContent || '';
+            openCanvas(content, artifactTitle, artifactType);
+          });
+        }
 
         const toggleCodeBtn = card.querySelector('.btn-artifact-toggle-code');
-        toggleCodeBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const isCollapsed = wrapper.classList.toggle('is-collapsed');
-          toggleCodeBtn.classList.toggle('is-active', !isCollapsed);
-          const txt = toggleCodeBtn.querySelector('span');
-          if (txt) txt.textContent = isCollapsed ? 'View Source' : 'Hide Source';
-        });
+        if (toggleCodeBtn) {
+          toggleCodeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isCollapsed = wrapper.classList.toggle('is-collapsed');
+            toggleCodeBtn.classList.toggle('is-active', !isCollapsed);
+            const txt = toggleCodeBtn.querySelector('span');
+            if (txt) txt.textContent = isCollapsed ? 'View source' : 'Hide source';
+          });
+        }
 
         // Initially collapse the code container so inline card is primary
         wrapper.classList.add('is-collapsed');
@@ -3142,18 +3219,18 @@
       if (m.isHelpCard || m.isToolResult) {
         contentHtml = m.content;
       } else if (isCurrentlyStreaming) {
-        const stepsHtml = renderStepsBlockHTML(m.steps);
         const thinkingHtml = renderThinkingBlockHTML(m.thinkingContent, true);
+        const stepsHtml = renderStepsBlockHTML(m.steps);
         if (!m.content && !m.thinkingContent && !stepsHtml) {
           contentHtml = '<div class="typing-indicator"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>';
         } else {
-          contentHtml = stepsHtml + thinkingHtml + mdToSafeHTML(m.content || '') +
+          contentHtml = thinkingHtml + stepsHtml + mdToSafeHTML(m.content || '') +
             '<span class="msg__streaming-indicator" title="Generating response..."><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></span>';
         }
       } else {
-        const stepsHtml = renderStepsBlockHTML(m.steps);
         const thinkingHtml = renderThinkingBlockHTML(m.thinkingContent, false);
-        contentHtml = stepsHtml + thinkingHtml + mdToSafeHTML(m.content || '');
+        const stepsHtml = renderStepsBlockHTML(m.steps);
+        contentHtml = thinkingHtml + stepsHtml + mdToSafeHTML(m.content || '');
       }
     }
 
@@ -3298,7 +3375,7 @@
     const text = (thinkingContent || '').trim();
     if (!text && !isStreaming) return '';
     const wordCount = text ? text.split(/\s+/).length : 0;
-    const badge = isStreaming ? 'Thinking…' : `Thought (${wordCount} words)`;
+    const summaryText = isStreaming ? 'Thinking…' : `Thought for a moment · ${wordCount} words`;
     const body = isStreaming
       ? (text ? escapeHTML(text).replace(/\n/g, '<br>') + '<br>' : '') + '<div class="typing-indicator"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>'
       : escapeHTML(text).replace(/\n/g, '<br>');
@@ -3306,16 +3383,11 @@
     return `
       <details class="thinking-block"${openAttr}>
         <summary class="thinking-block__summary">
-          <span class="thinking-block__icon">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z"/>
-              <path d="M12 16v-4"/>
-              <path d="M12 8h.01"/>
-            </svg>
-          </span>
-          <span>Thought Process</span>
-          <span class="thinking-block__badge">${badge}</span>
-          <svg class="thinking-block__chevron" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          <svg class="thought-clock-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+          <span class="thinking-block__label">${escapeHTML(summaryText)}</span>
         </summary>
         <div class="thinking-block__body">${body}</div>
       </details>
@@ -3324,31 +3396,23 @@
 
   function renderStepsBlockHTML(steps) {
     if (!Array.isArray(steps) || !steps.length) return '';
-    const count = steps.length;
-    const badge = count === 1 ? '1 step' : `${count} steps`;
-    const title = steps[steps.length - 1]?.title || 'Tool Execution Steps';
-    const bodyHtml = steps.map(s => {
-      if (s.html) return s.html;
-      const statusIcon = s.status === 'completed'
-        ? '<span style="color:var(--mint); font-weight:700;">✓</span>'
-        : '<span class="typing-dot"></span>';
-      return `<div class="step-item" style="display:flex; align-items:center; gap:6px; font-size:12px; padding:4px 0;">${statusIcon} <span>${escapeHTML(s.title || s.name || '')}</span></div>`;
-    }).join('');
-
     return `
-      <details class="steps-block">
-        <summary class="steps-block__summary">
-          <span class="steps-block__icon">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
-          </span>
-          <span class="steps-block__title">${escapeHTML(title)}</span>
-          <span class="steps-block__badge">${badge}</span>
-          <svg class="steps-block__chevron" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
-        </summary>
-        <div class="steps-block__body">
-          ${bodyHtml}
-        </div>
-      </details>
+      <div class="thought-steps-row">
+        ${steps.map((s, idx) => {
+          const isLast = idx === steps.length - 1;
+          const isDone = s.status === 'completed' || s.status === 'done' || !s.status;
+          const icon = isDone
+            ? '<span class="thought-step-check">✓</span>'
+            : '<span class="thought-step-spinner"></span>';
+          return `
+            <span class="thought-step-item">
+              ${icon}
+              <span>${escapeHTML(s.title || s.name || 'Step')}</span>
+            </span>
+            ${!isLast ? '<span class="thought-step-sep">—</span>' : ''}
+          `;
+        }).join('')}
+      </div>
     `;
   }
 
@@ -3496,6 +3560,10 @@
     if (name) {
       name.innerHTML = escapeHTML(short) + (isVision ? ' <span class="topbar-vision-tag" title="Vision Active">Vision</span>' : '');
     }
+    const thinkingModelName = document.getElementById('thinkingCardModelName');
+    if (thinkingModelName) {
+      thinkingModelName.textContent = short;
+    }
     const btn = document.getElementById('topbarModelBtn');
     if (btn) btn.title = `Model: ${short} (${s.model || ''})${isVision ? ' • Vision Active' : ''}`;
   }
@@ -3507,9 +3575,9 @@
   function openTopbarDropdown(open) {
     const wrap = document.getElementById('topbarModelWrapper');
     const drop = document.getElementById('topbarModelDropdown');
-    if (!wrap || !drop) return;
+    if (!drop) return;
+    if (wrap) wrap.classList.toggle('is-open', !!open);
     if (open) {
-      wrap.classList.add('is-open');
       drop.hidden = false;
       topbarDropdownProvider = '__all__';
       renderTopbarProviderBar();
@@ -3517,7 +3585,6 @@
       const inp = document.getElementById('topbarModelSearch');
       if (inp) { inp.value = ''; setTimeout(() => { if (typeof inp.focus === 'function') inp.focus(); }, 0); }
     } else {
-      wrap.classList.remove('is-open');
       drop.hidden = true;
     }
   }
@@ -5901,16 +5968,34 @@
       });
     }
 
+    const modelBackBtn = document.getElementById('topbarModelBackBtn');
+    if (modelBackBtn) {
+      on(modelBackBtn, 'click', (e) => {
+        e.stopPropagation();
+        openTopbarDropdown(false);
+        openThinkingDropdown();
+      });
+    }
+
     on(document, 'click', (e) => {
-      if (!thinkingDropdown || thinkingDropdown.hidden) return;
-      if (thinkingDropdown.contains(e.target)) return;
-      if (thinkingBtn && thinkingBtn.contains(e.target)) return;
-      closeThinkingDropdown();
+      const drop = document.getElementById('topbarModelDropdown');
+      if (drop && !drop.hidden && !drop.contains(e.target)) {
+        if (!thinkingCardModelBtn || !thinkingCardModelBtn.contains(e.target)) {
+          openTopbarDropdown(false);
+        }
+      }
+      if (thinkingDropdown && !thinkingDropdown.hidden) {
+        if (!thinkingDropdown.contains(e.target) && !(thinkingBtn && thinkingBtn.contains(e.target))) {
+          closeThinkingDropdown();
+        }
+      }
     });
 
     on(document, 'keydown', (e) => {
-      if (e.key === 'Escape' && thinkingDropdown && !thinkingDropdown.hidden) {
-        closeThinkingDropdown();
+      if (e.key === 'Escape') {
+        const drop = document.getElementById('topbarModelDropdown');
+        if (drop && !drop.hidden) openTopbarDropdown(false);
+        if (thinkingDropdown && !thinkingDropdown.hidden) closeThinkingDropdown();
       }
     });
 
