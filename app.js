@@ -362,6 +362,18 @@
       webSearch: { enabled: true },
       analytics: { enabled: true },
     },
+    capabilities: {
+      web: true,
+      think: true,
+      canvas: true,
+      pdf: true,
+      memory: true,
+      location: true,
+    },
+    userMemory: {
+      notes: '',
+      facts: [],
+    },
     appearance: {
       palette: 'cute-pink',
       font: 'plus-jakarta',
@@ -373,6 +385,7 @@
     settings: structuredClone(DEFAULT_SETTINGS),
     conversations: [],            // [{id, title, messages, createdAt, session}]
     activeConvId: null,
+    userLocation: null,
     currentMode: 'chat',
     attachments: [],              // [{name, type, size, dataUrl|content}]
     userScrolledUp: false,
@@ -435,6 +448,8 @@
       state.settings.model   = Object.assign({}, DEFAULT_SETTINGS.model,   s.model   || {});
       state.settings.custom  = Object.assign({}, DEFAULT_SETTINGS.custom,  s.custom  || {});
       state.settings.connectors = Object.assign({}, DEFAULT_SETTINGS.connectors, s.connectors || {});
+      state.settings.capabilities = Object.assign({}, DEFAULT_SETTINGS.capabilities, s.capabilities || {});
+      state.settings.userMemory = Object.assign({}, DEFAULT_SETTINGS.userMemory, s.userMemory || {});
       state.settings.appearance = Object.assign({}, DEFAULT_SETTINGS.appearance, s.appearance || {});
       if (Array.isArray(s.customProviders) && s.customProviders.length > 0) {
         state.settings.customProviders = s.customProviders;
@@ -1093,7 +1108,8 @@
     }
 
     // Thinking level instruction
-    const tLevel = (s && typeof s.thinkingLevel === 'number') ? s.thinkingLevel : (state.settings.thinkingLevel ?? 2);
+    const isThinkingCap = state.settings.capabilities?.think !== false;
+    const tLevel = isThinkingCap ? ((s && typeof s.thinkingLevel === 'number') ? s.thinkingLevel : (state.settings.thinkingLevel ?? 2)) : 0;
     if (tLevel > 0) {
       const depth = tLevel === 1 ? 'briefly' : tLevel === 2 ? 'clearly' : tLevel === 3 ? 'in detail' : 'exhaustively';
       parts.push(`Think ${depth} before answering. When useful, expose your reasoning in a fenced code block with language tag "thinking" containing ONLY the reasoning text. After the thinking block, deliver the final answer in normal prose.`);
@@ -1101,13 +1117,62 @@
 
     if (s && s.skills) {
       for (const sk of SKILLS) {
-        if (s.skills[sk.id] && sk.sys) parts.push(sk.sys);
+        if (state.settings.capabilities?.[sk.id] !== false && s.skills[sk.id] !== false && sk.sys) {
+          parts.push(sk.sys);
+        }
+      }
+    }
+
+    // Real-Time User Context (Approximate Location & Time via IP)
+    const isLocationEnabled = state.settings.capabilities?.location !== false;
+    if (isLocationEnabled && state.userLocation) {
+      const loc = state.userLocation;
+      const tz = loc.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const nowStr = new Date().toLocaleString('en-US', {
+        timeZone: tz,
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      const locParts = [loc.city, loc.region, loc.country].filter(Boolean);
+      if (locParts.length > 0) {
+        parts.push([
+          '# Real-Time User Environment & Approximate Location Context:',
+          `- User's Approximate Location: ${locParts.join(', ')}`,
+          `- User's Timezone: ${tz}`,
+          `- Current Date & Time: ${nowStr}`,
+          'Incorporate this real-time geographic and temporal context naturally and accurately when relevant (e.g., local time, weather, regional specifics, or localized recommendations).'
+        ].join('\n'));
+      }
+    }
+
+    // Real Long-Term User Memory & Profile Context
+    const isMemoryEnabled = state.settings.capabilities?.memory !== false && state.settings.memory !== false;
+    if (isMemoryEnabled) {
+      const mem = state.settings.userMemory || {};
+      const memLines = [];
+      if (mem.notes && mem.notes.trim()) {
+        memLines.push(`- User Profile & Notes: ${mem.notes.trim()}`);
+      }
+      if (Array.isArray(mem.facts) && mem.facts.length > 0) {
+        memLines.push(...mem.facts.map(f => `- ${f}`));
+      }
+      if (memLines.length > 0) {
+        parts.push([
+          '# Long-Term User Memory & Personalization:',
+          'The user has established the following personal context and preferences:',
+          ...memLines,
+          'Incorporate this personalized context seamlessly into your responses.'
+        ].join('\n'));
       }
     }
 
     // Web Search & MCP Tools Instructions
     const conn = state.settings.connectors || {};
-    const isWebEnabled = conn.webSearch?.enabled || (s && s.skills && s.skills.web);
+    const isWebEnabled = state.settings.capabilities?.web !== false && (conn.webSearch?.enabled !== false || (s && s.skills && s.skills.web !== false));
     if (isWebEnabled) {
       parts.push([
         '# Real-Time Public Web Search Capability:',
@@ -3233,35 +3298,40 @@
   // -----------------------------------------------------------------------
   function renderSkills() {
     const host = document.getElementById('skills');
-    if (!host) return;
-    const s = activeSession();
-    if (!s) { host.innerHTML = ''; return; }
-    if (!s.skills) s.skills = {};
-    host.innerHTML = '';
-    for (const sk of SKILLS) {
-      const on = !!(s.skills[sk.id]);
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'skill' + (on ? ' is-on' : '');
-      btn.title = sk.hint;
-      btn.dataset.skill = sk.id;
-      btn.innerHTML = '<span class="skill__dot"></span><span>' + escapeHTML(sk.label) + '</span>';
-      btn.addEventListener('click', () => {
-        s.skills[sk.id] = !s.skills[sk.id];
-        persist();
-        renderSkills();
-      });
-      host.appendChild(btn);
-    }
+    if (host) host.innerHTML = ''; // Kept clean and uncluttered from the top bar
+
+    // Sync settings modal capability switches
+    const caps = state.settings.capabilities || {};
+    const capWeb = document.getElementById('capWebSearch');
+    if (capWeb) capWeb.checked = caps.web !== false;
+    const capThink = document.getElementById('capThinking');
+    if (capThink) capThink.checked = caps.think !== false;
+    const capCanv = document.getElementById('capCanvas');
+    if (capCanv) capCanv.checked = caps.canvas !== false;
+    const capPdf = document.getElementById('capPdf');
+    if (capPdf) capPdf.checked = caps.pdf !== false;
+    const capMem = document.getElementById('capMemory');
+    if (capMem) capMem.checked = caps.memory !== false;
+    const capLoc = document.getElementById('capLocation');
+    if (capLoc) capLoc.checked = caps.location !== false;
   }
 
   function skillOn(id) {
-    const s = activeSession(); return s && s.skills && !!s.skills[id];
+    if (state.settings.capabilities && state.settings.capabilities[id] !== undefined) {
+      return !!state.settings.capabilities[id];
+    }
+    const s = activeSession();
+    if (s && s.skills && s.skills[id] !== undefined) return !!s.skills[id];
+    return true; // Default enabled
   }
   function toggleSkill(id) {
-    const s = activeSession(); if (!s) return;
-    s.skills = s.skills || {};
-    s.skills[id] = !s.skills[id];
+    if (!state.settings.capabilities) state.settings.capabilities = {};
+    state.settings.capabilities[id] = !skillOn(id);
+    const s = activeSession();
+    if (s) {
+      s.skills = s.skills || {};
+      s.skills[id] = state.settings.capabilities[id];
+    }
     persist();
     renderSkills();
   }
@@ -3788,6 +3858,7 @@
         .join('\n\n');
       conv.messages.push({ role: 'user', content: userContent + (userContent ? '\n\n' : '') + txt, ts: Date.now() });
     } else {
+      extractUserMemoryFromText(userContent);
       conv.messages.push({ role: 'user', content: userContent, ts: Date.now() });
     }
 
@@ -4522,11 +4593,132 @@
     }
   }
 
+  // -----------------------------------------------------------------------
+  // Real User Memory & Context Extraction
+  // -----------------------------------------------------------------------
+  function extractUserMemoryFromText(rawText) {
+    if (!rawText || typeof rawText !== 'string') return;
+    if (state.settings.capabilities?.memory === false) return;
+    const text = rawText.trim();
+    if (text.length < 5 || text.startsWith('/')) return;
+
+    // Name detection: "My name is John", "Call me Alice"
+    const nameMatch = text.match(/(?:my name is|call me|i am called)\s+([A-Z][a-zA-Z]+)/i);
+    if (nameMatch && nameMatch[1]) {
+      recordMemoryFact(`User's name is ${nameMatch[1]}`);
+    }
+
+    // Role / Profession detection: "I am a software engineer", "I work as a designer"
+    const roleMatch = text.match(/(?:i work as an?|i am an?|my job is)\s+([a-zA-Z\s]{3,35})(?:[.,\n]|$)/i);
+    if (roleMatch && roleMatch[1]) {
+      const cleanRole = roleMatch[1].trim();
+      if (!/user|assistant|human|thinking|model/i.test(cleanRole)) {
+        recordMemoryFact(`User works as a ${cleanRole}`);
+      }
+    }
+
+    // Location detection: "I live in Berlin", "I'm located in Tokyo"
+    const locMatch = text.match(/(?:i live in|i'm located in|i am based in)\s+([a-zA-Z\s,]{3,40})(?:[.,\n]|$)/i);
+    if (locMatch && locMatch[1]) {
+      recordMemoryFact(`User is based in ${locMatch[1].trim()}`);
+    }
+  }
+
+  function recordMemoryFact(fact) {
+    if (!state.settings.userMemory) state.settings.userMemory = { notes: '', facts: [] };
+    if (!Array.isArray(state.settings.userMemory.facts)) state.settings.userMemory.facts = [];
+    const clean = fact.trim();
+    if (clean && !state.settings.userMemory.facts.includes(clean)) {
+      state.settings.userMemory.facts.push(clean);
+      if (state.settings.userMemory.facts.length > 30) {
+        state.settings.userMemory.facts.shift();
+      }
+      persist();
+      renderMemoryFactsUI();
+    }
+  }
+
+  function renderMemoryFactsUI() {
+    const box = document.getElementById('memoryFactsBox');
+    if (!box) return;
+    const facts = state.settings.userMemory?.facts || [];
+    if (!facts.length) {
+      box.innerHTML = '<span style="font-size:11.5px; color:var(--ink-400);">No conversation memory facts recorded yet.</span>';
+      return;
+    }
+    box.innerHTML = '';
+    facts.forEach((fact, idx) => {
+      const chip = document.createElement('div');
+      chip.className = 'memory-fact-chip';
+      chip.innerHTML = `<span>${escapeHTML(fact)}</span><button type="button" title="Delete memory fact" aria-label="Delete fact">&times;</button>`;
+      chip.querySelector('button').addEventListener('click', () => {
+        state.settings.userMemory.facts.splice(idx, 1);
+        persist();
+        renderMemoryFactsUI();
+      });
+      box.appendChild(chip);
+    });
+  }
+
+  // -----------------------------------------------------------------------
+  // Real Approximate Location via IP Geolocation
+  // -----------------------------------------------------------------------
+  async function initUserLocation() {
+    try {
+      const cached = localStorage.getItem('cc.userLocation.v1');
+      if (cached) {
+        state.userLocation = JSON.parse(cached);
+        updateLocationDescUI();
+      }
+    } catch (_) {}
+
+    try {
+      const res = await fetch('https://ipwho.is/', { signal: AbortSignal.timeout(4500) });
+      if (res.ok) {
+        const d = await res.json();
+        if (d && d.success !== false) {
+          state.userLocation = {
+            city: d.city || '',
+            region: d.region || '',
+            country: d.country || '',
+            timezone: d.timezone?.id || Intl.DateTimeFormat().resolvedOptions().timeZone,
+            latitude: d.latitude,
+            longitude: d.longitude,
+          };
+          try {
+            localStorage.setItem('cc.userLocation.v1', JSON.stringify(state.userLocation));
+          } catch (_) {}
+          updateLocationDescUI();
+        }
+      }
+    } catch (e) {
+      console.warn('Location detection notice:', e.message);
+      if (!state.userLocation) {
+        state.userLocation = {
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        };
+        updateLocationDescUI();
+      }
+    }
+  }
+
+  function updateLocationDescUI() {
+    const desc = document.getElementById('detectedLocationDesc');
+    if (!desc) return;
+    if (state.userLocation && (state.userLocation.city || state.userLocation.country)) {
+      const locStr = [state.userLocation.city, state.userLocation.region, state.userLocation.country].filter(Boolean).join(', ');
+      desc.textContent = `📍 ${locStr}`;
+      desc.title = `Approximate IP location: ${locStr} (${state.userLocation.timezone || ''})`;
+    } else {
+      desc.textContent = `📍 ${Intl.DateTimeFormat().resolvedOptions().timeZone || 'Approximate location via IP'}`;
+    }
+  }
+
   function fillSettingsFromState() {
+    const prov = state.settings.provider;
     // Provider radio
-    const prov = activeSession()?.provider || state.settings.provider;
-    const radio = document.querySelector('input[name="provider"][value="' + prov + '"]');
-    if (radio) radio.checked = true;
+    const rad = document.querySelector(`input[name="provider"][value="${prov}"]`);
+    if (rad) rad.checked = true;
     document.querySelectorAll('.provider-item').forEach(item => {
       const r = item.querySelector('input[type="radio"]');
       item.classList.toggle('is-active', r && r.value === prov);
@@ -4540,11 +4732,33 @@
     if (ok) ok.value = state.settings.apiKeys.openrouter || '';
     // Render custom providers list
     renderCustomProvidersSettings();
+
+    // Capabilities toggles (default enabled)
+    const caps = state.settings.capabilities || {};
+    const capWeb = document.getElementById('capWebSearch');
+    if (capWeb) capWeb.checked = caps.web !== false;
+    const capThink = document.getElementById('capThinking');
+    if (capThink) capThink.checked = caps.think !== false;
+    const capCanv = document.getElementById('capCanvas');
+    if (capCanv) capCanv.checked = caps.canvas !== false;
+    const capPdf = document.getElementById('capPdf');
+    if (capPdf) capPdf.checked = caps.pdf !== false;
+    const capMem = document.getElementById('capMemory');
+    if (capMem) capMem.checked = caps.memory !== false;
+    const capLoc = document.getElementById('capLocation');
+    if (capLoc) capLoc.checked = caps.location !== false;
+
+    // Location badge
+    updateLocationDescUI();
+
+    // User Memory & Notes
+    const un = document.getElementById('userMemoryNotes');
+    if (un) un.value = state.settings.userMemory?.notes || '';
+    renderMemoryFactsUI();
+
     // Toggles
     const st = document.getElementById('streamToggle');
     if (st) st.checked = !!state.settings.stream;
-    const mt = document.getElementById('memoryToggle');
-    if (mt) mt.checked = !!state.settings.memory;
     // Temperature
     const t = activeSession()?.temperature ?? state.settings.temperature;
     const tr = document.getElementById('tempRange');
@@ -5201,9 +5415,25 @@
       }
     });
 
+    // Capabilities & Intelligence toggles
+    on($('#capWebSearch'), 'change', e => { state.settings.capabilities.web = e.target.checked; persist(); });
+    on($('#capThinking'), 'change', e => { state.settings.capabilities.think = e.target.checked; persist(); });
+    on($('#capCanvas'), 'change', e => { state.settings.capabilities.canvas = e.target.checked; persist(); });
+    on($('#capPdf'), 'change', e => { state.settings.capabilities.pdf = e.target.checked; persist(); });
+    on($('#capMemory'), 'change', e => {
+      state.settings.capabilities.memory = e.target.checked;
+      state.settings.memory = e.target.checked;
+      persist();
+    });
+    on($('#capLocation'), 'change', e => { state.settings.capabilities.location = e.target.checked; persist(); });
+    on($('#userMemoryNotes'), 'input', e => {
+      if (!state.settings.userMemory) state.settings.userMemory = { notes: '', facts: [] };
+      state.settings.userMemory.notes = e.target.value;
+      persist();
+    });
+
     // Toggles
     on($('#streamToggle'), 'change', e => { state.settings.stream = e.target.checked; persist(); });
-    on($('#memoryToggle'), 'change', e => { state.settings.memory = e.target.checked; persist(); });
     on($('#tempRange'), 'input', e => {
       const v = parseFloat(e.target.value);
       const tv = document.getElementById('tempVal');
@@ -5979,6 +6209,7 @@
   function init() {
     // Load persisted settings + conversations
     loadPersisted();
+    initUserLocation();
     applyAppearance();
     hydrateModelsFromCache();
     if (!state.conversations.length) createConversation();
