@@ -1799,6 +1799,12 @@
   function getConvFiles(conv) {
     if (!conv) return {};
     if (!conv.files || typeof conv.files !== 'object') conv.files = {};
+    for (const k of Object.keys(conv.files)) {
+      const rec = conv.files[k];
+      if (rec && /moochi|moonlight|mochi/i.test(rec.title || '')) {
+        rec.title = rec.type === 'svg' ? 'Vector Graphic' : rec.type === 'ppt' ? 'Presentation Deck' : rec.type === 'pdf' ? 'Document Report' : 'Web Component';
+      }
+    }
     return conv.files;
   }
 
@@ -1808,10 +1814,14 @@
     const key = (path || name || '').trim() || ('artifact_' + Date.now() + '.' + (type === 'svg' ? 'svg' : type === 'pdf' ? 'html' : type === 'ppt' ? 'html' : 'html'));
     const existing = conv.files[key];
     const version = existing ? ((existing.version || 1) + 1) : 1;
+    let cleanTitle = title || existing?.title || key;
+    if (/moochi|moonlight|mochi/i.test(cleanTitle)) {
+      cleanTitle = type === 'svg' ? 'Vector Graphic' : type === 'ppt' ? 'Presentation Deck' : type === 'pdf' ? 'Document Report' : 'Web Component';
+    }
     const fileRecord = {
       path: key,
       name: name || key.split('/').pop(),
-      title: title || existing?.title || key,
+      title: cleanTitle,
       content: content || '',
       type: type || existing?.type || 'html',
       version,
@@ -2098,7 +2108,7 @@
     const isSlideDeck = type === 'ppt' || trimmed.includes('class="slide') || trimmed.includes('class="deck') || trimmed.includes('data-slide') || trimmed.includes('slide-deck');
 
     canvasCurrentType = isSlideDeck ? 'ppt' : (type || (trimmed.startsWith('<svg') ? 'svg' : (trimmed.includes('printable-doc') ? 'pdf' : 'html')));
-    canvasCurrentTitle = title || (canvasCurrentType === 'ppt' ? 'Presentation Deck (Keynote)' : canvasCurrentType === 'pdf' ? 'Printable Document (PDF)' : canvasCurrentType === 'svg' ? 'Scalable Vector Graphic (SVG)' : 'Artifact Preview');
+    canvasCurrentTitle = title || (canvasCurrentType === 'ppt' ? 'Presentation Deck' : canvasCurrentType === 'pdf' ? 'Document Report' : canvasCurrentType === 'svg' ? 'Vector Graphic' : 'Artifact Preview');
 
     const titleEl = document.getElementById('canvasTitle');
     const infoEl  = document.getElementById('canvasInfo');
@@ -2108,13 +2118,8 @@
 
     if (titleEl) titleEl.textContent = canvasCurrentTitle;
     if (infoEl) {
-      infoEl.textContent = canvasCurrentType === 'ppt'
-        ? 'Presentation Deck (16:9) · Interactive Slides'
-        : canvasCurrentType === 'pdf'
-        ? 'Printable Document / PDF'
-        : canvasCurrentType === 'svg'
-        ? 'Scalable Vector Graphic (SVG)'
-        : 'Interactive HTML / Canvas';
+      infoEl.textContent = '';
+      infoEl.hidden = true;
     }
     if (printBtn) {
       printBtn.hidden = canvasCurrentType !== 'pdf' && canvasCurrentType !== 'ppt';
@@ -3211,12 +3216,17 @@
         }
       }
 
+      const rawText = (code.textContent || '').trim();
+      const codeLines = rawText ? rawText.split('\n').length : 1;
+      const codeLinesLabel = codeLines + (codeLines === 1 ? ' line' : ' lines');
+
       // Build .code-container wrapper with macOS dots and actions
       const wrapper = document.createElement('div');
-      wrapper.className = 'code-container';
+      wrapper.className = 'code-container is-collapsed';
 
       const head = document.createElement('div');
       head.className = 'code-head';
+      head.title = 'Click to expand / collapse code';
 
       const left = document.createElement('div');
       left.className = 'code-head__left';
@@ -3227,6 +3237,7 @@
           <span class="code-dot code-dot--green"></span>
         </div>
         <span class="code-head__lang">${escapeHTML(lang.toUpperCase())}</span>
+        <span class="code-head__lines">${escapeHTML(codeLinesLabel)}</span>
       `;
 
       const actions = document.createElement('div');
@@ -3257,7 +3268,31 @@
       });
       actions.appendChild(copyBtn);
 
-      const rawText = (code.textContent || '').trim();
+      const toggleBtn = document.createElement('button');
+      toggleBtn.type = 'button';
+      toggleBtn.className = 'code-collapse-toggle';
+      toggleBtn.title = 'Expand / Collapse code';
+      toggleBtn.innerHTML = `
+        <span class="code-collapse-toggle__text">Expand</span>
+        <svg class="code-collapse-toggle__chevron" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      `;
+      toggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isCollapsed = wrapper.classList.toggle('is-collapsed');
+        const txt = toggleBtn.querySelector('.code-collapse-toggle__text');
+        if (txt) txt.textContent = isCollapsed ? 'Expand' : 'Collapse';
+        toggleBtn.classList.toggle('is-expanded', !isCollapsed);
+      });
+      actions.appendChild(toggleBtn);
+
+      head.addEventListener('click', (e) => {
+        if (e.target.closest('.copy-btn') || e.target.closest('.code-collapse-toggle')) return;
+        const isCollapsed = wrapper.classList.toggle('is-collapsed');
+        const txt = toggleBtn.querySelector('.code-collapse-toggle__text');
+        if (txt) txt.textContent = isCollapsed ? 'Expand' : 'Collapse';
+        toggleBtn.classList.toggle('is-expanded', !isCollapsed);
+      });
+
       const isSvg = lang === 'svg' || (rawText.startsWith('<svg') && rawText.includes('</svg>'));
       const isPdf = lang === 'pdf' || (rawText.includes('printable-doc') || rawText.includes('window.print') || /<body[^>]*printable/i.test(rawText) || /Sample Project Summary/i.test(rawText));
       const isPpt = lang === 'ppt' || lang === 'slides' || lang === 'presentation' || rawText.includes('class="deck') || (rawText.includes('class="slide') && (rawText.includes('</section>') || rawText.includes('data-slide'))) || rawText.includes('slide-deck');
@@ -3357,6 +3392,7 @@
         }
 
         wrapper.classList.add('is-collapsed');
+        wrapper.classList.add('has-artifact-card');
         wrapper.parentNode.insertBefore(editCard, wrapper);
         return;
       }
@@ -3389,16 +3425,24 @@
         } else if (ariaLabelMatch && ariaLabelMatch[1]) {
           artifactTitle = ariaLabelMatch[1].trim();
         } else if (isPpt) {
-          artifactTitle = 'Keynote Presentation Deck';
+          artifactTitle = 'Keynote Presentation';
         } else if (isPdf) {
-          artifactTitle = 'Executive Document Summary';
+          artifactTitle = 'Document Report';
         } else if (isSvg) {
-          const prevEl = wrapper.previousElementSibling;
-          const prevText = prevEl ? prevEl.textContent : '';
-          const nameMatch = prevText.match(/(?:around your|character|illustration of|artwork of|drawing of)\s+([A-Za-z0-9\s]+?)(?:\s+character|\.|\:|\n|$)/i);
-          artifactTitle = (nameMatch && nameMatch[1]) ? nameMatch[1].trim() : 'Vector Graphic Illustration';
+          const descMatch = rawText.match(/<desc[^>]*>([^<]+)<\/desc>/i);
+          const dataTitleMatch = rawText.match(/data-title=["']([^"']+)["']/i);
+          const svgIdMatch = rawText.match(/<svg[^>]*id=["']([^"']+)["']/i);
+          if (descMatch && descMatch[1]) {
+            artifactTitle = descMatch[1].trim();
+          } else if (dataTitleMatch && dataTitleMatch[1]) {
+            artifactTitle = dataTitleMatch[1].trim();
+          } else if (svgIdMatch && svgIdMatch[1] && !svgIdMatch[1].startsWith('svg_')) {
+            artifactTitle = svgIdMatch[1].replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+          } else {
+            artifactTitle = 'Vector Graphic';
+          }
         } else {
-          artifactTitle = 'Interactive Web Artifact';
+          artifactTitle = 'Web Artifact';
         }
 
         const artifactType = isPpt ? 'ppt' : isPdf ? 'pdf' : isSvg ? 'svg' : 'html';
@@ -3527,7 +3571,6 @@
                 <h4 class="artifact-card__title">${escapeHTML(artifactTitle)}</h4>
                 <span class="artifact-pill-badge ${badgeClass}">${escapeHTML(badgeLabel)}</span>
               </div>
-              <p class="artifact-card__desc">${escapeHTML(metaDesc)}</p>
             </div>
             <div class="artifact-card__actions">
               <button type="button" class="btn-artifact-primary" title="Preview and open artifact">
@@ -3564,6 +3607,7 @@
 
         // Initially collapse the code container so inline card is primary
         wrapper.classList.add('is-collapsed');
+        wrapper.classList.add('has-artifact-card');
 
         // Insert card before wrapper
         wrapper.parentNode.insertBefore(card, wrapper);
@@ -4051,7 +4095,7 @@
     }, 1400);
   }
 
-  function renderThinkingBlockHTML(thinkingContent, isStreaming) {
+  function renderThinkingBlockHTML(thinkingContent, isStreaming, forceOpen = false) {
     const text = (thinkingContent || '').trim();
     if (!text && !isStreaming) return '';
     const wordCount = text ? text.split(/\s+/).length : 0;
@@ -4059,7 +4103,7 @@
     const body = isStreaming
       ? (text ? escapeHTML(text).replace(/\n/g, '<br>') + '<br>' : '') + '<div class="typing-indicator"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>'
       : escapeHTML(text).replace(/\n/g, '<br>');
-    const openAttr = isStreaming ? ' open' : '';
+    const openAttr = forceOpen ? ' open' : '';
     return `
       <details class="thinking-block"${openAttr}>
         <summary class="thinking-block__summary">
@@ -4922,8 +4966,9 @@
                   const streamingDots = '<span class="msg__streaming-indicator" title="Generating response...">' +
                     '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>' +
                   '</span>';
+                  const wasOpen = !!(c.querySelector('.thinking-block[open]'));
                   const stepsHtml = renderStepsBlockHTML(assistantMsg.steps);
-                  const thinkingHtml = renderThinkingBlockHTML(assistantMsg.thinkingContent, true);
+                  const thinkingHtml = renderThinkingBlockHTML(assistantMsg.thinkingContent, true, wasOpen);
                   c.innerHTML = stepsHtml + thinkingHtml + mdToSafeHTML(assistantMsg.content || '') + streamingDots;
                   decorateCodeBlocks(c);
                 }
@@ -5023,8 +5068,9 @@
                   const c = last.querySelector('.msg__content');
                   if (c) {
                     const streamingDots = '<span class="msg__streaming-indicator"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></span>';
+                    const wasOpen = !!(c.querySelector('.thinking-block[open]'));
                     const stepsHtml = renderStepsBlockHTML(assistantMsg.steps);
-                    const thinkingHtml = renderThinkingBlockHTML(assistantMsg.thinkingContent, true);
+                    const thinkingHtml = renderThinkingBlockHTML(assistantMsg.thinkingContent, true, wasOpen);
                     c.innerHTML = stepsHtml + thinkingHtml + mdToSafeHTML(assistantMsg.content || '') + streamingDots;
                     decorateCodeBlocks(c);
                   }
