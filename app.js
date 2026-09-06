@@ -3988,6 +3988,12 @@
           '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>' +
         '</button>';
 
+      const editBtnHtml = m.role === 'user'
+        ? '<button class="msg__action-btn msg__edit" type="button" aria-label="Edit prompt" title="Edit prompt">' +
+            '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>' +
+          '</button>'
+        : '';
+
       const pinBtnHtml =
         `<button class="msg__action-btn msg__pin ${m.pinned ? 'is-active' : ''}" type="button" aria-label="${m.pinned ? 'Unpin message' : 'Pin message'}" title="${m.pinned ? 'Unpin message' : 'Pin message'}">` +
           `<svg viewBox="0 0 24 24" width="13" height="13" fill="${m.pinned ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a1 1 0 0 0 0-2H8a1 1 0 0 0 0 2h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg>` +
@@ -4002,6 +4008,7 @@
       actionsHtml =
         '<div class="msg__actions">' +
           copyBtnHtml +
+          editBtnHtml +
           pinBtnHtml +
           regenBtnHtml +
         '</div>';
@@ -4066,6 +4073,19 @@
       });
     }
 
+    const editBtn = div.querySelector('.msg__edit');
+    if (editBtn) {
+      on(editBtn, 'click', () => {
+        const conv = activeConv();
+        if (!conv) return;
+        if (isConvStreaming(conv.id)) {
+          toast('Please wait for streaming to complete', 'warn');
+          return;
+        }
+        startInlineMessageEdit(div, m, conv);
+      });
+    }
+
     const pinBtn = div.querySelector('.msg__pin');
     if (pinBtn) {
       on(pinBtn, 'click', () => {
@@ -4081,6 +4101,102 @@
       if (regen) on(regen, 'click', () => regenerateLast());
     }
     return div;
+  }
+
+  function startInlineMessageEdit(msgEl, m, conv) {
+    const contentEl = msgEl.querySelector('.msg__content');
+    const actionsEl = msgEl.querySelector('.msg__actions');
+    if (!contentEl) return;
+
+    if (msgEl.querySelector('.msg-edit-form')) return;
+
+    const originalText = typeof m.content === 'string'
+      ? m.content
+      : Array.isArray(m.content)
+      ? (m.content.find(p => p.type === 'text')?.text || '')
+      : String(m.content || '');
+
+    const origDisplay = contentEl.style.display;
+    contentEl.style.display = 'none';
+    if (actionsEl) actionsEl.style.display = 'none';
+
+    const form = document.createElement('div');
+    form.className = 'msg-edit-form';
+    form.innerHTML = `
+      <textarea class="msg-edit-form__input" rows="3" aria-label="Edit your prompt"></textarea>
+      <div class="msg-edit-form__actions">
+        <span class="msg-edit-form__hint">Ctrl+Enter to submit</span>
+        <button type="button" class="msg-edit-form__btn msg-edit-form__btn--cancel">Cancel</button>
+        <button type="button" class="msg-edit-form__btn msg-edit-form__btn--save">Save &amp; Submit</button>
+      </div>
+    `;
+
+    contentEl.parentNode.insertBefore(form, actionsEl || null);
+
+    const textarea = form.querySelector('.msg-edit-form__input');
+    textarea.value = originalText;
+
+    const autoResize = () => {
+      textarea.style.height = 'auto';
+      textarea.style.height = Math.max(72, textarea.scrollHeight) + 'px';
+    };
+    setTimeout(() => {
+      autoResize();
+      textarea.focus();
+      textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+    }, 20);
+
+    on(textarea, 'input', autoResize);
+
+    const cancelEdit = () => {
+      form.remove();
+      contentEl.style.display = origDisplay;
+      if (actionsEl) actionsEl.style.display = '';
+    };
+
+    const submitEdit = () => {
+      const newText = textarea.value.trim();
+      if (!newText) {
+        toast('Message cannot be empty', 'warn');
+        textarea.focus();
+        return;
+      }
+      if (newText === originalText.trim()) {
+        cancelEdit();
+        return;
+      }
+
+      if (Array.isArray(m.content)) {
+        const nonText = m.content.filter(p => p.type !== 'text');
+        m.content = [{ type: 'text', text: newText }, ...nonText];
+      } else {
+        m.content = newText;
+      }
+
+      const idx = conv.messages.indexOf(m);
+      if (idx !== -1) {
+        conv.messages = conv.messages.slice(0, idx + 1);
+      }
+      persist();
+      state.userScrolledUp = false;
+      renderChat(true);
+
+      streamAssistant(conv.id);
+      toast('Prompt updated & generating response', 'ok');
+    };
+
+    on(form.querySelector('.msg-edit-form__btn--cancel'), 'click', cancelEdit);
+    on(form.querySelector('.msg-edit-form__btn--save'), 'click', submitEdit);
+
+    on(textarea, 'keydown', (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        cancelEdit();
+      } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        submitEdit();
+      }
+    });
   }
 
   function flashCopyIcon(btn) {
