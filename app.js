@@ -55,37 +55,37 @@
     {
       id: 'chat', label: 'Chat', tabTitle: 'Chat',
       tabSub: 'Thoughtful, coherent AI conversation',
-      sys: 'You are a friendly, concise AI assistant. Be clear and helpful. Use markdown.',
+      sys: 'You are Sage, a thoughtful, precise, and sophisticated AI assistant. Always identify as Sage when asked about your identity or name. Be clear, concise, and helpful. Use markdown.',
       icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
     },
     {
       id: 'code', label: 'Code', tabTitle: 'Code',
       tabSub: 'Write, review, and refactor code with precision',
-      sys: 'You are a senior software engineer. Answer with concise, correct code. Prefer modern idioms and explain tradeoffs in 1-2 sentences. Wrap code in fenced blocks with the right language tag.',
+      sys: 'You are Sage, an expert senior software engineer. Always identify as Sage. Answer with concise, correct code. Prefer modern idioms and explain tradeoffs in 1-2 sentences. Wrap code in fenced blocks with the right language tag.',
       icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',
     },
     {
       id: 'study', label: 'Study', tabTitle: 'Study',
       tabSub: 'Learn anything, step by step',
-      sys: 'You are a patient tutor. Break topics into small steps, use analogies, and end each response with a quick recap.',
+      sys: 'You are Sage, a patient tutor. Always identify as Sage. Break topics into small steps, use analogies, and end each response with a quick recap.',
       icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>',
     },
     {
       id: 'write', label: 'Write', tabTitle: 'Write',
       tabSub: 'Draft, edit, and polish any text',
-      sys: 'You are a writing partner. Match the requested tone, suggest improvements, and offer a short, punchy version when asked.',
+      sys: 'You are Sage, an expert writing partner. Always identify as Sage. Match the requested tone, suggest improvements, and offer a short, punchy version when asked.',
       icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
     },
     {
       id: 'summarize', label: 'Summarize', tabTitle: 'Summarize',
       tabSub: 'Distill long text into key points',
-      sys: 'You are a summarizer. Produce a tight summary with bullet points, then a one-sentence TL;DR. Stay faithful to the source.',
+      sys: 'You are Sage, an expert summarizer. Always identify as Sage. Produce a tight summary with bullet points, then a one-sentence TL;DR. Stay faithful to the source.',
       icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M6 12h12M9 18h6"/></svg>',
     },
     {
       id: 'translate', label: 'Translate', tabTitle: 'Translate',
       tabSub: 'Faithful translation between languages',
-      sys: 'You are a translator. Detect the source language and translate to the user\u2019s target language (default: English). Preserve formatting, idioms, and tone.',
+      sys: 'You are Sage, an expert translator. Always identify as Sage. Detect the source language and translate to the user’s target language (default: English). Preserve formatting, idioms, and tone.',
       icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14M9 4v4M7 20l3-7 3 7M8 17h4"/><path d="M14 12h7M17.5 9 21 15M14 15l3.5 6"/></svg>',
     },
   ];
@@ -374,6 +374,7 @@
       notes: '',
       facts: [],
     },
+    globalSystemPrompt: '',
     appearance: {
       palette: 'cute-pink',
       font: 'plus-jakarta',
@@ -387,6 +388,7 @@
     activeConvId: null,
     userLocation: null,
     currentMode: 'chat',
+    personaScope: 'conversation', // 'conversation' | 'global'
     attachments: [],              // [{name, type, size, dataUrl|content}]
     userScrolledUp: false,
     activeStreams: new Map(),     // convId -> { aborter, assistantMsg }
@@ -1128,10 +1130,33 @@
   function buildSystemPrompt(targetConv) {
     const mode = MODES.find(m => m.id === state.currentMode) || MODES[0];
     const s = targetConv ? ensureSession(targetConv) : activeSession();
-    const parts = [mode.sys, ARTIFACT_INSTRUCTIONS];
-    if (s && s.systemPromptOverride && s.systemPromptOverride.trim()) {
-      parts.push('Additional instructions from the user:\n' + s.systemPromptOverride.trim());
+    
+    // Check persona: per-chat override has priority over global custom prompt
+    const convOverride = (s && s.systemPromptOverride && s.systemPromptOverride.trim()) ? s.systemPromptOverride.trim() : '';
+    const globalOverride = (state.settings.globalSystemPrompt && state.settings.globalSystemPrompt.trim()) ? state.settings.globalSystemPrompt.trim() : '';
+    const activePersona = convOverride || globalOverride;
+
+    const parts = [];
+
+    if (activePersona) {
+      parts.push([
+        '# Assistant Identity & System Persona:',
+        'You are adopting the following custom persona and instructions. Embody this persona completely in your tone, style, knowledge, and responses:',
+        activePersona,
+        '',
+        'Unless overridden by the persona instructions above, your default name is Sage. Always identify as Sage or the specified persona when asked who or what you are. Never refer to yourself as AI Dash or any other default service name.'
+      ].join('\n'));
+    } else {
+      parts.push([
+        '# Assistant Identity:',
+        'You are Sage, a thoughtful, exceptionally capable, and sophisticated AI assistant. Your name is Sage.',
+        'Always identify as Sage when asked who you are, what your name is, or what assistant is running.',
+        'Never refer to yourself as AI Dash or any other name.',
+        mode.sys
+      ].join('\n'));
     }
+
+    parts.push(ARTIFACT_INSTRUCTIONS);
 
     // Thinking level instruction
     const isThinkingCap = state.settings.capabilities?.think !== false;
@@ -1320,6 +1345,10 @@
     if (CC.syncThinkingUI) {
       const s = activeSession();
       CC.syncThinkingUI(s?.thinkingLevel ?? state.settings.thinkingLevel ?? 2, false);
+    }
+    const sp = document.getElementById('systemPromptInput');
+    if (sp && state.personaScope === 'conversation') {
+      sp.value = activeSession()?.systemPromptOverride || '';
     }
 
     const sidebar = document.getElementById('sidebar');
@@ -3676,7 +3705,6 @@
     const prov = s?.provider || state.settings.provider;
     const dot = document.getElementById('providerDot');
     const lbl = document.getElementById('providerLabel');
-    if (!dot || !lbl) return;
     let txt = prov;
     let cls = 'is-idle';
     if (prov === 'pollinations')      { txt = 'Pollinations'; cls = 'is-ok'; }
@@ -3693,8 +3721,8 @@
         cls = state.settings.custom?.baseUrl ? 'is-ok' : 'is-idle';
       }
     }
-    dot.className = 'dot ' + cls;
-    lbl.textContent = txt;
+    if (dot) dot.className = 'dot ' + cls;
+    if (lbl) lbl.textContent = txt;
     const mDot = document.getElementById('modalProviderDot');
     const mLbl = document.getElementById('modalProviderLabel');
     if (mDot) mDot.className = 'dot ' + cls;
@@ -3797,8 +3825,10 @@
 
   function renderMemoryFactsUI() {
     const box = document.getElementById('memoryFactsBox');
-    if (!box) return;
+    const badge = document.getElementById('memoryFactsBadge');
     const facts = state.settings.userMemory?.facts || [];
+    if (badge) badge.textContent = `${facts.length} ${facts.length === 1 ? 'fact' : 'facts'}`;
+    if (!box) return;
     if (!facts.length) {
       box.innerHTML = '<span style="font-size:11.5px; color:var(--ink-400);">No conversation memory facts recorded yet.</span>';
       return;
@@ -4849,9 +4879,31 @@
     const tv = document.getElementById('tempVal');
     if (tr) tr.value = String(t);
     if (tv) tv.textContent = (+t).toFixed(2);
-    // System prompt override (per-chat)
+    // System Persona (Conversation vs Global)
+    const convPrompt = activeSession()?.systemPromptOverride || '';
+    const globPrompt = state.settings.globalSystemPrompt || '';
+    const scopeConvBtn = document.getElementById('personaScopeConvBtn');
+    const scopeGlobBtn = document.getElementById('personaScopeGlobalBtn');
+    const scopeHint = document.getElementById('personaScopeHint');
     const sp = document.getElementById('systemPromptInput');
-    if (sp) sp.value = activeSession()?.systemPromptOverride || '';
+
+    if (state.personaScope === 'global') {
+      if (scopeGlobBtn) scopeGlobBtn.classList.add('is-active');
+      if (scopeConvBtn) scopeConvBtn.classList.remove('is-active');
+      if (scopeHint) scopeHint.textContent = 'Custom persona and instructions applied globally across all conversations.';
+      if (sp) {
+        sp.value = globPrompt;
+        sp.placeholder = 'Define global custom persona for all chats...';
+      }
+    } else {
+      if (scopeConvBtn) scopeConvBtn.classList.add('is-active');
+      if (scopeGlobBtn) scopeGlobBtn.classList.remove('is-active');
+      if (scopeHint) scopeHint.textContent = 'Custom persona and instructions applied only to this conversation.';
+      if (sp) {
+        sp.value = convPrompt;
+        sp.placeholder = 'Define custom instructions for this chat (optional)...';
+      }
+    }
     // Model dropdown & hint
     renderModelOptions();
     updateModelHint(prov);
@@ -4864,13 +4916,25 @@
   // -----------------------------------------------------------------------
   function renderCustomProvidersSettings() {
     const host = document.getElementById('customProvidersList');
+    const badge = document.getElementById('customProvCountBadge');
+    const cpList = state.settings.customProviders || [];
+    if (badge) badge.textContent = `${cpList.length} configured`;
     if (!host) return;
     host.innerHTML = '';
-    const cpList = state.settings.customProviders || [];
+
+    const activeProv = activeSession()?.provider || state.settings.provider;
+    const isAnyCustomActive = cpList.some(cp => cp.id === activeProv);
+    if (isAnyCustomActive) {
+      const toggle = document.getElementById('customProvidersToggleBtn');
+      const body = document.getElementById('customProvidersBody');
+      if (toggle && body) {
+        toggle.setAttribute('aria-expanded', 'true');
+        body.hidden = false;
+      }
+    }
 
     for (const cp of cpList) {
       const modelCount = (MODELS[cp.id] || []).length;
-      const activeProv = activeSession()?.provider || state.settings.provider;
       const isSelected = activeProv === cp.id;
       const card = document.createElement('div');
       card.className = 'custom-provider-card' + (isSelected ? ' is-active' : '');
@@ -5527,9 +5591,48 @@
       state.settings.temperature = v;
       persist();
     });
+    // Persona Scope Toggle & System Prompt
+    on($('#personaScopeConvBtn'), 'click', () => {
+      state.personaScope = 'conversation';
+      fillSettingsFromState();
+    });
+    on($('#personaScopeGlobalBtn'), 'click', () => {
+      state.personaScope = 'global';
+      fillSettingsFromState();
+    });
     on($('#systemPromptInput'), 'input', e => {
-      const s = activeSession();
-      if (s) { s.systemPromptOverride = e.target.value; persist(); }
+      if (state.personaScope === 'global') {
+        state.settings.globalSystemPrompt = e.target.value;
+        persist();
+      } else {
+        const s = activeSession();
+        if (s) { s.systemPromptOverride = e.target.value; persist(); }
+      }
+    });
+
+    // Accordions
+    on($('#memoryAccordionToggle'), 'click', () => {
+      const btn = document.getElementById('memoryAccordionToggle');
+      const body = document.getElementById('memoryAccordionBody');
+      if (!btn || !body) return;
+      const isExpanded = btn.getAttribute('aria-expanded') === 'true';
+      btn.setAttribute('aria-expanded', String(!isExpanded));
+      body.hidden = isExpanded;
+    });
+    on($('#clearAllMemoryFactsBtn'), 'click', () => {
+      if (!state.settings.userMemory) state.settings.userMemory = { notes: '', facts: [] };
+      state.settings.userMemory.facts = [];
+      persist();
+      renderMemoryFactsUI();
+    });
+
+    on($('#customProvidersToggleBtn'), 'click', () => {
+      const btn = document.getElementById('customProvidersToggleBtn');
+      const body = document.getElementById('customProvidersBody');
+      if (!btn || !body) return;
+      const isExpanded = btn.getAttribute('aria-expanded') === 'true';
+      btn.setAttribute('aria-expanded', String(!isExpanded));
+      body.hidden = isExpanded;
     });
 
     // Backup buttons
@@ -6254,6 +6357,18 @@
     const search = document.getElementById('topbarModelSearch');
     const exportBtn = document.getElementById('exportBtn');
     const clearBtn = document.getElementById('clearChatBtn');
+    const newChatBtn = document.getElementById('topbarNewChatBtn');
+
+    if (newChatBtn) {
+      on(newChatBtn, 'click', () => {
+        const c = createConversation();
+        state.activeConvId = c.id;
+        persist();
+        renderConversations();
+        renderChat();
+        focusInput();
+      });
+    }
 
     on(trig, 'click', (e) => {
       e.stopPropagation();

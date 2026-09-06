@@ -46,10 +46,6 @@
               </div>
               <div class="brand__text">
                 <span class="brand__name">Sage</span>
-                <div class="brand__status">
-                  <span class="dot" id="providerDot" aria-hidden="true"></span>
-                  <span id="providerLabel" class="brand__status-text">connecting…</span>
-                </div>
               </div>
             </div>
             <button class="iconbtn brand-zone__collapser" id="headerCollapseBtn" type="button" aria-label="Collapse sidebar" title="Collapse sidebar (Ctrl+[)">
@@ -147,16 +143,8 @@
                 </svg>
               </span>
             </button>
-            <div class="topbar__title">
-              <span class="topbar__mode-icon" id="topbarModeIcon">
-                <!-- SVG icon rendered by JS -->
-              </span>
-              <h2 id="topbarTitle">Chat</h2>
-              <span id="topbarSubtitle" hidden>Thoughtful, coherent AI conversation</span>
-            </div>
-          </div>
 
-          <div class="topbar__actions">
+            <!-- Individual Model Selector Button -->
             <div class="topbar__model-wrapper" id="topbarModelWrapper">
               <button class="model-badge" id="topbarModelBtn" type="button" title="Select Model" aria-haspopup="listbox" aria-expanded="false">
                 <span class="model-badge__indicator"></span>
@@ -176,6 +164,19 @@
                 <div class="topbar-dropdown__list" id="topbarModelList" role="listbox"></div>
               </div>
             </div>
+
+            <!-- Hidden container for JS compat -->
+            <div class="topbar__title" id="topbarTitleWrap" hidden style="display:none !important;">
+              <span class="topbar__mode-icon" id="topbarModeIcon"></span>
+              <h2 id="topbarTitle">Chat</h2>
+              <span id="topbarSubtitle"></span>
+            </div>
+          </div>
+
+          <div class="topbar__actions">
+            <button class="topbar__action-btn" id="topbarNewChatBtn" type="button" title="New conversation" aria-label="New chat">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+            </button>
             <button class="topbar__action-btn" id="exportBtn" type="button" title="Export conversation as Markdown" aria-label="Export conversation">
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
               <span>Export</span>
@@ -473,9 +474,8 @@
                     <div class="provider-item__info">
                       <div class="provider-item__title-row">
                         <span class="provider-item__name">Pollinations</span>
-                        <span class="badge badge--green">Free / Instant</span>
+                        <span class="badge badge--green">Free</span>
                       </div>
-                      <span class="provider-item__desc">Immediate access without registration. Supports Vision &amp; OpenAI/Gemini endpoints.</span>
                     </div>
                   </label>
                   <div class="provider-item__body">
@@ -502,7 +502,6 @@
                         <span class="provider-item__name">Groq</span>
                         <span class="badge badge--orange">Ultra Fast</span>
                       </div>
-                      <span class="provider-item__desc">Lightning speed inference on Llama 3.3 70B via LPUs. Requires free API key.</span>
                     </div>
                   </label>
                   <div class="provider-item__body">
@@ -526,9 +525,8 @@
                     <div class="provider-item__info">
                       <div class="provider-item__title-row">
                         <span class="provider-item__name">OpenRouter</span>
-                        <span class="badge badge--purple">Broadest Models</span>
+                        <span class="badge badge--purple">Multi-Model</span>
                       </div>
-                      <span class="provider-item__desc">Access hundreds of open &amp; commercial models (DeepSeek, Claude, GPT, Qwen).</span>
                     </div>
                   </label>
                   <div class="provider-item__body">
@@ -548,20 +546,26 @@
               </div>
             </div>
 
-            <!-- Custom Providers Section -->
-            <div class="settings-section" id="customProvidersSection">
-              <div class="settings-section__label-row">
-                <div>
-                  <div class="settings-section__label">Custom Endpoints (OpenAI-Compatible)</div>
-                  <p class="settings-section__hint">Add endpoints like Kilo Gateway, Ollama, LM Studio, vLLM, DeepSeek</p>
+            <!-- Custom Providers Section Accordion -->
+            <div class="settings-section settings-section--accordion" id="customProvidersSection">
+              <button type="button" class="settings-accordion-toggle" id="customProvidersToggleBtn" aria-expanded="false" aria-controls="customProvidersBody">
+                <div class="settings-accordion-toggle__left">
+                  <svg class="settings-accordion-toggle__chevron" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                  <span class="settings-accordion-toggle__title">Custom Endpoints</span>
                 </div>
-                <button type="button" class="settings-section__action" id="addCustomProviderBtn" title="Add another provider">
-                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
-                  Add Provider
-                </button>
-              </div>
-              <div class="custom-providers-list" id="customProvidersList">
-                <!-- Dynamically rendered by JS -->
+                <span class="settings-accordion-toggle__badge" id="customProvCountBadge">0 configured</span>
+              </button>
+              <div class="settings-accordion__body" id="customProvidersBody" hidden>
+                <div class="settings-section__label-row" style="margin-bottom: 8px;">
+                  <span class="settings-section__hint">OpenAI-compatible endpoints (Ollama, LM Studio, vLLM)</span>
+                  <button type="button" class="settings-section__action" id="addCustomProviderBtn" title="Add another provider">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                    Add
+                  </button>
+                </div>
+                <div class="custom-providers-list" id="customProvidersList">
+                  <!-- Dynamically rendered by JS -->
+                </div>
               </div>
             </div>
 
@@ -662,11 +666,29 @@
               </div>
             </div>
 
-            <!-- Real User Memory & Personalization -->
-            <div class="settings-section">
-              <div class="settings-section__label">Memory &amp; Notes</div>
-              <textarea id="userMemoryNotes" rows="2" placeholder="Notes about you (e.g. your role, preferred languages, concise tone)..."></textarea>
-              <div class="memory-facts-box" id="memoryFactsBox" style="margin-top: 8px;"></div>
+            <!-- Real User Memory & Personalization Accordion -->
+            <div class="settings-section settings-section--accordion" id="memoryAccordionSection">
+              <button type="button" class="settings-accordion-toggle" id="memoryAccordionToggle" aria-expanded="false" aria-controls="memoryAccordionBody">
+                <div class="settings-accordion-toggle__left">
+                  <svg class="settings-accordion-toggle__chevron" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                  <span class="settings-accordion-toggle__title">Memory &amp; Notes</span>
+                </div>
+                <span class="settings-accordion-toggle__badge" id="memoryFactsBadge">0 facts</span>
+              </button>
+              <div class="settings-accordion__body" id="memoryAccordionBody" hidden>
+                <p class="settings-section__hint">Long-term profile notes and facts Sage remembers about you to personalize your answers.</p>
+                <div class="settings-field-group">
+                  <label class="settings-field-label" for="userMemoryNotes">Profile Notes &amp; Preferences</label>
+                  <textarea id="userMemoryNotes" class="custom-textarea" rows="2" placeholder="Notes about you (e.g. your role, preferred languages, concise tone)..."></textarea>
+                </div>
+                <div class="settings-field-group" style="margin-top: 10px;">
+                  <div class="settings-field-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <label class="settings-field-label">Learned Facts</label>
+                    <button type="button" class="settings-field-action-btn" id="clearAllMemoryFactsBtn" title="Clear all learned facts">Clear All</button>
+                  </div>
+                  <div class="memory-facts-box" id="memoryFactsBox"></div>
+                </div>
+              </div>
             </div>
 
             <!-- Behavior -->
@@ -700,9 +722,17 @@
               </div>
             </div>
 
+            <!-- System Persona (Conversation vs Global) -->
             <div class="settings-section">
-              <div class="settings-section__label">System Persona</div>
-              <textarea id="systemPromptInput" rows="2" placeholder="Custom instructions for this chat (optional)"></textarea>
+              <div class="settings-section__label-row">
+                <div class="settings-section__label">System Persona</div>
+                <div class="scope-segmented" id="personaScopeToggle" role="radiogroup" aria-label="Persona Scope">
+                  <button type="button" class="scope-btn is-active" data-scope="conversation" id="personaScopeConvBtn" title="Apply persona only to this conversation">This Chat</button>
+                  <button type="button" class="scope-btn" data-scope="global" id="personaScopeGlobalBtn" title="Apply persona globally to all conversations">Global (All Chats)</button>
+                </div>
+              </div>
+              <p class="settings-section__hint" id="personaScopeHint">Custom persona and instructions applied only to this conversation.</p>
+              <textarea id="systemPromptInput" class="custom-textarea" rows="3" placeholder="Define custom instructions or persona (e.g. 'You are an expert full-stack engineer and tech lead...'). Leave blank for default Sage identity."></textarea>
             </div>
           </div>
 
