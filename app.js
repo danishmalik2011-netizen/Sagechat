@@ -1456,7 +1456,7 @@
       const isStreaming = isConvStreaming(c.id);
       const streamingBadgeHTML = isStreaming
         ? '<span class="conv__streaming-badge" title="Generating response...">' +
-            '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>' +
+            '<span class="streaming-spinner streaming-spinner--mini"></span>' +
           '</span><span class="conv__dot">·</span>'
         : '';
 
@@ -2116,7 +2116,10 @@
     const slideControls = document.getElementById('canvasSlideControls');
     const slideCounter  = document.getElementById('canvasSlideCounter');
 
-    if (titleEl) titleEl.textContent = canvasCurrentTitle;
+    if (titleEl) {
+      titleEl.textContent = canvasCurrentTitle;
+      titleEl.title = canvasCurrentTitle;
+    }
     if (infoEl) {
       infoEl.textContent = '';
       infoEl.hidden = true;
@@ -2370,12 +2373,20 @@
       canvasCurrentSrc = URL.createObjectURL(blob);
     } catch {}
 
+    const appEl = document.getElementById('app');
+    if (appEl) appEl.classList.add('has-canvas-open');
+    document.body.classList.add('has-canvas-open');
+
     m.hidden = false;
     m.removeAttribute('hidden');
     (window.requestAnimationFrame || setTimeout)(() => m.classList.add('is-open'), 0);
   }
 
   function closeCanvas() {
+    const appEl = document.getElementById('app');
+    if (appEl) appEl.classList.remove('has-canvas-open');
+    document.body.classList.remove('has-canvas-open');
+
     const m = document.getElementById('canvasModal');
     if (!m) return;
     m.classList.remove('is-open');
@@ -3668,7 +3679,7 @@
             resContainer.className = 'code-tool-result';
             wrapper.parentNode.insertBefore(resContainer, wrapper.nextSibling);
           }
-          resContainer.innerHTML = `<div class="tool-result-card"><div class="typing-indicator"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span> Searching...</div></div>`;
+          resContainer.innerHTML = `<div class="tool-result-card"><div class="typing-indicator"><span class="streaming-spinner"></span> <span class="typing-indicator__label">Searching…</span></div></div>`;
           const data = await searchWeb(rawText);
           resContainer.innerHTML = formatSearchResultsHTML(data);
         });
@@ -3946,10 +3957,10 @@
         const thinkingHtml = renderThinkingBlockHTML(m.thinkingContent, true);
         const stepsHtml = renderStepsBlockHTML(m.steps);
         if (!m.content && !m.thinkingContent && !stepsHtml) {
-          contentHtml = '<div class="typing-indicator"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>';
+          contentHtml = '<div class="typing-indicator" title="Thinking..."><span class="streaming-spinner"></span> <span class="typing-indicator__label">Thinking…</span></div>';
         } else {
           contentHtml = thinkingHtml + stepsHtml + mdToSafeHTML(m.content || '') +
-            '<span class="msg__streaming-indicator" title="Generating response..."><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></span>';
+            '<span class="msg__streaming-indicator" title="Generating response..."><span class="streaming-spinner"></span></span>';
         }
       } else {
         const thinkingHtml = renderThinkingBlockHTML(m.thinkingContent, false);
@@ -4101,7 +4112,7 @@
     const wordCount = text ? text.split(/\s+/).length : 0;
     const summaryText = isStreaming ? 'Thinking…' : `Thought for a moment · ${wordCount} words`;
     const body = isStreaming
-      ? (text ? escapeHTML(text).replace(/\n/g, '<br>') + '<br>' : '') + '<div class="typing-indicator"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>'
+      ? (text ? escapeHTML(text).replace(/\n/g, '<br>') + '<br>' : '') + '<div class="typing-indicator" title="Thinking..."><span class="streaming-spinner"></span> <span class="typing-indicator__label">Thinking…</span></div>'
       : escapeHTML(text).replace(/\n/g, '<br>');
     const openAttr = forceOpen ? ' open' : '';
     return `
@@ -4964,7 +4975,7 @@
                 if (c) {
                   if (!c.classList.contains('md')) c.classList.add('md');
                   const streamingDots = '<span class="msg__streaming-indicator" title="Generating response...">' +
-                    '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>' +
+                    '<span class="streaming-spinner"></span>' +
                   '</span>';
                   const wasOpen = !!(c.querySelector('.thinking-block[open]'));
                   const stepsHtml = renderStepsBlockHTML(assistantMsg.steps);
@@ -5067,7 +5078,7 @@
                 if (last && last.classList.contains('msg--assistant')) {
                   const c = last.querySelector('.msg__content');
                   if (c) {
-                    const streamingDots = '<span class="msg__streaming-indicator"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></span>';
+                    const streamingDots = '<span class="msg__streaming-indicator" title="Generating response..."><span class="streaming-spinner"></span></span>';
                     const wasOpen = !!(c.querySelector('.thinking-block[open]'));
                     const stepsHtml = renderStepsBlockHTML(assistantMsg.steps);
                     const thinkingHtml = renderThinkingBlockHTML(assistantMsg.thinkingContent, true, wasOpen);

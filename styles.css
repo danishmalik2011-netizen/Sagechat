@@ -1147,15 +1147,15 @@ html, body {
   gap: 3px;
   background: var(--primary-subtle);
   border: 1px solid var(--primary-border);
-  padding: 2px 5px;
+  padding: 2px 4px;
   border-radius: 4px;
   flex-shrink: 0;
   height: 14px;
 }
-.conv__streaming-badge .typing-dot {
-  width: 4px;
-  height: 4px;
-  background: var(--primary);
+.conv__streaming-badge .streaming-spinner {
+  width: 8px;
+  height: 8px;
+  border-width: 1.3px;
 }
 .conv__dot {
   color: var(--ink-300);
@@ -2106,17 +2106,20 @@ html, body {
   gap: 3.5px;
   margin-left: 6px;
   vertical-align: middle;
-  padding: 2px 7px;
+  padding: 3px 5px;
   background: var(--primary-subtle);
   border: 1px solid var(--primary-border);
-  border-radius: 12px;
+  border-radius: 999px;
   line-height: 1;
   user-select: none;
 }
-.msg__streaming-indicator .typing-dot {
-  width: 5px;
-  height: 5px;
-  background: var(--primary);
+.msg__streaming-indicator .streaming-spinner {
+  width: 12px;
+  height: 12px;
+  border-width: 1.6px;
+}
+.msg--assistant.is-streaming .msg__content.md > p:last-of-type {
+  display: inline;
 }
 
 /* Thinking block inside assistant messages */
@@ -2189,31 +2192,46 @@ details[open] > .thinking-block__summary .thinking-block__chevron {
   color: #d32f2f;
 }
 
-/* Streaming Typing Indicator */
+/* High-End Minimalist Streaming Spinner (Apple / Vercel / Linear Aesthetic) */
+.streaming-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 1.8px solid var(--primary-border, rgba(224, 104, 83, 0.25));
+  border-top-color: var(--primary, #ff3366);
+  border-radius: 50%;
+  animation: streamSpin 0.72s cubic-bezier(0.4, 0.1, 0.3, 1) infinite;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+.streaming-spinner--mini {
+  width: 9.5px;
+  height: 9.5px;
+  border-width: 1.4px;
+}
+@keyframes streamSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Sleek Minimalist Typing / Thinking Indicator Card */
 .typing-indicator {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 8px 14px;
+  gap: 7.5px;
+  padding: 6px 12px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   margin-top: 2px;
+  box-shadow: var(--shadow-sm);
 }
-.typing-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--primary);
-  animation: typingBounce 1.2s infinite ease-in-out both;
-}
-.typing-dot:nth-child(1) { animation-delay: -0.32s; }
-.typing-dot:nth-child(2) { animation-delay: -0.16s; }
-.typing-dot:nth-child(3) { animation-delay: 0s; }
-
-@keyframes typingBounce {
-  0%, 80%, 100% { transform: scale(0.6); opacity: 0.35; }
-  40% { transform: scale(1.05); opacity: 1; }
+.typing-indicator__label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-500);
+  letter-spacing: -0.01em;
+  user-select: none;
 }
 
 /* AI Help & Error Action Card */
@@ -5068,113 +5086,288 @@ input[type="range"] { width: 100%; accent-color: var(--primary); }
 .btnrow { display: flex; flex-wrap: wrap; gap: 8px; }
 
 /* =========================================================
-   CANVAS ARTIFACT PREVIEW DRAWER & SIDEBAR (NOT A POPUP)
+   CANVAS ARTIFACT PREVIEW: TRUE SPLIT-SCREEN & BOTTOM SHEET
+   Desktop: Inline Split-Screen (side-by-side with chat, NO scrim, NO popup)
+   Mobile: Bottom Sheet Drawer (slides up from bottom, icon-only buttons)
    ========================================================= */
 #canvasModal {
-  position: fixed;
-  inset: 0;
-  z-index: 600;
-  display: block; /* Dedicated drawer/sidebar layout, NOT centered grid popup */
   padding: 0;
-  pointer-events: none;
-  opacity: 1;
   overflow: hidden;
-  transition: none;
+  box-sizing: border-box;
 }
-#canvasModal.is-open {
-  pointer-events: auto;
-}
+
 #canvasModal[hidden] {
   display: none !important;
 }
 
-#canvasModal .modal__scrim {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.16);
-  backdrop-filter: blur(2px);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.28s ease;
-}
-#canvasModal.is-open .modal__scrim {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.canvas__drag-handle {
-  display: none;
-}
-
-/* Desktop: Right Sidebar (slides in smoothly from right) */
+/* DESKTOP: True Inline Split-Screen Workspace */
 @media (min-width: 769px) {
-  #canvasModal .modal__panel--canvas {
-    position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: auto;
-    width: min(740px, 52vw);
-    min-width: 480px;
-    max-width: 920px;
-    height: 100vh;
-    max-height: 100vh;
-    border-radius: 0;
-    border: none;
-    border-left: 1px solid var(--border);
-    box-shadow: -10px 0 40px rgba(0, 0, 0, 0.16);
-    background: var(--surface);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    transform: translateX(100%);
-    transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
-    z-index: 2;
+  .app.has-canvas-open .main {
+    flex: 1 1 50% !important;
+    min-width: 360px !important;
+    max-width: 60% !important;
   }
-  #canvasModal.is-open .modal__panel--canvas {
-    transform: translateX(0);
+
+  #canvasModal {
+    position: relative !important;
+    inset: auto !important;
+    z-index: 20 !important;
+    flex: 1 1 50% !important;
+    width: 50% !important;
+    min-width: 400px !important;
+    max-width: 65% !important;
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    background: var(--surface) !important;
+    border-left: 1px solid var(--border) !important;
+    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.06) !important;
+    pointer-events: auto !important;
+    opacity: 1 !important;
+    transform: none !important;
+    animation: canvasSplitIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes canvasSplitIn {
+    from {
+      opacity: 0.85;
+      transform: translateX(18px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  /* Never show backdrop scrim on desktop split-screen (Chat remains 100% lit & active) */
+  #canvasModal .modal__scrim {
+    display: none !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+  }
+
+  #canvasModal .modal__panel--canvas {
+    position: relative !important;
+    inset: auto !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: 100% !important;
+    max-height: none !important;
+    border-radius: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: var(--surface) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    transform: none !important;
+    transition: none !important;
+    overflow: hidden !important;
+  }
+
+  .canvas__drag-handle {
+    display: none !important;
+  }
+
+  /* Desktop Header Layout - Everything fits on one line, all icons visible */
+  #canvasModal .modal__head {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 10px 14px !important;
+    border-bottom: 1px solid var(--border) !important;
+    background: var(--paper-elevated) !important;
+    gap: 8px !important;
+    flex-wrap: nowrap !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+
+  #canvasModal .modal__title-group {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    min-width: 0 !important;
+    flex: 0 1 auto !important;
+    overflow: hidden !important;
+  }
+
+  #canvasModal #canvasTitle {
+    font-size: 13.5px !important;
+    font-weight: 700 !important;
+    color: var(--ink-900) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 170px !important;
+    margin: 0 !important;
+    line-height: 1.3 !important;
+  }
+
+  #canvasModal .canvas__slide-controls {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    flex-shrink: 0 !important;
+    background: var(--surface) !important;
+    padding: 3px 6px !important;
+    border-radius: var(--radius-sm) !important;
+    border: 1px solid var(--border) !important;
+  }
+
+  #canvasModal .canvas__slide-counter {
+    font-size: 11.5px !important;
+    font-weight: 700 !important;
+    color: var(--ink-700) !important;
+    padding: 0 4px !important;
+    min-width: 36px !important;
+    text-align: center !important;
+    user-select: none !important;
+  }
+
+  #canvasModal .canvas__actions {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    flex-shrink: 0 !important;
+  }
+
+  #canvasModal .chip {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    padding: 0 !important;
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+    line-height: 1 !important;
+    border-radius: var(--radius-sm) !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    background: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    color: var(--ink-800) !important;
+    cursor: pointer !important;
+    transition: all 0.12s ease !important;
+  }
+
+  #canvasModal .chip span {
+    display: none !important;
+  }
+
+  #canvasModal .chip:hover {
+    background: var(--surface-hover) !important;
+    border-color: var(--border-focus) !important;
+    color: var(--primary) !important;
+  }
+
+  #canvasModal .chip svg {
+    width: 13px !important;
+    height: 13px !important;
+    flex-shrink: 0 !important;
+    margin: 0 !important;
+  }
+
+  #canvasModal .iconbtn[data-close] {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    padding: 0 !important;
+    display: grid !important;
+    place-items: center !important;
+    border-radius: var(--radius-sm) !important;
+    background: transparent !important;
+    border: 1px solid transparent !important;
+    color: var(--ink-600) !important;
+    cursor: pointer !important;
+    flex-shrink: 0 !important;
+    transition: all 0.12s ease !important;
+  }
+
+  #canvasModal .iconbtn[data-close]:hover {
+    background: var(--surface-hover) !important;
+    color: #e11d48 !important;
+    border-color: var(--border) !important;
+  }
+
+  /* Ultra-wide monitors: show concise button text alongside icons */
+  @media (min-width: 1560px) {
+    #canvasModal .chip {
+      width: auto !important;
+      padding: 0 8px !important;
+    }
+    #canvasModal .chip span {
+      display: inline !important;
+    }
+    #canvasModal #canvasTitle {
+      max-width: 280px !important;
+    }
   }
 }
 
-/* Mobile: Bottom Sheet Drawer (slides up smoothly from bottom) */
+/* MOBILE: Bottom Sheet Drawer (Slides smoothly up from bottom) */
 @media (max-width: 768px) {
+  #canvasModal {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 900 !important;
+    display: block !important;
+    pointer-events: none !important;
+  }
+  #canvasModal.is-open {
+    pointer-events: auto !important;
+  }
   #canvasModal .modal__scrim {
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(3px);
+    position: absolute !important;
+    inset: 0 !important;
+    background: rgba(0, 0, 0, 0.45) !important;
+    backdrop-filter: blur(3px) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: opacity 0.28s ease !important;
+    display: block !important;
+    visibility: visible !important;
+  }
+  #canvasModal.is-open .modal__scrim {
+    opacity: 1 !important;
+    pointer-events: auto !important;
   }
   .canvas__drag-handle {
-    display: block;
-    width: 38px;
-    height: 4px;
-    border-radius: 999px;
-    background: var(--border-hover, rgba(140, 140, 160, 0.45));
-    margin: 8px auto 2px auto;
-    flex-shrink: 0;
+    display: block !important;
+    width: 38px !important;
+    height: 4px !important;
+    border-radius: 999px !important;
+    background: var(--border-hover, rgba(140, 140, 160, 0.45)) !important;
+    margin: 8px auto 2px auto !important;
+    flex-shrink: 0 !important;
   }
   #canvasModal .modal__panel--canvas {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    top: auto;
-    width: 100vw;
-    max-width: 100vw;
-    height: 88vh;
-    max-height: 92vh;
-    border-radius: 22px 22px 0 0;
-    border: 1px solid var(--border);
-    border-bottom: none;
-    box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.28);
-    background: var(--surface);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    transform: translateY(100%);
-    transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
-    z-index: 2;
+    position: fixed !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    top: auto !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 88vh !important;
+    max-height: 92vh !important;
+    border-radius: 22px 22px 0 0 !important;
+    border: 1px solid var(--border) !important;
+    border-bottom: none !important;
+    box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.28) !important;
+    background: var(--surface) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    transform: translateY(100%) !important;
+    transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    z-index: 2 !important;
   }
   #canvasModal.is-open .modal__panel--canvas {
-    transform: translateY(0);
+    transform: translateY(0) !important;
   }
 
   /* All buttons in canvas on mobile: ONLY ICONS AND NO TEXT */
@@ -5198,8 +5391,8 @@ input[type="range"] { width: 100%; accent-color: var(--primary); }
   }
   #canvasModal .canvas__slide-counter {
     display: inline-flex !important;
-    align-items: center;
-    justify-content: center;
+    align-items: center !important;
+    justify-content: center !important;
     font-size: 11px !important;
     font-weight: 700 !important;
     padding: 2px 7px !important;
@@ -5238,6 +5431,27 @@ input[type="range"] { width: 100%; accent-color: var(--primary); }
     max-width: 130px !important;
   }
 }
+
+/* Fullscreen presentation deck mode */
+#canvasModal:fullscreen,
+#canvasModal:-webkit-full-screen {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+  border: none !important;
+  z-index: 9999 !important;
+  background: #0b0e14 !important;
+}
+#canvasModal:fullscreen .modal__panel--canvas,
+#canvasModal:-webkit-full-screen .modal__panel--canvas {
+  width: 100vw !important;
+  height: 100vh !important;
+  background: #0b0e14 !important;
+}
+
 #canvasInfo {
   display: none !important;
 }
