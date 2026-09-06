@@ -510,6 +510,130 @@
   --scrollbar-thumb-hover: #6366f1;
 }
 
+/* 5. Premium Monochrome Palette (ChatGPT-style solid grayscale) */
+[data-palette="mono"] {
+  --primary: #0a0a0a;
+  --primary-hover: #000000;
+  --primary-active: #171717;
+  --primary-subtle: rgba(0, 0, 0, 0.06);
+  --primary-border: rgba(0, 0, 0, 0.18);
+  --primary-glow: transparent;
+
+  --paper: #fafafa;
+  --paper-elevated: #f3f3f3;
+  --surface: #ffffff;
+  --surface-hover: #f0f0f0;
+  --surface-active: #e6e6e6;
+  --surface-2: #f5f5f5;
+  --surface-3: #eeeeee;
+  --surface-border: #e6e6e6;
+
+  --ink-900: #0a0a0a;
+  --ink-700: #3a3a3a;
+  --ink-500: #737373;
+  --ink-400: #a3a3a3;
+  --ink-300: #d4d4d4;
+  --ink-100: #f0f0f0;
+
+  --border: #e5e5e5;
+  --border-strong: #d4d4d4;
+  --border-focus: #0a0a0a;
+
+  --user-bubble: #f2f2f2;
+  --user-bubble-text: #0a0a0a;
+  --user-bubble-border: #e5e5e5;
+
+  --scrollbar-track: #fafafa;
+  --scrollbar-thumb: #d4d4d4;
+  --scrollbar-thumb-hover: #0a0a0a;
+}
+
+[data-theme="dark"][data-palette="mono"] {
+  --primary: #ffffff;
+  --primary-hover: #e6e6e6;
+  --primary-active: #cccccc;
+  --primary-subtle: rgba(255, 255, 255, 0.1);
+  --primary-border: rgba(255, 255, 255, 0.22);
+  --primary-glow: transparent;
+
+  --paper: #0a0a0a;
+  --paper-elevated: #0f0f0f;
+  --surface: #141414;
+  --surface-hover: #1a1a1a;
+  --surface-active: #222222;
+  --surface-2: #111111;
+  --surface-3: #1a1a1a;
+  --surface-border: #262626;
+
+  --ink-900: #f5f5f5;
+  --ink-700: #e5e5e5;
+  --ink-500: #a3a3a3;
+  --ink-400: #737373;
+  --ink-300: #404040;
+  --ink-100: #171717;
+
+  --border: #262626;
+  --border-strong: #333333;
+  --border-focus: #ffffff;
+
+  --user-bubble: #171717;
+  --user-bubble-text: #f5f5f5;
+  --user-bubble-border: #262626;
+
+  --scrollbar-track: #0a0a0a;
+  --scrollbar-thumb: #333333;
+  --scrollbar-thumb-hover: #ffffff;
+}
+
+/* Monochrome dark mode component hardening: avoid harsh white overlays */
+[data-theme="dark"][data-palette="mono"] .btn--primary,
+[data-theme="dark"][data-palette="mono"] .composer__send,
+[data-theme="dark"][data-palette="mono"] .composer__icon--stop,
+[data-theme="dark"][data-palette="mono"] .preview-btn,
+[data-theme="dark"][data-palette="mono"] .topbar-dropdown__item.is-selected,
+[data-theme="dark"][data-palette="mono"] .custom-select__option.is-selected,
+[data-theme="dark"][data-palette="mono"] .mode.is-active,
+[data-theme="dark"][data-palette="mono"] .skill.is-on,
+[data-theme="dark"][data-palette="mono"] .chip--slide-fs,
+[data-theme="dark"][data-palette="mono"] .settings-tab.is-active {
+  background: var(--surface-active);
+  color: var(--ink-900);
+  border-color: var(--border-strong);
+  box-shadow: none;
+}
+
+[data-theme="dark"][data-palette="mono"] .btn--primary:hover,
+[data-theme="dark"][data-palette="mono"] .composer__send:hover,
+[data-theme="dark"][data-palette="mono"] .composer__icon--stop:hover {
+  background: var(--surface-hover);
+  color: var(--ink-900);
+}
+
+[data-theme="dark"][data-palette="mono"] .composer__send svg,
+[data-theme="dark"][data-palette="mono"] .composer__icon--stop svg,
+[data-theme="dark"][data-palette="mono"] .btn--primary svg {
+  stroke: var(--ink-900);
+  color: var(--ink-900);
+}
+
+[data-theme="dark"][data-palette="mono"] .check-toggle input:checked + .toggle-slider {
+  background: var(--surface-active);
+}
+
+[data-theme="dark"][data-palette="mono"] .toggle-slider::after {
+  background: var(--ink-900);
+}
+
+[data-theme="dark"][data-palette="mono"] .topbar-dropdown__item.is-selected svg,
+[data-theme="dark"][data-palette="mono"] .custom-select__option.is-selected svg {
+  color: var(--ink-900);
+}
+
+[data-theme="dark"][data-palette="mono"] .topbar-dropdown__item.is-selected .topbar-dropdown__tag,
+[data-theme="dark"][data-palette="mono"] .custom-select__option.is-selected .custom-select__option-name {
+  color: var(--ink-900);
+}
+
 /* =========================================================
    CUSTOM TYPOGRAPHY & FONT ACCESSIBILITY
    ========================================================= */
@@ -3476,6 +3600,19 @@ details[open] > .thinking-block__summary .thinking-block__chevron {
   mix-blend-mode: overlay;
   opacity: 0.35;
   transition: opacity 0.25s ease;
+}
+
+/* Solid monochrome fill for mono palette */
+[data-palette="mono"] .thinking-slider__fill {
+  background: #0a0a0a !important;
+  box-shadow: none !important;
+}
+[data-palette="mono"] .thinking-slider__grain {
+  opacity: 0 !important;
+}
+[data-theme="dark"][data-palette="mono"] .thinking-slider__fill {
+  background: #ffffff !important;
+  box-shadow: none !important;
 }
 
 /* Discrete Step Dots aligned with stop positions */
