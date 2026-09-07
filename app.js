@@ -86,7 +86,7 @@
       id: 'translate', label: 'Translate', tabTitle: 'Translate',
       tabSub: 'Faithful translation between languages',
       sys: 'You are Sage, an expert translator. Always identify as Sage. Detect the source language and translate to the user’s target language (default: English). Preserve formatting, idioms, and tone.',
-      icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14M9 4v4M7 20l3-7 3 7M8 17h4"/><path d="M14 12h7M17.5 9 21 15M14 15l3.5 6"/><circle cx="6" cy="4" r="1" fill="currentColor" opacity="0.6"/></svg>',
+      icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14M9 4v4M7 20l3-7 3 7M8 17h4"/><path d="M14 12h7M17.5 9 21 15M14 15l3.5 6"/><circle cx="6" cy="4" r="1" fill="currentColor" opacity="0.6"/><path d="M6 12h4" opacity="0.6"/></svg>',
     },
   ];
 
