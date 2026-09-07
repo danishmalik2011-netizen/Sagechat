@@ -56,37 +56,37 @@
       id: 'chat', label: 'Chat', tabTitle: 'Chat',
       tabSub: 'Thoughtful, coherent AI conversation',
       sys: 'You are Sage, a thoughtful, precise, and sophisticated AI assistant. Always identify as Sage when asked about your identity or name. Be clear, concise, and helpful. Use markdown.',
-      icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8M8 13h4" opacity="0.6"/></svg>',
+      icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8.5 10.5a1 1 0 1 0 0-2 1 1 0 0 0 0 2z" fill="currentColor" stroke="none"/><path d="M12 10.5a1 1 0 1 0 0-2 1 1 0 0 0 0 2z" fill="currentColor" stroke="none"/><path d="M15.5 10.5a1 1 0 1 0 0-2 1 1 0 0 0 0 2z" fill="currentColor" stroke="none"/></svg>',
     },
     {
       id: 'code', label: 'Code', tabTitle: 'Code',
       tabSub: 'Write, review, and refactor code with precision',
       sys: 'You are Sage, an expert senior software engineer. Always identify as Sage. Answer with concise, correct code. Prefer modern idioms and explain tradeoffs in 1-2 sentences. Wrap code in fenced blocks with the right language tag.',
-      icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/><path d="M12 12v4" opacity="0.6"/></svg>',
+      icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4L4 12l5 8"/><path d="M15 4l5 8-5 8"/><path d="M12 8l-2 8" opacity="0.55"/></svg>',
     },
     {
       id: 'study', label: 'Study', tabTitle: 'Study',
       tabSub: 'Learn anything, step by step',
       sys: 'You are Sage, a patient tutor. Always identify as Sage. Break topics into small steps, use analogies, and end each response with a quick recap.',
-      icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/><path d="M6 8h6M6 12h4" opacity="0.6"/></svg>',
+      icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M8 7h8M8 11h6" opacity="0.7"/></svg>',
     },
     {
       id: 'write', label: 'Write', tabTitle: 'Write',
       tabSub: 'Draft, edit, and polish any text',
       sys: 'You are Sage, an expert writing partner. Always identify as Sage. Match the requested tone, suggest improvements, and offer a short, punchy version when asked.',
-      icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/><path d="M6 12h6" opacity="0.6"/></svg>',
+      icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/><path d="M15 5l4 4" opacity="0.7"/></svg>',
     },
     {
       id: 'summarize', label: 'Summarize', tabTitle: 'Summarize',
       tabSub: 'Distill long text into key points',
       sys: 'You are Sage, an expert summarizer. Always identify as Sage. Produce a tight summary with bullet points, then a one-sentence TL;DR. Stay faithful to the source.',
-      icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M6 12h12M9 18h6"/><circle cx="6" cy="6" r="1" fill="currentColor" opacity="0.6"/><circle cx="6" cy="12" r="1" fill="currentColor" opacity="0.6"/><circle cx="6" cy="18" r="1" fill="currentColor" opacity="0.6"/></svg>',
+      icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h10"/><path d="M19 15l3 3-3 3" opacity="0.7"/></svg>',
     },
     {
       id: 'translate', label: 'Translate', tabTitle: 'Translate',
       tabSub: 'Faithful translation between languages',
       sys: 'You are Sage, an expert translator. Always identify as Sage. Detect the source language and translate to the user’s target language (default: English). Preserve formatting, idioms, and tone.',
-      icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14M9 4v4M7 20l3-7 3 7M8 17h4"/><path d="M14 12h7M17.5 9 21 15M14 15l3.5 6"/><circle cx="6" cy="4" r="1" fill="currentColor" opacity="0.6"/><path d="M6 12h4" opacity="0.6"/></svg>',
+      icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14"/><path d="M12 4v4"/><path d="M7 20l3-7 3 7"/><path d="M7.5 13H17"/><path d="M17 17l3-3-3-3"/><path d="M14 14l3 3" opacity="0.7"/></svg>',
     },
   ];
 

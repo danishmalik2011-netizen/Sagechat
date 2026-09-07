@@ -76,6 +76,12 @@ Or just open `index.html` directly in a browser (file:// works for most features
 - Theme-aware CSS variables for all colors and borders
 - Connector card icons use `var(--primary-subtle)` and `var(--primary)` for monochrome consistency
 - All MCP connector icons are polished minimal SVGs with theme-aware styling
+- **Surface depth system**: 3-tier elevation (`--surface` / `--surface-2` / `--paper`) with inset composer well
+- **No border noise**: buttons and mode cards use `box-shadow` instead of borders for interactive states
+- **Custom mode icons**: all 6 modes (Chat/Code/Study/Write/Summarize/Translate) have unique hand-crafted SVG icons with character
+- **Redesigned send button**: diagonal arrow-up-right icon with micro-interaction on hover
+- **Thinking levels**: CSS variable-driven (`--thinking-1` through `--thinking-4`) — no hardcoded hex colors; Level 4 glow removed for consistency
+- **Status dots**: `is-ok` state uses `--primary` instead of hardcoded ink color
 
 ## Conventions
 - Soft pastel palette, friendly tone, no placeholders
