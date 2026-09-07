@@ -70,6 +70,13 @@ Or just open `index.html` directly in a browser (file:// works for most features
 - `newChatBtn` — calls `ensureSession(conv)` so new chats get a default session immediately
 - `init()` — initial `setProviderStatus` uses `activeSession()?.provider`
 
+## UI & Design
+- **Premium monochrome theme** as default (`data-palette="mono"`)
+- Solid, clean, minimalist design — NO glassmorphism, NO gradients anywhere
+- Theme-aware CSS variables for all colors and borders
+- Connector card icons use `var(--primary-subtle)` and `var(--primary)` for monochrome consistency
+- All MCP connector icons are polished minimal SVGs with theme-aware styling
+
 ## Conventions
 - Soft pastel palette, friendly tone, no placeholders
 - API keys stored only in localStorage; never sent anywhere except chosen provider
