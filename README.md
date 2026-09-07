@@ -1,6 +1,6 @@
 <div align="center">
 
-# ✦ Sagechat
+# ✦ Sage
 
 ### A private, delightful, local-first AI workspace built right into your browser.
 
@@ -17,7 +17,7 @@
 
 ## 📖 Overview
 
-**Sagechat** is a high-performance, private, client-side conversational AI application designed around the **BYOK (Bring Your Own Key)** philosophy. 
+**Sage** is a high-performance, private, client-side conversational AI application designed around the **BYOK (Bring Your Own Key)** philosophy. 
 
 Everything runs directly in your browser: API keys never touch an intermediate server, chat histories stay stored locally on your device, and you get instant access to the world's most powerful LLMs alongside a suite of developer-first tools like a live **Canvas sandbox**, **Model Context Protocol (MCP)** integration, and a **Codex-style Thinking Depth Slider**.
 
@@ -83,7 +83,7 @@ No installation required. Visit:
 
 ### 2. Run Locally
 
-Sagechat is built with vanilla web technologies—no heavy bundling or node dependencies required.
+Sage is built with vanilla web technologies—no heavy bundling or node dependencies required.
 
 ```bash
 # Clone the repository
@@ -105,7 +105,7 @@ Open `http://localhost:8766` in your browser.
 ## 📂 Project Structure
 
 ```text
-Sagechat/
+Sage/
 ├── api/
 │   └── search.js       # Vercel Serverless Function for multi-source web search
 ├── index.html          # Semantic application layout & template structures
@@ -122,7 +122,7 @@ Sagechat/
 
 ### Deploy to Vercel
 
-Sagechat is fully static and deploys to Vercel with zero configuration:
+Sage is fully static and deploys to Vercel with zero configuration:
 
 1. Import the repository on [Vercel](https://vercel.com/new).
 2. Set Framework Preset to **Other** (Root directory `./`).

@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Lexend:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400..700&display=swap"
       rel="stylesheet"
     />
     <link href="https://fonts.cdnfonts.com/css/open-dyslexic" rel="stylesheet" />
@@ -25,7 +25,7 @@
       disabled
     />
     <link rel="manifest" href="manifest.json" />
-    <link rel="stylesheet" href="styles.css?v=6" />
+    <link rel="stylesheet" href="styles.css?v=8" />
   </head>
   <body>
     <div class="app" id="app" role="application" aria-label="Sage Assistant">
@@ -105,6 +105,13 @@
         </div>
 
         <div class="sidebar__foot">
+          <!-- Incognito badge — visible only when incognito is active -->
+          <button class="sidebar__incognito-badge" id="incognitoSidebarBadge" type="button" title="End incognito mode" hidden>
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor">
+              <path d="M12 2L4 6v6c0 5.25 3.5 9.74 8 11 4.5-1.26 8-5.75 8-11V6l-8-4z"/>
+            </svg>
+            Incognito
+          </button>
           <button class="ghost" id="openSettingsBtn" type="button" title="Open Settings">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
             <span>Settings</span>
@@ -161,6 +168,21 @@
           </div>
 
           <div class="topbar__actions">
+            <!-- Incognito toggle (shield icon) — replaces old new-chat button -->
+            <button class="topbar__action-btn topbar__action-btn--incognito" id="incognitoBtn" type="button" title="Toggle incognito mode" aria-label="Toggle incognito mode" aria-pressed="false">
+              <!-- Inactive: outlined shield with slash -->
+              <svg class="incognito-icon--off" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2L4 6v6c0 5.25 3.5 9.74 8 11 4.5-1.26 8-5.75 8-11V6l-8-4z"/>
+                <path d="M12 2L4 6v6c0 5.25 3.5 9.74 8 11 4.5-1.26 8-5.75 8-11V6l-8-4z" opacity="0"/>
+                <line x1="5" y1="19" x2="19" y2="5" stroke-width="1.8"/>
+              </svg>
+              <!-- Active: filled shield with lock dot -->
+              <svg class="incognito-icon--on" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2L4 6v6c0 5.25 3.5 9.74 8 11 4.5-1.26 8-5.75 8-11V6l-8-4z"/>
+                <rect x="10" y="11" width="4" height="5" rx="0.5" fill="none" stroke="currentColor" stroke-width="1.5"/>
+                <line x1="11" y1="13" x2="11" y2="15" stroke="currentColor" stroke-width="1.5"/>
+              </svg>
+            </button>
             <button class="topbar__action-btn" id="topbarNewChatBtn" type="button" title="New conversation" aria-label="New chat">
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
             </button>
@@ -182,6 +204,14 @@
 
         <!-- Capabilities & Skills Bar (Moved to Settings) -->
         <div class="skillsbar" id="skills" aria-label="Interactive intelligence skills" hidden style="display:none;"></div>
+
+        <!-- Incognito Status Bar -->
+        <div class="incognito-status-bar" id="incognitoStatusBar" hidden>
+          <span class="incognito-status-bar__dot"></span>
+          <span class="incognito-status-bar__label">Incognito mode — <strong>chats are not saved</strong></span>
+          <span class="incognito-status-bar__divider"></span>
+          <button class="incognito-status-bar__action" id="incognitoEndBtn" type="button">End incognito</button>
+        </div>
 
         <!-- Chat Area with Left Navigation Rail -->
         <div class="chat-layout" id="chatLayout">
@@ -872,9 +902,9 @@
               <div class="theme-palette-grid" id="themePaletteGrid" role="radiogroup" aria-label="Color Themes">
                 
                 <!-- Blossom (Signature) -->
-                <label class="theme-palette-card is-active" data-palette-val="cute-pink">
-                  <input type="radio" name="appearancePalette" value="cute-pink" checked />
-                  <div class="theme-palette-card__preview preview--pink">
+                <label class="theme-palette-card is-active" data-palette-val="blossom">
+                  <input type="radio" name="appearancePalette" value="blossom" checked />
+                  <div class="theme-palette-card__preview preview--blossom">
                     <span class="preview-swatch" style="background:#131114;"></span>
                     <span class="preview-swatch" style="background:#e05d82;"></span>
                     <span class="preview-swatch" style="background:#f7f4f6;"></span>
@@ -886,9 +916,9 @@
                 </label>
 
                 <!-- Studio Slate -->
-                <label class="theme-palette-card" data-palette-val="obsidian">
-                  <input type="radio" name="appearancePalette" value="obsidian" />
-                  <div class="theme-palette-card__preview preview--obsidian">
+                <label class="theme-palette-card" data-palette-val="slate">
+                  <input type="radio" name="appearancePalette" value="slate" />
+                  <div class="theme-palette-card__preview preview--slate">
                     <span class="preview-swatch" style="background:#0d0f12;"></span>
                     <span class="preview-swatch" style="background:#60a5fa;"></span>
                     <span class="preview-swatch" style="background:#f1f5f9;"></span>
@@ -928,9 +958,9 @@
                 </label>
 
                 <!-- Deep Ocean -->
-                <label class="theme-palette-card" data-palette-val="indigo">
-                  <input type="radio" name="appearancePalette" value="indigo" />
-                  <div class="theme-palette-card__preview preview--indigo">
+                <label class="theme-palette-card" data-palette-val="ocean">
+                  <input type="radio" name="appearancePalette" value="ocean" />
+                  <div class="theme-palette-card__preview preview--ocean">
                     <span class="preview-swatch" style="background:#090d16;"></span>
                     <span class="preview-swatch" style="background:#4882e0;"></span>
                     <span class="preview-swatch" style="background:#eff4fc;"></span>
@@ -1571,6 +1601,23 @@
       </div>
     </div>
 
+    <!-- Incognito Clear Confirmation Dialog -->
+    <div class="incognito-clear-dialog" id="incognitoClearDialog" hidden role="dialog" aria-modal="true">
+      <div class="incognito-clear-dialog__panel">
+        <div class="incognito-clear-dialog__icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path d="M12 2L4 6v6c0 5.25 3.5 9.74 8 11 4.5-1.26 8-5.75 8-11V6l-8-4z"/>
+          </svg>
+        </div>
+        <div class="incognito-clear-dialog__title">Leave incognito?</div>
+        <div class="incognito-clear-dialog__body">You have incognito conversations that haven't been saved. They will be permanently deleted.</div>
+        <div class="incognito-clear-dialog__actions">
+          <button class="incognito-clear-dialog__btn incognito-clear-dialog__btn--ghost" id="incognitoClearKeepBtn" type="button">Keep chats</button>
+          <button class="incognito-clear-dialog__btn incognito-clear-dialog__btn--danger" id="incognitoClearClearBtn" type="button">Clear &amp; exit</button>
+        </div>
+      </div>
+    </div>
+
     <!-- PWA Install Banner -->
     <div id="pwaInstallBanner" class="pwa-install-banner" hidden role="dialog" aria-label="Install app">
       <div class="pwa-install-banner__body">
@@ -1596,6 +1643,6 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@13.0.3/marked.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" defer></script>
-    <script src="app.js?v=6" defer></script>
+    <script src="app.js?v=8" defer></script>
   </body>
 </html>

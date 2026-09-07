@@ -1,4 +1,4 @@
-# cute chat — project context
+# Sage — project context
 
 ## What this is
 A real AI chat assistant that runs in the browser. No backend. Vanilla HTML/CSS/JS. Solves real problems (code review, study, writing, summarizing, translating) using free AI providers.

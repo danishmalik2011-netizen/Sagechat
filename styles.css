@@ -1,5 +1,5 @@
 /* =========================================================
-   cute chat — premium AI assistant styles
+   Sage — premium AI assistant styles
    Solid, clean, minimalist design (no noisy blur/glow)
    Solid accents, balanced centering & authentic syntax highlight
    ========================================================= */
@@ -129,7 +129,7 @@
    ========================================================= */
 
 /* 1. Blossom Rose (Signature) */
-[data-palette="cute-pink"] {
+[data-palette="blossom"] {
   --primary: #d85a7f;
   --primary-hover: #c4476c;
   --primary-active: #b0365b;
@@ -163,7 +163,7 @@
   --scrollbar-thumb-hover: #d85a7f;
 }
 
-[data-theme="dark"][data-palette="cute-pink"],
+[data-theme="dark"][data-palette="blossom"],
 [data-theme="dark"] {
   --primary: #ff2a5f;
   --primary-hover: #ff4777;
@@ -203,7 +203,7 @@
 }
 
 /* 2. Studio Slate Palette (Linear / Raycast Dark Minimalism) */
-[data-palette="obsidian"] {
+[data-palette="slate"] {
   --primary: #2563eb;
   --primary-hover: #1d4ed8;
   --primary-active: #1e40af;
@@ -237,7 +237,7 @@
   --scrollbar-thumb-hover: #64748b;
 }
 
-[data-theme="dark"][data-palette="obsidian"] {
+[data-theme="dark"][data-palette="slate"] {
   --primary: #38bdf8;
   --primary-hover: #60a5fa;
   --primary-active: #2563eb;
@@ -276,8 +276,7 @@
 }
 
 /* 3. Warm Sandstone Palette (Notion / Editorial Warm Minimalism) */
-[data-palette="sandstone"],
-[data-palette="nord"] {
+[data-palette="sandstone"] {
   --primary: #9c542a;
   --primary-hover: #824420;
   --primary-active: #693416;
@@ -311,8 +310,7 @@
   --scrollbar-thumb-hover: #9c542a;
 }
 
-[data-theme="dark"][data-palette="sandstone"],
-[data-theme="dark"][data-palette="nord"] {
+[data-theme="dark"][data-palette="sandstone"] {
   --primary: #f59e0b;
   --primary-hover: #fbbf24;
   --primary-active: #d97706;
@@ -351,8 +349,7 @@
 }
 
 /* 4. Forest Moss Palette (Botanical Evergreen & Lichen) */
-[data-palette="moss"],
-[data-palette="matcha"] {
+[data-palette="moss"] {
   --primary: #2d664a;
   --primary-hover: #21513a;
   --primary-active: #173e2b;
@@ -386,8 +383,7 @@
   --scrollbar-thumb-hover: #2d664a;
 }
 
-[data-theme="dark"][data-palette="moss"],
-[data-theme="dark"][data-palette="matcha"] {
+[data-theme="dark"][data-palette="moss"] {
   --primary: #10b981;
   --primary-hover: #34d399;
   --primary-active: #059669;
@@ -426,8 +422,7 @@
 }
 
 /* 5. Deep Ocean Palette (Abyssal Navy & Marine Slate, No Glow) */
-[data-palette="indigo"],
-[data-palette="midnight"] {
+[data-palette="ocean"] {
   --primary: #1d53b3;
   --primary-hover: #174291;
   --primary-active: #103373;
@@ -461,8 +456,7 @@
   --scrollbar-thumb-hover: #1d53b3;
 }
 
-[data-theme="dark"][data-palette="indigo"],
-[data-theme="dark"][data-palette="midnight"] {
+[data-theme="dark"][data-palette="ocean"] {
   --primary: #6366f1;
   --primary-hover: #818cf8;
   --primary-active: #4f46e5;
@@ -7725,4 +7719,399 @@ details[open] > .steps-block__summary .steps-block__chevron {
   align-items: center;
   gap: 6px;
   flex-shrink: 0;
+}
+
+
+/* =========================================================
+   INCOGNITO MODE — OBSIDIAN VAULT AESTHETIC
+   Matte dark surfaces, slate-blue privacy accent
+   NO glow, NO glassmorphism — solid architectural design
+   ========================================================= */
+
+/* ── Incognito Design Tokens ── */
+:root {
+  --incognito-bg: #0d0e11;
+  --incognito-surface: #14161c;
+  --incognito-surface-hover: #1a1d25;
+  --incognito-border: #1e2230;
+  --incognito-accent: #5a7aff;
+  --incognito-accent-subtle: rgba(90, 122, 255, 0.14);
+  --incognito-accent-border: rgba(90, 122, 255, 0.30);
+  --incognito-text: #8a92a6;
+  --incognito-text-strong: #c8cdd8;
+  --incognito-dot: #5a7aff;
+  --incognito-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+/* ── Incognito App-Level Attribute ── */
+.app[data-incognito="true"] .main {
+  background: var(--incognito-bg);
+}
+
+.app[data-incognito="true"] .topbar {
+  background: var(--incognito-bg);
+  border-bottom-color: var(--incognito-border);
+}
+
+/* ── Shield Toggle Button ── */
+.topbar__action-btn--incognito {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: none;
+  color: var(--ink-500);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.topbar__action-btn--incognito:hover {
+  background: var(--incognito-surface-hover);
+  color: var(--incognito-text-strong);
+}
+
+.topbar__action-btn--incognito:active {
+  transform: scale(0.92);
+}
+
+/* Inactive: outlined shield with slash */
+.incognito-icon--off {
+  display: block;
+  transition: opacity 0.15s ease;
+}
+
+/* Active: filled shield with lock dot */
+.incognito-icon--on {
+  display: none;
+  transition: opacity 0.15s ease;
+}
+
+.topbar__action-btn--incognito.is-active {
+  color: var(--incognito-accent);
+  background: var(--incognito-accent-subtle);
+}
+
+.topbar__action-btn--incognito.is-active:hover {
+  background: rgba(90, 122, 255, 0.20);
+  color: var(--incognito-accent);
+}
+
+.topbar__action-btn--incognito.is-active .incognito-icon--off {
+  display: none;
+}
+
+.topbar__action-btn--incognito.is-active .incognito-icon--on {
+  display: block;
+}
+
+/* ── Incognito Status Bar ── */
+.incognito-status-bar {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 28px;
+  background: var(--incognito-bg);
+  border-bottom: 1px solid var(--incognito-border);
+  flex-shrink: 0;
+  animation: incognitoBarSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.incognito-status-bar[hidden] {
+  display: none;
+}
+
+.app[data-incognito="true"] .incognito-status-bar {
+  display: flex;
+}
+
+@keyframes incognitoBarSlide {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.incognito-status-bar__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--incognito-dot);
+  flex-shrink: 0;
+  animation: incognitoDotPulse 2s ease-in-out infinite;
+}
+
+@keyframes incognitoDotPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.incognito-status-bar__label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--incognito-text);
+  letter-spacing: 0.02em;
+  user-select: none;
+}
+
+.incognito-status-bar__label strong {
+  color: var(--incognito-text-strong);
+  font-weight: 700;
+}
+
+.incognito-status-bar__divider {
+  width: 1px;
+  height: 12px;
+  background: var(--incognito-border);
+}
+
+.incognito-status-bar__action {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--incognito-accent);
+  padding: 0;
+  transition: opacity 0.12s ease;
+  text-decoration: none;
+}
+
+.incognito-status-bar__action:hover {
+  opacity: 0.75;
+  text-decoration: underline;
+}
+
+/* ── Chat Area in Incognito ── */
+.app[data-incognito="true"] .chat {
+  background: var(--incognito-bg);
+}
+
+.app[data-incognito="true"] .msg {
+  animation: incognitoMsgIn 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes incognitoMsgIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Composer in Incognito ── */
+.app[data-incognito="true"] .composer {
+  background: var(--incognito-surface);
+  border-color: var(--incognito-border);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.3), 0 1px 0 rgba(255,255,255,0.03);
+}
+
+.app[data-incognito="true"] .composer:focus-within {
+  border-color: var(--incognito-border);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 0 3px var(--incognito-accent-subtle);
+}
+
+/* ── Hero/Empty State in Incognito ── */
+.app[data-incognito="true"] .hero__brand {
+  opacity: 0.6;
+}
+
+.app[data-incognito="true"] .hero__eyebrow {
+  color: var(--incognito-accent) !important;
+}
+
+.app[data-incognito="true"] .hero-starter {
+  background: var(--incognito-surface);
+  border-color: var(--incognito-border);
+}
+
+.app[data-incognito="true"] .hero-starter:hover {
+  background: var(--incognito-surface-hover);
+  border-color: var(--incognito-border);
+}
+
+/* ── Incognito Mode Badge in Sidebar ── */
+.sidebar__incognito-badge {
+  display: none;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--incognito-accent-subtle);
+  border: 1px solid var(--incognito-accent-border);
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--incognito-accent);
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  flex-shrink: 0;
+}
+
+.sidebar__incognito-badge:hover {
+  background: rgba(90, 122, 255, 0.22);
+}
+
+.app[data-incognito="true"] .sidebar__incognito-badge {
+  display: inline-flex;
+}
+
+.sidebar__incognito-badge svg {
+  flex-shrink: 0;
+}
+
+/* ── Incognito Toast ── */
+.toast--incognito {
+  background: var(--incognito-surface) !important;
+  border-color: var(--incognito-border) !important;
+  box-shadow: var(--incognito-shadow), 0 0 0 1px var(--incognito-border) !important;
+}
+
+.toast--incognito .toast__icon {
+  color: var(--incognito-accent) !important;
+}
+
+.toast--incognito::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--incognito-accent);
+  border-radius: 0;
+}
+
+/* ── Export Disabled in Incognito ── */
+.app[data-incognito="true"] #exportBtn {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.app[data-incognito="true"] #exportBtn:hover {
+  background: transparent;
+  border-color: transparent;
+  color: var(--ink-500);
+}
+
+/* ── Scrollbar in Incognito ── */
+.app[data-incognito="true"] ::-webkit-scrollbar-thumb {
+  background: var(--incognito-border);
+}
+
+.app[data-incognito="true"] ::-webkit-scrollbar-track {
+  background: var(--incognito-bg);
+}
+
+/* ── Incognito Conversation Item in Sidebar ── */
+.conv.is-incognito .conv__title {
+  color: var(--incognito-text-strong);
+  font-style: italic;
+}
+
+.conv.is-incognito::before {
+  display: none !important;
+}
+
+/* ── Incognito Prompt Confirmation Dialog ── */
+.incognito-clear-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 600;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.7);
+  animation: incogDialogFade 0.18s ease;
+}
+
+.incognito-clear-dialog[hidden] {
+  display: none !important;
+}
+
+@keyframes incogDialogFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.incognito-clear-dialog__panel {
+  background: var(--incognito-surface);
+  border: 1px solid var(--incognito-border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  width: 340px;
+  box-shadow: var(--incognito-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: incogDialogPop 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes incogDialogPop {
+  from { opacity: 0; transform: scale(0.94); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.incognito-clear-dialog__icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--incognito-accent-subtle);
+  color: var(--incognito-accent);
+  margin-bottom: 4px;
+}
+
+.incognito-clear-dialog__title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--incognito-text-strong);
+  letter-spacing: -0.01em;
+}
+
+.incognito-clear-dialog__body {
+  font-size: 13px;
+  color: var(--incognito-text);
+  line-height: 1.5;
+}
+
+.incognito-clear-dialog__actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.incognito-clear-dialog__btn {
+  padding: 7px 16px;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  border: 1px solid transparent;
+}
+
+.incognito-clear-dialog__btn--ghost {
+  background: transparent;
+  border-color: var(--incognito-border);
+  color: var(--incognito-text);
+}
+
+.incognito-clear-dialog__btn--ghost:hover {
+  background: var(--incognito-surface-hover);
+  color: var(--incognito-text-strong);
+}
+
+.incognito-clear-dialog__btn--danger {
+  background: var(--incognito-accent);
+  border-color: var(--incognito-accent);
+  color: #ffffff;
+}
+
+.incognito-clear-dialog__btn--danger:hover {
+  background: #4a6ae6;
 }

@@ -1,4 +1,4 @@
-// tiny zero-dep static server & CORS proxy for cute-chat
+// tiny zero-dep static server & CORS proxy for Sage
 const http = require('http');
 const https = require('https');
 const fs   = require('fs');
@@ -140,4 +140,4 @@ http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream' });
     res.end(data);
   });
-}).listen(PORT, () => console.log(`cute-chat ready: http://localhost:${PORT}/`));
+}).listen(PORT, () => console.log(`Sage ready: http://localhost:${PORT}/`));

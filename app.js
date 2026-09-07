@@ -1,5 +1,5 @@
 /* =========================================================================
- * cute chat — app.js
+ * Sage — app.js
  * Vanilla JS, no build step. Loaded via <script src="app.js" defer>.
  * Covers: state + persistence, 6 modes, 4 providers (pollinations/groq/
  * openrouter/custom), streaming chat, conversations, skills (think/PDF/web/
@@ -378,7 +378,7 @@
     },
     globalSystemPrompt: '',
     appearance: {
-      palette: 'cute-pink',
+      palette: 'mono',
       font: 'plus-jakarta',
       fontSize: 'medium',
     },
@@ -386,6 +386,8 @@
 
   const state = {
     settings: structuredClone(DEFAULT_SETTINGS),
+    incognitoActive: false,
+    incognitoConversations: [],
     conversations: [],            // [{id, title, messages, createdAt, session}]
     activeConvId: null,
     userLocation: null,
@@ -440,10 +442,13 @@
 
   function persist() {
     LS.set('cc.settings.v1', state.settings);
-    LS.set('cc.conversations.v1', {
-      list: state.conversations,
-      activeId: state.activeConvId,
-    });
+    // Never persist incognito conversations — they are memory-only
+    if (!state.incognitoActive) {
+      LS.set('cc.conversations.v1', {
+        list: state.conversations,
+        activeId: state.activeConvId,
+      });
+    }
   }
   function loadPersisted() {
     const s = LS.get('cc.settings.v1', null);
@@ -1400,6 +1405,16 @@
   function switchConversation(convId) {
     if (!convId) return;
     closeConvContextMenu();
+
+    // If incognito is active and user switches to a saved (non-incognito) chat, exit incognito
+    if (state.incognitoActive) {
+      const targetConv = state.conversations.find(c => c.id === convId);
+      if (targetConv) {
+        deactivateIncognito();
+        toast('Incognito ended — switched to saved chat', 'info');
+      }
+    }
+
     state.activeConvId = convId;
     state.userScrolledUp = false;
     renderConversations();
@@ -1433,7 +1448,10 @@
     const host = document.getElementById('conversations');
     if (!host) return;
     const q = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
-    const list = state.conversations
+    const visibleConvs = state.incognitoActive
+      ? state.incognitoConversations
+      : state.conversations;
+    const list = visibleConvs
       .filter(c => !q || (c.title || '').toLowerCase().includes(q))
       .sort((a, b) => {
         if (!!b.pinned !== !!a.pinned) return b.pinned ? 1 : -1;
@@ -1587,6 +1605,7 @@
       createdAt: Date.now(),
       session: null,
       pinned: false,
+      incognito: false,
     };
     ensureSession(clone);
     state.conversations.unshift(clone);
@@ -1694,12 +1713,82 @@
       files: {},
       createdAt: Date.now(),
       session: null, // populated by ensureSession
+      incognito: state.incognitoActive,
     };
     ensureSession(conv);
-    state.conversations.unshift(conv);
+    if (state.incognitoActive) {
+      state.incognitoConversations.unshift(conv);
+    } else {
+      state.conversations.unshift(conv);
+    }
     state.activeConvId = conv.id;
-    persist();
+    if (!state.incognitoActive) persist();
     return conv;
+  }
+
+  // -----------------------------------------------------------------------
+  // Incognito Mode
+  // -----------------------------------------------------------------------
+  function toggleIncognito() {
+    const app = document.getElementById('app');
+    const btn = document.getElementById('incognitoBtn');
+    const statusBar = document.getElementById('incognitoStatusBar');
+    const badge = document.getElementById('incognitoSidebarBadge');
+
+    if (!state.incognitoActive) {
+      state.incognitoActive = true;
+      app.setAttribute('data-incognito', 'true');
+      if (btn) btn.classList.add('is-active');
+      if (statusBar) statusBar.hidden = false;
+      if (badge) badge.hidden = false;
+      toast('Incognito mode on — chats won\'t be saved', 'info');
+    } else {
+      if (state.incognitoConversations.length > 0) {
+        showIncognitoClearDialog();
+      } else {
+        deactivateIncognito();
+      }
+    }
+  }
+
+  function deactivateIncognito() {
+    const app = document.getElementById('app');
+    const btn = document.getElementById('incognitoBtn');
+    const statusBar = document.getElementById('incognitoStatusBar');
+    const badge = document.getElementById('incognitoSidebarBadge');
+    state.incognitoActive = false;
+    app.removeAttribute('data-incognito');
+    if (btn) btn.classList.remove('is-active');
+    if (statusBar) statusBar.hidden = true;
+    if (badge) badge.hidden = true;
+    state.incognitoConversations = [];
+  }
+
+  function showIncognitoClearDialog() {
+    const dialog = document.getElementById('incognitoClearDialog');
+    if (dialog) dialog.hidden = false;
+  }
+
+  function hideIncognitoClearDialog() {
+    const dialog = document.getElementById('incognitoClearDialog');
+    if (dialog) dialog.hidden = true;
+  }
+
+  function handleIncognitoClearKeep() {
+    hideIncognitoClearDialog();
+    deactivateIncognito();
+    toast('Incognito mode ended', 'info');
+  }
+
+  function handleIncognitoClearClear() {
+    hideIncognitoClearDialog();
+    deactivateIncognito();
+    const c = activeConv();
+    if (c && c.messages && c.messages.length > 0) {
+      c.messages = [];
+      renderChat();
+    }
+    toast('Incognito conversations cleared', 'info');
   }
 
   // -----------------------------------------------------------------------
@@ -2907,7 +2996,7 @@
       'VERSION:2.0',
       'PRODID:-//Cute Chat//Calendar MCP//EN',
       'BEGIN:VEVENT',
-      `UID:event-${Date.now()}@cutechat`,
+      `UID:event-${Date.now()}@sage`,
       `DTSTAMP:${formatICSDate(now)}`,
       `DTSTART:${formatICSDate(start)}`,
       `DTEND:${formatICSDate(end)}`,
@@ -5327,6 +5416,8 @@
     // send / stream / regenerate
     sendMessage, streamAssistant, regenerateLast, stopStream, setStreamingUI, updateStreamingUI, switchConversation, isConvStreaming,
     extractUserMemoryFromText, recordMemoryFact, renderMemoryFactsUI,
+    // incognito mode
+    toggleIncognito, deactivateIncognito, handleIncognitoClearKeep, handleIncognitoClearClear,
     // MCP tools & connectors
     SQL_DB, searchWeb, formatSearchResultsHTML, fetchGitHubRepo, formatGitHubRepoHTML,
     sendSlackMessage, createCalendarEvent, formatCalendarEventHTML, renderSVGChart, parseChartSpec, formatChartHTML,
@@ -5366,6 +5457,7 @@
           SQL_DB, searchWeb, fetchGitHubRepo, sendSlackMessage, createCalendarEvent, renderSVGChart, openCanvas,
           openProjectFilesModal, closeProjectFilesModal, saveConvFile, applyFileEdit, updateProjectFilesBadge, setupProjectFilesModal,
           extractUserMemoryFromText, recordMemoryFact, renderMemoryFactsUI,
+          toggleIncognito, deactivateIncognito, handleIncognitoClearKeep, handleIncognitoClearClear,
           } = CC;
 
   // -----------------------------------------------------------------------
@@ -6323,7 +6415,7 @@
             autosizeInput();
           }
         } else if (id === 'googleCalendar') {
-          const ev = createCalendarEvent({ title: 'Cute Chat Design Review', location: 'Google Meet' });
+          const ev = createCalendarEvent({ title: 'Sage Design Review', location: 'Google Meet' });
           downloadFile('design_review.ics', ev.icsContent, 'text/calendar;charset=utf-8');
           toast('Sample .ics downloaded! Opening Google Calendar...', 'ok');
           window.open(ev.gCalUrl, '_blank', 'noopener,noreferrer');
@@ -6345,7 +6437,18 @@
 
   function applyAppearance() {
     const app = state.settings.appearance || DEFAULT_SETTINGS.appearance || {};
-    const palette = app.palette || 'cute-pink';
+    // Canonical palette ids — migrate legacy ids from older versions.
+    const LEGACY_PALETTES = {
+      'cute-pink': 'blossom', pink: 'blossom',
+      obsidian: 'slate', nord: 'sandstone',
+      matcha: 'moss', midnight: 'ocean', indigo: 'ocean',
+    };
+    let palette = app.palette || 'mono';
+    if (LEGACY_PALETTES[palette]) palette = LEGACY_PALETTES[palette];
+    if (app.palette !== palette) {
+      app.palette = palette;
+      persist();
+    }
     const font = app.font || 'plus-jakarta';
     const fontSize = app.fontSize || 'medium';
 
@@ -6827,7 +6930,7 @@
       conversations: state.conversations,
       activeConvId: state.activeConvId,
     };
-    downloadFile('cute-chat-backup.json', JSON.stringify(payload, null, 2), 'application/json');
+    downloadFile('sage-backup.json', JSON.stringify(payload, null, 2), 'application/json');
     toast('Exported all data', 'ok');
   }
   function importAll(e) {
@@ -7428,11 +7531,32 @@
       on(newChatBtn, 'click', () => {
         const c = createConversation();
         state.activeConvId = c.id;
-        persist();
+        if (!state.incognitoActive) persist();
         renderConversations();
         renderChat();
         focusInput();
       });
+    }
+
+    const incogBtn = document.getElementById('incognitoBtn');
+    if (incogBtn) {
+      on(incogBtn, 'click', toggleIncognito);
+    }
+    const incogSidebarBadge = document.getElementById('incognitoSidebarBadge');
+    if (incogSidebarBadge) {
+      on(incogSidebarBadge, 'click', toggleIncognito);
+    }
+    const incogEndBtn = document.getElementById('incognitoEndBtn');
+    if (incogEndBtn) {
+      on(incogEndBtn, 'click', toggleIncognito);
+    }
+    const incogClearKeepBtn = document.getElementById('incognitoClearKeepBtn');
+    if (incogClearKeepBtn) {
+      on(incogClearKeepBtn, 'click', handleIncognitoClearKeep);
+    }
+    const incogClearClearBtn = document.getElementById('incognitoClearClearBtn');
+    if (incogClearClearBtn) {
+      on(incogClearClearBtn, 'click', handleIncognitoClearClear);
     }
 
     if (projectFilesBtn) {

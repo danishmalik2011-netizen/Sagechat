@@ -1,9 +1,10 @@
-const CACHE_NAME = 'sage-chat-v1';
+const CACHE_VERSION = 8;
+const CACHE_NAME = `sage-shell-v${CACHE_VERSION}`;
 const APP_SHELL = [
   '/',
   '/index.html',
-  '/styles.css',
-  '/app.js',
+  `/styles.css?v=${CACHE_VERSION}`,
+  `/app.js?v=${CACHE_VERSION}`,
   '/manifest.json',
 ];
 
