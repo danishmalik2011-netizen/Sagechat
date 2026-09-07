@@ -4,6 +4,7 @@ chrome-temp/
 .apex/
 node_modules/
 .vercel/
+.freebuff/
 
 # OS Files
 .DS_Store

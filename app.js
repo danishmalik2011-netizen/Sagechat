@@ -56,37 +56,37 @@
       id: 'chat', label: 'Chat', tabTitle: 'Chat',
       tabSub: 'Thoughtful, coherent AI conversation',
       sys: 'You are Sage, a thoughtful, precise, and sophisticated AI assistant. Always identify as Sage when asked about your identity or name. Be clear, concise, and helpful. Use markdown.',
-      icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8.5 10.5a1 1 0 1 0 0-2 1 1 0 0 0 0 2z" fill="currentColor" stroke="none"/><path d="M12 10.5a1 1 0 1 0 0-2 1 1 0 0 0 0 2z" fill="currentColor" stroke="none"/><path d="M15.5 10.5a1 1 0 1 0 0-2 1 1 0 0 0 0 2z" fill="currentColor" stroke="none"/></svg>',
+      icon: window.SAGE_ICONS.get('chat'),
     },
     {
       id: 'code', label: 'Code', tabTitle: 'Code',
       tabSub: 'Write, review, and refactor code with precision',
       sys: 'You are Sage, an expert senior software engineer. Always identify as Sage. Answer with concise, correct code. Prefer modern idioms and explain tradeoffs in 1-2 sentences. Wrap code in fenced blocks with the right language tag.',
-      icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4L4 12l5 8"/><path d="M15 4l5 8-5 8"/><path d="M12 8l-2 8" opacity="0.55"/></svg>',
+      icon: window.SAGE_ICONS.get('code'),
     },
     {
       id: 'study', label: 'Study', tabTitle: 'Study',
       tabSub: 'Learn anything, step by step',
       sys: 'You are Sage, a patient tutor. Always identify as Sage. Break topics into small steps, use analogies, and end each response with a quick recap.',
-      icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M8 7h8M8 11h6" opacity="0.7"/></svg>',
+      icon: window.SAGE_ICONS.get('study'),
     },
     {
       id: 'write', label: 'Write', tabTitle: 'Write',
       tabSub: 'Draft, edit, and polish any text',
       sys: 'You are Sage, an expert writing partner. Always identify as Sage. Match the requested tone, suggest improvements, and offer a short, punchy version when asked.',
-      icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/><path d="M15 5l4 4" opacity="0.7"/></svg>',
+      icon: window.SAGE_ICONS.get('write'),
     },
     {
       id: 'summarize', label: 'Summarize', tabTitle: 'Summarize',
       tabSub: 'Distill long text into key points',
       sys: 'You are Sage, an expert summarizer. Always identify as Sage. Produce a tight summary with bullet points, then a one-sentence TL;DR. Stay faithful to the source.',
-      icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h10"/><path d="M19 15l3 3-3 3" opacity="0.7"/></svg>',
+      icon: window.SAGE_ICONS.get('summarize'),
     },
     {
       id: 'translate', label: 'Translate', tabTitle: 'Translate',
       tabSub: 'Faithful translation between languages',
       sys: 'You are Sage, an expert translator. Always identify as Sage. Detect the source language and translate to the user’s target language (default: English). Preserve formatting, idioms, and tone.',
-      icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14"/><path d="M12 4v4"/><path d="M7 20l3-7 3 7"/><path d="M7.5 13H17"/><path d="M17 17l3-3-3-3"/><path d="M14 14l3 3" opacity="0.7"/></svg>',
+      icon: window.SAGE_ICONS.get('translate'),
     },
   ];
 
@@ -379,7 +379,7 @@
     globalSystemPrompt: '',
     appearance: {
       palette: 'mono',
-      font: 'plus-jakarta',
+      font: 'inter',
       fontSize: 'medium',
     },
   };
@@ -451,6 +451,11 @@
     }
   }
   function loadPersisted() {
+    // Restore last-used assistant mode (validated against the registry)
+    const savedMode = LS.get('cc.mode.v1', null);
+    if (savedMode && MODES.some(m => m.id === savedMode)) {
+      state.currentMode = savedMode;
+    }
     const s = LS.get('cc.settings.v1', null);
     if (s && typeof s === 'object') {
       // shallow merge so new fields added in DEFAULT_SETTINGS are honored
@@ -1176,6 +1181,7 @@
     '  [new replacement snippet]',
     '  >>>>>>>',
     '- CRITICAL RULE: When the user asks for tweaks, improvements, color changes, or copy updates to an existing artifact, NEVER rewrite the entire file from scratch! Use edit_file with targeted SEARCH/REPLACE blocks. This preserves token context and enables long-run continuous project iteration.',
+    '- IMPORTANT: The current content of every registered project file is injected into your system prompt under the "Current file content" section. You CAN see the exact file — read it from there before emitting SEARCH/REPLACE blocks. Do NOT guess at whitespace, indentation, line numbers, attribute order, or punctuation. Copy the SEARCH block verbatim from the file content shown above. If the file is marked as truncated, open the project files panel to read the full version before editing.',
     '',
     '## 6. General Project File Creation (create_file):',
     '- Language tag: ```file:<filename> (e.g. ```file:config.json or ```file:dashboard.html)'
@@ -1225,6 +1231,53 @@
           '',
           'IMPORTANT: When iterating on, updating, or fixing any of the files listed above, ALWAYS use the `edit_file` tool with SEARCH/REPLACE diff blocks instead of rewriting the entire file from scratch. This enables seamless long-term project development.'
         ].join('\n'));
+
+        // Inject the current content of the most-recently-updated file so the
+        // model can read it before emitting SEARCH/REPLACE blocks. Cap to a
+        // sensible per-file size; if the file is huge, only include the head
+        // and mention the truncation. If multiple files fit within the
+        // remaining budget, also include them.
+        const FILE_BUDGET_TOTAL = 32 * 1024;   // 32 KB across all files
+        const FILE_BUDGET_PER   = 24 * 1024;   // 24 KB per file
+        let budgetLeft = FILE_BUDGET_TOTAL;
+        // Most-recently-updated first
+        const sortedFiles = fileList.slice().sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+        const includedFiles = [];
+        let truncatedAny = false;
+        for (const f of sortedFiles) {
+          if (budgetLeft <= 0) break;
+          const raw = f.content || '';
+          if (!raw) continue;
+          const cap = Math.min(FILE_BUDGET_PER, budgetLeft);
+          let body = raw;
+          let truncated = false;
+          if (raw.length > cap) {
+            body = raw.slice(0, cap);
+            truncated = true;
+            truncatedAny = true;
+          }
+          budgetLeft -= body.length;
+          includedFiles.push({ record: f, body, truncated, wasTruncated: raw.length > cap });
+        }
+
+        if (includedFiles.length > 0) {
+          const blocks = includedFiles.map(({ record, body, wasTruncated }) => {
+            const tag = `\`\`\`${record.type || 'html'}`;
+            const langHint = record.path ? ` (${record.path}, v${record.version || 1})` : '';
+            const note = wasTruncated
+              ? `\n\n<!-- [Sage note: file content was truncated to fit the context window. Read the full file in the project files panel before editing.] -->`
+              : '';
+            return [
+              `# Current file content${langHint}:`,
+              'Below is the live, current content of the file. You can read it directly — do NOT guess at line numbers, indentation, or whitespace when emitting SEARCH/REPLACE blocks.',
+              tag,
+              body,
+              '```',
+              note
+            ].filter(Boolean).join('\n');
+          });
+          parts.push(blocks.join('\n\n'));
+        }
       }
     }
 
@@ -1331,6 +1384,7 @@
   // -----------------------------------------------------------------------
   function switchMode(id) {
     state.currentMode = id;
+    try { LS.set('cc.mode.v1', id); } catch {}
     const m = MODES.find(x => x.id === id) || MODES[0];
     const titleEl = document.getElementById('topbarTitle');
     const subEl   = document.getElementById('topbarSubtitle');
@@ -1347,26 +1401,77 @@
   }
 
   function renderModes() {
-    const host = document.getElementById('modes');
-    if (host) {
-      host.innerHTML = '';
+    const activeM = MODES.find(x => x.id === state.currentMode) || MODES[0];
+    // Composer picker button
+    const pickerIcon = document.getElementById('modePickerIcon');
+    const pickerLabel = document.getElementById('modePickerLabel');
+    if (pickerIcon) pickerIcon.innerHTML = activeM.icon;
+    if (pickerLabel) pickerLabel.textContent = activeM.label;
+    // Menu item active states
+    const menu = document.getElementById('modeMenu');
+    if (menu) {
+      menu.querySelectorAll('.mode-menu__item').forEach(item => {
+        const isActive = item.dataset.modeVal === activeM.id;
+        item.classList.toggle('is-active', isActive);
+        item.setAttribute('aria-checked', isActive ? 'true' : 'false');
+      });
+    }
+  }
+
+  // -----------------------------------------------------------------------
+  // Composer mode picker: compact pill + dropdown menu (replaces the
+  // sidebar mode grid — sidebar shows only threads and search now)
+  // -----------------------------------------------------------------------
+  function setupModeMenu() {
+    const btn = document.getElementById('modePickerBtn');
+    const menu = document.getElementById('modeMenu');
+    if (!btn || !menu) return;
+
+    // Build menu items once
+    if (!menu.childElementCount) {
+      const checkSvg = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>';
       for (const m of MODES) {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'mode' + (m.id === state.currentMode ? ' is-active' : '');
-        btn.dataset.mode = m.id;
-        btn.setAttribute('role', 'tab');
-        btn.setAttribute('aria-selected', m.id === state.currentMode ? 'true' : 'false');
-        btn.innerHTML = m.icon + '<span>' + escapeHTML(m.label) + '</span>';
-        on(btn, 'click', () => switchMode(m.id));
-        host.appendChild(btn);
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'mode-menu__item';
+        item.dataset.modeVal = m.id;
+        item.setAttribute('role', 'menuitemradio');
+        item.innerHTML =
+          '<span class="mode-menu__item-icon">' + m.icon + '</span>' +
+          '<span class="mode-menu__item-info">' +
+            '<span class="mode-menu__item-name">' + escapeHTML(m.label) + '</span>' +
+            '<span class="mode-menu__item-desc">' + escapeHTML(m.tabSub) + '</span>' +
+          '</span>' +
+          '<span class="mode-menu__item-check">' + checkSvg + '</span>';
+        on(item, 'click', (e) => {
+          e.stopPropagation();
+          setModeMenu(false);
+          switchMode(m.id);
+        });
+        menu.appendChild(item);
       }
     }
-    const badge = document.getElementById('activeModeBadge');
-    if (badge) {
-      const activeM = MODES.find(x => x.id === state.currentMode) || MODES[0];
-      badge.textContent = activeM.label;
+
+    function setModeMenu(open) {
+      const show = open != null ? open : menu.hidden;
+      menu.hidden = !show;
+      btn.classList.toggle('is-active', show);
+      btn.setAttribute('aria-expanded', show ? 'true' : 'false');
+      if (show) renderModes();
     }
+
+    on(btn, 'click', (e) => {
+      e.stopPropagation();
+      setModeMenu();
+    });
+
+    // Close on outside click / Escape
+    on(document, 'click', (e) => {
+      if (!menu.hidden && !menu.contains(e.target) && !btn.contains(e.target)) setModeMenu(false);
+    });
+    on(document, 'keydown', (e) => {
+      if (e.key === 'Escape' && !menu.hidden) setModeMenu(false);
+    });
   }
 
   // -----------------------------------------------------------------------
@@ -1474,7 +1579,9 @@
       const isStreaming = isConvStreaming(c.id);
       const streamingBadgeHTML = isStreaming
         ? '<span class="conv__streaming-badge" title="Generating response...">' +
-            '<span class="streaming-spinner streaming-spinner--mini"></span>' +
+            '<span class="pixel-spinner" aria-hidden="true">' +
+              '<span class="pixel-spinner__cell"></span>'.repeat(9) +
+            '</span>' +
           '</span><span class="conv__dot">·</span>'
         : '';
 
@@ -1726,6 +1833,27 @@
     return conv;
   }
 
+  // Always-on handler for the incognito button: ensures a fresh, empty
+  // chat is open before toggling incognito state.
+  function startIncognitoChat() {
+    // Make sure incognito is enabled so createConversation() routes the
+    // new chat into the incognito bucket instead of persisted storage.
+    if (!state.incognitoActive) {
+      state.incognitoActive = true;
+      const app = document.getElementById('app');
+      if (app) app.setAttribute('data-incognito', 'true');
+    }
+    createConversation();
+    state.userScrolledUp = false;
+    renderConversations();
+    renderChat(true);
+    refreshTopbarModelButton();
+    setProviderStatus();
+    updateStreamingUI();
+    const input = document.getElementById('input');
+    if (input && typeof input.focus === 'function') input.focus();
+  }
+
   // -----------------------------------------------------------------------
   // Incognito Mode
   // -----------------------------------------------------------------------
@@ -1737,8 +1865,12 @@
 
     if (!state.incognitoActive) {
       state.incognitoActive = true;
+      // Vault mode is always dark — remember the user's theme and force dark
+      // so the sidebar, chat, and chrome share one coherent palette.
+      state.incognitoPrevTheme = document.documentElement.getAttribute('data-theme') || 'light';
+      if (state.incognitoPrevTheme !== 'dark' && CC.applyTheme) CC.applyTheme('dark');
       app.setAttribute('data-incognito', 'true');
-      if (btn) btn.classList.add('is-active');
+      if (btn) { btn.classList.add('is-active'); btn.setAttribute('aria-pressed', 'true'); }
       if (statusBar) statusBar.hidden = false;
       if (badge) badge.hidden = false;
       toast('Incognito mode on — chats won\'t be saved', 'info');
@@ -1758,7 +1890,10 @@
     const badge = document.getElementById('incognitoSidebarBadge');
     state.incognitoActive = false;
     app.removeAttribute('data-incognito');
-    if (btn) btn.classList.remove('is-active');
+    // Restore the user's pre-incognito theme
+    if (CC.applyTheme) CC.applyTheme(state.incognitoPrevTheme || 'light');
+    state.incognitoPrevTheme = null;
+    if (btn) { btn.classList.remove('is-active'); btn.setAttribute('aria-pressed', 'false'); }
     if (statusBar) statusBar.hidden = true;
     if (badge) badge.hidden = true;
     state.incognitoConversations = [];
@@ -1794,6 +1929,363 @@
   // -----------------------------------------------------------------------
   // Chat rendering + Colorful Code Syntax Highlighting + Hero Empty State
   // -----------------------------------------------------------------------
+
+  // -- Streaming performance helpers -----------------------------------------
+  // Live streaming was freezing the page on long responses because every
+  // SSE token re-ran the full markdown pipeline (marked + DOMPurify) over
+  // the entire growing content and then did a full innerHTML rebuild +
+  // highlight.js pass. That's O(N^2) on top of layout thrash.
+  //
+  // These helpers give us a fast streaming path:
+  //   * requestLiveUpdate(conv, msg) coalesces many chunks inside one rAF
+  //     tick, so we render at most once per frame (~16ms) regardless of
+  //     how fast the model is emitting.
+  //   * applyIncrementalStream(conv, msg) does the actual DOM work using
+  //     a pre-rendered markdown shell + a fast-escaped "raw" tail, so the
+  //     heavy marked/DOMPurify pass only runs ONCE on stream end.
+  //   * The shimmer / thinking-line / steps are inserted into a fixed
+  //     skeleton that is created on the first update, so subsequent
+  //     updates only mutate two text nodes.
+  const liveUpdateState = new WeakMap(); // assistantMsg -> { raf, dirty, scratch, finished }
+
+  function escapeForStreaming(text) {
+    return String(text || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  // Build (or reuse) a stable skeleton inside the streaming message.
+  // The skeleton has fixed slots for steps, thinking, content, and a
+  // blinking cursor. After the first call, applyIncrementalStream only
+  // mutates text nodes — no innerHTML rebuild, no layout thrash.
+  function ensureStreamSkeleton(contentEl, assistantMsg) {
+    if (contentEl.dataset.streamSkeleton === '1') return true;
+    // We split markdown rendering by:
+    //   * closed block (a full paragraph, a code fence, a heading, etc.)
+    //   * raw tail (the still-growing last block)
+    // The closed HTML is rendered once when the block closes; the raw
+    // tail is shown as plain escaped text that updates cheaply.
+    contentEl.innerHTML = `
+      <div class="msg__stream-steps" data-stream-slot="steps"></div>
+      <div class="msg__stream-thinking" data-stream-slot="thinking" hidden></div>
+      <div class="msg__stream-closed" data-stream-slot="closed"></div>
+      <div class="msg__stream-raw" data-stream-slot="raw"></div>
+      <span class="msg__streaming-indicator" data-stream-slot="cursor" aria-hidden="true">
+        <span class="pixel-spinner" aria-hidden="true">
+          ${'<span class="pixel-spinner__cell"></span>'.repeat(9)}
+        </span>
+      </span>
+    `;
+    contentEl.dataset.streamSkeleton = '1';
+    return true;
+  }
+
+  // Quick split: find the index of the last "block boundary" in a markdown
+  // string. A boundary is a blank line, a heading, or a complete code
+  // fence. Everything BEFORE the boundary can be safely fed to marked;
+  // everything AFTER is the raw growing tail.
+  // Returns { boundary, openFence } where openFence is null when no
+  // code fence is currently open, or { start, lang, bodyStart } when
+  // an unclosed ``` fence is in flight — the caller can use that to
+  // render a live <pre><code> skeleton while the body is still streaming.
+  function findStreamBoundary(text) {
+    if (!text) return { boundary: 0, openFence: null };
+    const n = text.length;
+
+    // 1) If we're inside a fenced code block (```), wait for it to close
+    //    before handing the WHOLE block off. While it's open, return the
+    //    fence position so the caller can render a live <pre><code> with
+    //    the partial body.
+    const fenceMatches = text.match(/```/g) || [];
+    const fenceOpen = fenceMatches.length % 2 === 1;
+    if (fenceOpen) {
+      // Find the opening fence (the *last* unclosed ```). Because the
+      // count is odd, the last occurrence is the opener.
+      const openIdx = text.lastIndexOf('```');
+      // Extract language tag (text on the same line, after the backticks)
+      const lineAfter = text.slice(openIdx + 3, text.indexOf('\n', openIdx + 3) === -1 ? n : text.indexOf('\n', openIdx + 3));
+      const lang = (lineAfter || '').trim().split(/\s+/)[0] || '';
+      // Body starts after the newline that ends the fence line.
+      let bodyStart = text.indexOf('\n', openIdx + 3);
+      if (bodyStart === -1) bodyStart = n; // fence with no newline yet — body is empty
+      else bodyStart += 1;
+      // Look for the last blank line PRIOR to the opening fence. That
+      // marks the last safely-closed markdown prefix; everything from
+      // that point up to the fence (including the opening fence line)
+      // will be rendered as a live code block.
+      const before = openIdx > 0 ? text.slice(0, openIdx) : '';
+      const lastBlankBeforeFence = before.lastIndexOf('\n\n');
+      const boundary = lastBlankBeforeFence > 0 ? lastBlankBeforeFence : 0;
+      return {
+        boundary,
+        openFence: { start: openIdx, lang, bodyStart },
+      };
+    }
+
+    // 2) Otherwise look for the last paragraph-ending blank line.
+    let i = n - 1;
+    while (i >= 1) {
+      if (text[i] === '\n' && text[i - 1] === '\n') return { boundary: i + 1, openFence: null };
+      i--;
+    }
+    return { boundary: 0, openFence: null };
+  }
+
+  // Render a live <pre><code> skeleton for an in-progress fenced code
+  // block. The body is the raw text between bodyStart and the end of
+  // `text`. We escape & syntax-highlight the body, and tag the
+  // <code> with the detected language so highlight.js can colorize it
+  // from the very first character of code.
+  function renderLiveCodeBlockHTML(lang, body) {
+    const safeLang = (lang || '').toLowerCase().replace(/[^a-z0-9_+-]/g, '') || 'code';
+    let highlighted = escapeHTML(body);
+    if (window.hljs) {
+      try {
+        if (window.hljs.getLanguage(safeLang)) {
+          const res = window.hljs.highlight(body || '', { language: safeLang, ignoreIllegals: true });
+          highlighted = res.value;
+        } else {
+          // Fall back to auto if we couldn't detect a real language
+          // yet (the model is still streaming the tag). Avoid running
+          // on every chunk though — it can be expensive.
+        }
+      } catch { /* keep escaped text */ }
+    }
+    const cls = 'language-' + safeLang + (window.hljs ? ' hljs' : '');
+    // Note: streaming blocks are intentionally NOT marked is-collapsed —
+    // the user wants to see the code as it streams in. is-streaming-code
+    // gives the body full max-height (no clipping) and skips the fade
+    // hints. is-collapsed is added later by decorateCodeBlocks() when the
+    // stream closes, so the user can collapse finished blocks.
+    return `<div class="code-container is-streaming-code" data-stream-code="1" data-lang="${escapeHTML(safeLang)}">` +
+      `<div class="code-head"><div class="code-head__left">` +
+      `<div class="code-dots"><span class="code-dot code-dot--red"></span><span class="code-dot code-dot--yellow"></span><span class="code-dot code-dot--green"></span></div>` +
+      `<span class="code-head__lang">${escapeHTML(safeLang.toUpperCase())}</span>` +
+      `</div></div>` +
+      `<pre><code class="${cls}">${highlighted}</code></pre>` +
+      `</div>`;
+  }
+
+  // Fast incremental renderer: rebuilds only the small tail that changed
+  // since the last call, leaving the closed-prefix DOM alone.
+  function applyIncrementalStream(conv, assistantMsg) {
+    if (state.activeConvId !== conv.id) return;
+    const host = document.getElementById('chat');
+    if (!host) return;
+    const last = host.lastElementChild;
+    if (!last || !last.classList.contains('msg--assistant')) return;
+    const c = last.querySelector('.msg__content');
+    if (!c) return;
+    if (!c.classList.contains('md')) c.classList.add('md');
+    last.classList.add('is-streaming');
+    const actions = last.querySelector('.msg__actions');
+    if (actions) actions.style.display = 'none';
+
+    ensureStreamSkeleton(c, assistantMsg);
+
+    const stepsSlot = c.querySelector('[data-stream-slot="steps"]');
+    const thinkSlot = c.querySelector('[data-stream-slot="thinking"]');
+    const closedSlot = c.querySelector('[data-stream-slot="closed"]');
+    const rawSlot = c.querySelector('[data-stream-slot="raw"]');
+
+    // 1) Steps (search/canvas previews) — small, full re-render is fine
+    if (stepsSlot) {
+      const stepsHtml = renderStepsBlockHTML(assistantMsg.steps);
+      if (stepsSlot.innerHTML !== stepsHtml) stepsSlot.innerHTML = stepsHtml;
+    }
+
+    // 2) Thinking — render the thinking bar, preserve the open state
+    if (thinkSlot) {
+      const thinkingText = assistantMsg.thinkingContent || '';
+      if (thinkingText.trim()) {
+        if (thinkSlot.hidden) thinkSlot.hidden = false;
+        const wasOpen = thinkSlot.querySelector('.thinking-line[open]') ? true : false;
+        const thinkingHtml = renderThinkingBlockHTML(thinkingText, true, wasOpen);
+        if (thinkSlot.dataset.lastHtml !== thinkingHtml) {
+          thinkSlot.innerHTML = thinkingHtml;
+          thinkSlot.dataset.lastHtml = thinkingHtml;
+        }
+      } else if (!thinkSlot.hidden) {
+        thinkSlot.hidden = true;
+        thinkSlot.innerHTML = '';
+      }
+    }
+
+    // 3) Content: closed prefix (markdown) + raw tail (escaped text).
+    const fullText = assistantMsg.content || '';
+    if (!assistantMsg._streamRenderedLen) assistantMsg._streamRenderedLen = 0;
+    if (!assistantMsg._streamClosedLen)  assistantMsg._streamClosedLen  = 0;
+
+    const { boundary, openFence } = findStreamBoundary(fullText);
+    // If the model produced new "closed" content past the previous
+    // boundary, re-run marked on the slice and append it to the closed
+    // slot. Then re-render the tail as plain escaped text.
+    if (boundary > assistantMsg._streamClosedLen) {
+      const slice = fullText.slice(0, boundary);
+      const sliceHtml = mdToSafeHTML(slice);
+      // Append the newly-closed slice to whatever was already in the
+      // closed slot. Doing it this way means marked only re-parses the
+      // *delta* (not the entire growing buffer).
+      const prev = closedSlot.dataset.lastHtml || '';
+      // The slice is a prefix of the whole string, so the previous
+      // closed HTML is a prefix of the new closed HTML. Use that fact to
+      // skip work: if the new slice's HTML still starts with the old
+      // closed HTML, we can keep `prev` and just append the new tail.
+      let appended;
+      if (prev && sliceHtml.indexOf(prev) === 0) {
+        appended = prev + sliceHtml.slice(prev.length);
+        closedSlot.innerHTML = appended;
+      } else {
+        // Fallback: re-render the whole prefix. Rare; happens when
+        // boundaries shift (e.g. user undoes a fence).
+        appended = sliceHtml;
+        closedSlot.innerHTML = appended;
+      }
+      closedSlot.dataset.lastHtml = appended;
+      assistantMsg._streamClosedLen = boundary;
+    }
+
+    // 3b) Live in-progress code fence: render a real <pre><code> with
+    //     the partial body so the user sees a code block from the very
+    //     first character of code (instead of raw ```python ... text
+    //     until the closing fence arrives). The body sits at the end of
+    //     the closed slot, the raw tail starts after the body so we
+    //     don't double-print the code.
+    if (openFence) {
+      const liveBody = fullText.slice(openFence.bodyStart);
+      const liveHtml = renderLiveCodeBlockHTML(openFence.lang, liveBody);
+      if (closedSlot.dataset.lastLiveCode !== liveHtml) {
+        // Strip any prior live-code block, then append the new one.
+        const prior = closedSlot.querySelector('[data-stream-code="1"]');
+        if (prior) prior.remove();
+        const wrap = document.createElement('div');
+        wrap.innerHTML = liveHtml;
+        const node = wrap.firstElementChild;
+        if (node) closedSlot.appendChild(node);
+        closedSlot.dataset.lastLiveCode = liveHtml;
+      }
+      // Mark the raw tail to skip the live body so we don't duplicate.
+      assistantMsg._streamClosedLen = openFence.bodyStart;
+    } else {
+      // No live fence — drop any prior live-code block and let the
+      // normal closed slot re-render take over.
+      if (closedSlot.dataset.lastLiveCode) {
+        const prior = closedSlot.querySelector('[data-stream-code="1"]');
+        if (prior) prior.remove();
+        closedSlot.dataset.lastLiveCode = '';
+        // The full slice through `boundary` is now the authoritative
+        // closed content; re-render it once to swap the live block for
+        // a real one and clear the marker.
+        const slice = fullText.slice(0, boundary);
+        closedSlot.innerHTML = mdToSafeHTML(slice);
+        closedSlot.dataset.lastHtml = closedSlot.innerHTML;
+        assistantMsg._streamClosedLen = boundary;
+      }
+    }
+
+    // Raw tail: just escaped text, no markdown pipeline. When a code
+    // fence is open, the body bytes are already rendered as a live
+    // <pre> inside the closed slot, so the raw tail must stay empty
+    // (otherwise the body would appear twice — once in the live <pre>
+    // and once as raw text here).
+    if (openFence) {
+      if (rawSlot.dataset.lastHtml !== '') {
+        rawSlot.innerHTML = '';
+        rawSlot.dataset.lastHtml = '';
+      }
+    } else {
+      const tail = fullText.slice(assistantMsg._streamClosedLen);
+      // Preserve newlines visually by converting them to <br> so the
+      // streaming text wraps naturally inside a <div>.
+      const tailHtml = escapeForStreaming(tail).replace(/\n/g, '<br>');
+      if (rawSlot.dataset.lastHtml !== tailHtml) {
+        rawSlot.innerHTML = tailHtml;
+        rawSlot.dataset.lastHtml = tailHtml;
+      }
+    }
+    assistantMsg._streamRenderedLen = fullText.length;
+
+    // 4) Smart auto-scroll: only if the user is near the bottom AND the
+    //    last update was more than ~16ms ago. This prevents the rAF
+    //    coalescer from fighting scroll events.
+    if (!state.userScrolledUp) {
+      const dist = host.scrollHeight - host.scrollTop - host.clientHeight;
+      if (dist <= 200) {
+        // Use rAF so layout & paint happen together.
+        requestAnimationFrame(() => {
+          host.scrollTop = host.scrollHeight;
+          updateScrollBottomButton(host);
+        });
+      } else {
+        updateScrollBottomButton(host);
+      }
+    }
+  }
+
+  // Schedule at most one render per animation frame for this conv/msg.
+  // Many chunks arriving between frames collapse into a single render.
+  function requestLiveUpdate(conv, assistantMsg) {
+    const st = liveUpdateState.get(assistantMsg) || { raf: 0, dirty: false, scratch: false };
+    st.dirty = true;
+    liveUpdateState.set(assistantMsg, st);
+    if (st.raf) return;
+    st.raf = requestAnimationFrame(() => {
+      st.raf = 0;
+      if (!st.dirty) return;
+      st.dirty = false;
+      // Skip the heavy pass if the stream just finished and the final
+      // renderChat() is about to run.
+      if (st.scratch) return;
+      try {
+        applyIncrementalStream(conv, assistantMsg);
+      } catch (err) {
+        console.warn('[stream] incremental render error', err);
+      }
+    });
+  }
+
+  // Called on stream end: collapses the streaming skeleton into a real
+  // markdown render of the final content, with code highlighting. This
+  // is the ONLY place we do the expensive full-markdown pass during
+  // streaming.
+  function finalizeStreamedMessage(conv, assistantMsg) {
+    if (state.activeConvId !== conv.id) return;
+    const host = document.getElementById('chat');
+    if (!host) return;
+    const last = host.lastElementChild;
+    if (!last || !last.classList.contains('msg--assistant')) return;
+    const c = last.querySelector('.msg__content');
+    if (!c) return;
+    last.classList.remove('is-streaming');
+
+    // If a code container was already opened during streaming, leave it
+    // as-is and just clear the streaming slots.
+    const hasSkeleton = c.dataset.streamSkeleton === '1';
+    if (hasSkeleton) {
+      const thinkingHtml = renderThinkingBlockHTML(assistantMsg.thinkingContent, false);
+      const stepsHtml    = renderStepsBlockHTML(assistantMsg.steps);
+      const finalHtml    = mdToSafeHTML(assistantMsg.content || '');
+      c.innerHTML = thinkingHtml + stepsHtml + finalHtml;
+      c.dataset.streamSkeleton = '';
+      decorateCodeBlocks(c);
+      // Wire action buttons (copy/edit/pin/regen) by re-rendering just
+      // the actions row. Cheap.
+      renderMessageActions(last, assistantMsg);
+    }
+  }
+
+  // Drop a streaming message's "rendered up to" markers. Used when
+  // regenerating a message so the next stream starts clean.
+  function resetStreamMarkers(assistantMsg) {
+    assistantMsg._streamClosedLen = 0;
+    assistantMsg._streamRenderedLen = 0;
+    delete assistantMsg._streamRenderedLen;
+    delete assistantMsg._streamClosedLen;
+  }
+
   function mdToSafeHTML(src) {
     if (!src) return '';
     try {
@@ -1842,43 +2334,18 @@
       },
     ];
 
-    const cardsHtml = starterPrompts.map(p => `
-      <button type="button" class="hero-starter" data-prompt="${escapeHTML(p.prompt)}">
-        <div class="hero-starter__icon">${p.icon}</div>
-        <div class="hero-starter__body">
-          <div class="hero-starter__title">${escapeHTML(p.title)}</div>
-          <div class="hero-starter__desc">${escapeHTML(p.desc)}</div>
-        </div>
-        <div class="hero-starter__arrow" aria-hidden="true">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-        </div>
-      </button>
+    const pillsHtml = starterPrompts.map(p => `
+      <button type="button" class="hero-pill" data-prompt="${escapeHTML(p.prompt)}" title="${escapeHTML(p.desc)}">${escapeHTML(p.title)}</button>
     `).join('');
 
     return `
       <div class="hero">
-        <div class="hero__brand">
-          <div class="hero__avatar">
-            <svg class="sage-logo-hero" viewBox="0 0 32 32" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect width="32" height="32" rx="9" fill="var(--surface-3, #222228)" stroke="var(--surface-border)" stroke-width="1"/>
-              <path d="M16 5.5L23.5 12.5L16 16.5L12.5 11.5L16 5.5Z" fill="var(--primary, #E06853)"/>
-              <path d="M16 26.5L8.5 19.5L16 15.5L19.5 20.5L16 26.5Z" fill="var(--ink-700, #2B2D42)"/>
-              <path d="M5.5 16L12.5 11.5L16 15.5L11.5 20.5L5.5 16Z" fill="var(--primary-hover, #D97757)"/>
-              <path d="M26.5 16L19.5 20.5L16 16.5L20.5 11.5L26.5 16Z" fill="var(--ink-400, #717688)"/>
-              <path d="M16 13L19 16L16 19L13 16L16 13Z" fill="#FFFFFF"/>
-              <circle cx="16" cy="16" r="1.2" fill="var(--primary, #E06853)"/>
-            </svg>
-          </div>
-          <div class="hero__brand-text">
-            <div class="hero__eyebrow">INTELLIGENCE &amp; CLARITY</div>
-            <h2 class="hero__title">Welcome to <span class="hero__name">Sage</span></h2>
-            <p class="hero__sub">Clarity, deep reasoning, and live tools. Mode: <strong>${escapeHTML(activeM.tabTitle)}</strong></p>
-          </div>
+        <div class="hero__mark" aria-hidden="true">
+          <svg class="sage-mark" viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M16.6 5.6C15.9 4.6 14.2 4 12.3 4 9.4 4 7.3 5.5 7.3 7.9c0 2.3 2 3.2 4.7 3.8 2.7.6 4.7 1.5 4.7 3.9 0 2.4-2.1 3.9-5 3.9-2.2 0-4-.8-4.7-2.1"/></svg>
         </div>
-
-        <div class="hero__starters">
-          ${cardsHtml}
-        </div>
+        <h2 class="hero__title">Welcome to <span class="hero__name">Sage</span></h2>
+        <p class="hero__sub">What can I help you with today?</p>
+        <div class="hero__pills">${pillsHtml}</div>
       </div>
     `;
   }
@@ -2226,17 +2693,59 @@
     if (slideCounter) {
       slideCounter.textContent = '1 / 1';
     }
+    // Enable the refresh button the moment a preview is loaded. The button
+    // is disabled in markup so it's clear that no preview is active yet.
+    const refreshBtn0 = document.getElementById('canvasRefreshBtn');
+    if (refreshBtn0) refreshBtn0.disabled = !canvasCurrentHtml;
 
     // Wrap partial HTML if needed
     let doc = html || '';
     if (trimmed.startsWith('<svg') && !doc.includes('<html')) {
-      doc = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#181825;overflow:auto;}svg{max-width:95vw;max-height:95vh;box-shadow:0 8px 30px rgba(0,0,0,0.5);border-radius:8px;}</style></head><body>${doc}</body></html>`;
+      doc = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>html,body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#181825;overflow:auto;}svg{max-width:95cqi;max-height:95cqi;box-shadow:0 8px 30px rgba(0,0,0,0.5);border-radius:8px;}</style></head><body data-cc-canvas-default>${doc}</body></html>`;
     } else if (isSlideDeck) {
       if (!doc.toLowerCase().includes('<html') && !doc.toLowerCase().includes('<!doctype')) {
         doc = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>${escapeHTML(canvasCurrentTitle)}</title></head><body><div class="deck">${doc}</div></body></html>`;
       }
     } else if (!doc.toLowerCase().includes('<html') && !doc.toLowerCase().includes('<!doctype')) {
-      doc = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body{font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;margin:24px;color:#222;line-height:1.5;background:#fff;}</style></head><body>${doc}</body></html>`;
+      // Responsive default canvas doc: typography and spacing scale with the
+      // iframe's inline-size (which equals the canvas panel's content width,
+      // since the iframe is 100% of .canvas__body). cqi units + clamp() make
+      // the content feel native at any panel width after the user drags the
+      // resizer. The body gets `data-cc-canvas-default` so the outer styles
+      // can target it without conflicting with model-authored markup.
+      doc = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>
+        /* Minimal scrollbar — matches the host's design system.
+           Applied to the iframe's own document so its internal scrollbars
+           feel native to Sage. */
+        html, body { font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; color:#222; line-height:1.5; background:#fff; }
+        body { margin: 0; padding: clamp(8px, 2.4cqi + 4px, 24px); font-size: clamp(11px, 1.6cqi + 8px, 15px); }
+        h1, h2, h3, h4, h5, h6 { line-height: 1.25; margin: 0.6em 0 0.35em; }
+        h1 { font-size: clamp(1.4em, 1.6cqi + 1em, 2.1em); }
+        h2 { font-size: clamp(1.2em, 1.4cqi + 0.9em, 1.7em); }
+        h3 { font-size: clamp(1.1em, 1.2cqi + 0.85em, 1.4em); }
+        p, li { font-size: 1em; }
+        pre, code { font-size: 0.92em; }
+        table { font-size: 0.95em; max-width: 100%; }
+        img, svg, video { max-width: 100%; height: auto; }
+        hr { margin: clamp(8px, 1.6cqi + 4px, 18px) 0; }
+        ul, ol { padding-left: clamp(16px, 3.2cqi + 8px, 28px); }
+        @container canvasFrame (max-width: 480px) {
+          body { padding: clamp(6px, 3cqi + 2px, 12px); }
+        }
+        /* Minimal scrollbar — matches the host canvas panel. */
+        html { scrollbar-width: thin; scrollbar-color: rgba(0,0,0,0.18) transparent; }
+        html::-webkit-scrollbar { width: 5px; height: 5px; }
+        html::-webkit-scrollbar-track { background: transparent; }
+        html::-webkit-scrollbar-thumb {
+          background: rgba(0,0,0,0.16);
+          border-radius: 999px;
+          border: 1px solid transparent;
+          background-clip: padding-box;
+          transition: background 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        html:hover::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.32); background-clip: padding-box; }
+        html::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.48); background-clip: padding-box; }
+      </style></head><body data-cc-canvas-default>${doc}</body></html>`;
     }
 
     // Keynote slide deck styling and controller script injection
@@ -2501,6 +3010,10 @@
         canvasCurrentSrc = '';
       }
       canvasCurrentHtml = '';
+      // Reflect the cleared state in the refresh button immediately so the
+      // chrome is honest: no preview, no refresh.
+      const refreshBtnClose = document.getElementById('canvasRefreshBtn');
+      if (refreshBtnClose) refreshBtnClose.disabled = true;
     }, 160);
   }
 
@@ -3285,6 +3798,266 @@
     `;
   }
 
+  // Detect a human-friendly title for an artifact block (used by the
+  // inline artifact card and the follow-up edit-file card).
+  function detectArtifactTitle(rawText, opts) {
+    const { isPpt = false, isPdf = false, isSvg = false } = opts || {};
+    const titleMatch = rawText.match(/<title[^>]*>([^<]+)<\/title>/i);
+    const h1Match = rawText.match(/<h1[^>]*>([^<]+)<\/h1>/i);
+    const ariaLabelMatch = rawText.match(/aria-label=["']([^"']+)["']/i);
+    if (titleMatch && titleMatch[1]) return titleMatch[1].trim();
+    if (h1Match && h1Match[1]) return h1Match[1].trim();
+    if (ariaLabelMatch && ariaLabelMatch[1]) return ariaLabelMatch[1].trim();
+    if (isPpt) return 'Keynote Presentation';
+    if (isPdf) return 'Document Report';
+    if (isSvg) {
+      const descMatch = rawText.match(/<desc[^>]*>([^<]+)<\/desc>/i);
+      const dataTitleMatch = rawText.match(/data-title=["']([^"']+)["']/i);
+      const svgIdMatch = rawText.match(/<svg[^>]*id=["']([^"']+)["']/i);
+      if (descMatch && descMatch[1]) return descMatch[1].trim();
+      if (dataTitleMatch && dataTitleMatch[1]) return dataTitleMatch[1].trim();
+      if (svgIdMatch && svgIdMatch[1] && !svgIdMatch[1].startsWith('svg_')) {
+        return svgIdMatch[1].replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      }
+      return 'Vector Graphic';
+    }
+    return 'Web Artifact';
+  }
+
+  // Build the inline open-able artifact card (thumb + title + preview/view-source).
+  // Returns the inserted card element. `parent` is the element the card will be
+  // inserted into. If `parent` is omitted, defaults to `wrapper.parentNode`.
+  // If `attachSourceToggle` is true, the "View source" button toggles the
+  // underlying code container. Otherwise the source button is omitted (used by
+  // the follow-up edit-file card, which already has its own collapse toggle).
+  function buildArtifactCard(opts) {
+    const {
+      rawText,
+      artifactType,           // 'html' | 'svg' | 'pdf' | 'ppt'
+      artifactTitle,
+      code,                   // the <code> element inside the <pre>
+      wrapper,                // the .code-container wrapper
+      parent,
+      attachSourceToggle = true,
+    } = opts;
+
+    const isSvg = artifactType === 'svg';
+    const isPdf = artifactType === 'pdf';
+    const isPpt = artifactType === 'ppt';
+    const badgeLabel = isPpt ? 'SLIDES' : isPdf ? 'PDF' : isSvg ? 'SVG' : 'Interactive';
+    const badgeClass = isPpt ? 'artifact-pill-badge--ppt'
+      : isPdf ? 'artifact-pill-badge--pdf'
+      : isSvg ? 'artifact-pill-badge--svg'
+      : 'artifact-pill-badge--html';
+
+    const primaryBtnText = isPpt ? 'Present slides'
+      : isPdf ? 'Preview & print'
+      : 'Open canvas';
+
+    // Build the thumbnail HTML
+    let thumbHtml = '';
+    if (isPpt) {
+      thumbHtml = `
+        <div class="artifact-card__thumb artifact-card__thumb--ppt" aria-hidden="true">
+          <div class="ppt-mini-slide">
+            <div class="ppt-mini-slide__top">
+              <div class="ppt-mini-slide__badge"></div>
+              <span class="ppt-mini-slide__count">01 / 05</span>
+            </div>
+            <div class="ppt-mini-slide__title"></div>
+            <div class="ppt-mini-slide__sub"></div>
+            <div class="ppt-mini-slide__cards">
+              <div class="ppt-mini-slide__card ppt-mini-slide__card--active"></div>
+              <div class="ppt-mini-slide__card"></div>
+              <div class="ppt-mini-slide__card"></div>
+            </div>
+          </div>
+        </div>
+      `;
+    } else if (isPdf) {
+      thumbHtml = `
+        <div class="artifact-card__thumb artifact-card__thumb--pdf" aria-hidden="true">
+          <div class="pdf-preview-sheet">
+            <div class="pdf-preview-sheet__top-row">
+              <div class="pdf-preview-sheet__header"></div>
+              <div class="pdf-preview-sheet__header-sub"></div>
+            </div>
+            <div class="pdf-preview-sheet__title-bar"></div>
+            <div class="pdf-preview-sheet__lines">
+              <div class="pdf-preview-sheet__line"></div>
+              <div class="pdf-preview-sheet__line-with-dot">
+                <span class="pdf-dot pdf-dot--amber"></span>
+                <div class="pdf-preview-sheet__line"></div>
+              </div>
+              <div class="pdf-preview-sheet__line-with-dot">
+                <span class="pdf-dot pdf-dot--teal"></span>
+                <div class="pdf-preview-sheet__line"></div>
+              </div>
+              <div class="pdf-preview-sheet__line-with-dot">
+                <span class="pdf-dot pdf-dot--blue"></span>
+                <div class="pdf-preview-sheet__line"></div>
+              </div>
+            </div>
+            <div class="pdf-preview-sheet__blocks">
+              <div class="pdf-preview-sheet__block pdf-preview-sheet__block--mint"></div>
+              <div class="pdf-preview-sheet__block pdf-preview-sheet__block--active"></div>
+              <div class="pdf-preview-sheet__block pdf-preview-sheet__block--mint"></div>
+            </div>
+          </div>
+        </div>
+      `;
+    } else if (isSvg) {
+      const elemMatches = rawText.match(/<(path|rect|circle|ellipse|line|polygon|polyline|text)/gi);
+      const elemCount = elemMatches ? elemMatches.length : 8;
+      const svgMatch = rawText.match(/<svg[\s\S]*?<\/svg>/i);
+      const safeSvg = svgMatch ? svgMatch[0].replace(/<script[\s\S]*?<\/script>/gi, '') : '';
+      const desc = `Scalable vector illustration · ${elemCount} elements`;
+      thumbHtml = `
+        <div class="artifact-card__thumb artifact-card__thumb--svg" aria-hidden="true">
+          ${safeSvg}
+        </div>
+      `;
+      // (desc is not currently displayed, but kept for future use)
+      void desc;
+    } else {
+      thumbHtml = `
+        <div class="artifact-card__thumb artifact-card__thumb--html" aria-hidden="true">
+          <div class="html-preview-canvas">
+            <div class="html-preview-canvas__bar">
+              <span></span><span></span><span></span>
+            </div>
+            <div class="html-preview-canvas__body">
+              <div class="html-preview-canvas__hero"></div>
+              <div class="html-preview-canvas__row">
+                <div class="html-preview-canvas__block"></div>
+                <div class="html-preview-canvas__block"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    const card = document.createElement('div');
+    card.className = 'inline-artifact-card' + (isSvg ? ' is-svg-card' : '');
+    card.dataset.type = artifactType;
+
+    const sourceBtnHtml = attachSourceToggle
+      ? `<button type="button" class="btn-artifact-secondary btn-artifact-toggle-code" title="View source code">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          <span>View source</span>
+        </button>`
+      : '';
+
+    card.innerHTML = `
+      ${thumbHtml}
+      <div class="artifact-card__body">
+        <div class="artifact-card__meta-top">
+          <div class="artifact-card__title-row">
+            <h4 class="artifact-card__title">${escapeHTML(artifactTitle)}</h4>
+            <span class="artifact-pill-badge ${badgeClass}">${escapeHTML(badgeLabel)}</span>
+          </div>
+        </div>
+        <div class="artifact-card__actions">
+          <button type="button" class="btn-artifact-primary" title="Preview and open artifact">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+            <span>${escapeHTML(primaryBtnText)}</span>
+          </button>
+          ${sourceBtnHtml}
+        </div>
+      </div>
+    `;
+
+    const openBtn = card.querySelector('.btn-artifact-primary');
+    if (openBtn) {
+      openBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        // Prefer the live file content (post-edit) when available, otherwise fall
+        // back to the code element's textContent.
+        const content = (opts.contentOverride != null) ? opts.contentOverride : (code.textContent || '');
+        openCanvas(content, artifactTitle, artifactType);
+      });
+    }
+
+    if (attachSourceToggle) {
+      const toggleCodeBtn = card.querySelector('.btn-artifact-toggle-code');
+      if (toggleCodeBtn) {
+        toggleCodeBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const isCollapsed = wrapper.classList.toggle('is-collapsed');
+          toggleCodeBtn.classList.toggle('is-active', !isCollapsed);
+          const txt = toggleCodeBtn.querySelector('span');
+          if (txt) txt.textContent = isCollapsed ? 'View source' : 'Hide source';
+        });
+      }
+    }
+
+    // Initially collapse the code container so inline card is primary
+    wrapper.classList.add('is-collapsed');
+    wrapper.classList.add('has-artifact-card');
+
+    const insertBefore = (parent || wrapper.parentNode);
+    if (insertBefore && wrapper.parentNode) {
+      wrapper.parentNode.insertBefore(card, wrapper);
+    }
+
+    return card;
+  }
+
+  // Build a minimal "Editing file: name" card. The card is a single header line
+  // with a stats summary and a "Show diff" toggle. The diff drawer is hidden
+  // by default and expands when the toggle is clicked. Returns the card element
+  // already inserted before `wrapper`.
+  function buildInlineEditCard(opts) {
+    const { fileName, version, stats, diffLinesHtml, rawText, wrapper } = opts;
+
+    const editCard = document.createElement('div');
+    editCard.className = 'inline-edit-card';
+    editCard.dataset.fileName = fileName;
+
+    const summaryText = `+${stats.added} / -${stats.deleted} lines · ${stats.blocks} block${stats.blocks === 1 ? '' : 's'} updated`;
+
+    editCard.innerHTML = `
+      <div class="edit-card__header">
+        <div class="edit-card__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </div>
+        <div class="edit-card__title-group">
+          <div class="edit-card__file-name">${escapeHTML(fileName)}</div>
+          <span class="edit-card__version-pill">v${version}</span>
+          <span class="edit-card__summary">${escapeHTML(summaryText)}</span>
+        </div>
+        <button type="button" class="btn-edit-toggle-diff" title="Show diff" aria-expanded="false">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          <span>Show diff</span>
+        </button>
+      </div>
+      <div class="edit-card__diff-drawer" hidden>
+        <pre class="edit-card__diff-pre"><code>${diffLinesHtml}</code></pre>
+      </div>
+    `;
+
+    const toggleBtn = editCard.querySelector('.btn-edit-toggle-diff');
+    const drawer = editCard.querySelector('.edit-card__diff-drawer');
+    if (toggleBtn && drawer) {
+      toggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const open = drawer.hidden;
+        drawer.hidden = !open;
+        toggleBtn.classList.toggle('is-active', open);
+        toggleBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        const lbl = toggleBtn.querySelector('span');
+        if (lbl) lbl.textContent = open ? 'Hide diff' : 'Show diff';
+      });
+    }
+
+    wrapper.classList.add('is-collapsed');
+    wrapper.classList.add('has-artifact-card');
+    wrapper.parentNode.insertBefore(editCard, wrapper);
+
+    return editCard;
+  }
+
   function decorateCodeBlocks(container) {
     if (!container) return;
     const preElements = container.querySelectorAll('pre');
@@ -3433,11 +4206,8 @@
         const fileName = editRes.fileRecord?.name || 'project_file.html';
         const version = editRes.fileRecord?.version || 2;
         const stats = editRes.stats || { added: 0, deleted: 0, blocks: 1 };
-        const summaryText = `+${stats.added} lines / -${stats.deleted} lines · ${stats.blocks} block${stats.blocks === 1 ? '' : 's'} updated`;
 
-        const editCard = document.createElement('div');
-        editCard.className = 'inline-edit-card';
-
+        // Build the diff lines HTML (compact, for the optional drawer)
         let diffLinesHtml = '';
         if (editRes.diffLines && editRes.diffLines.length) {
           diffLinesHtml = editRes.diffLines.map(d => {
@@ -3449,55 +4219,97 @@
           diffLinesHtml = escapeHTML(rawText);
         }
 
-        editCard.innerHTML = `
-          <div class="edit-card__header">
-            <div class="edit-card__title-group">
-              <div class="edit-card__icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        // 1) Minimal "Editing file: name" card — header + diff toggle only.
+        buildInlineEditCard({
+          fileName,
+          version,
+          stats,
+          diffLinesHtml,
+          rawText,
+          wrapper
+        });
+
+        // 2) Follow-up artifact preview card for the *updated* file. This is
+        // where the user gets the full Preview / View source experience, with
+        // a thumb and the live file content. We use a self-contained wrapper
+        // (no underlying code block) so the card is standalone.
+        if (editRes.fileRecord) {
+          const fr = editRes.fileRecord;
+          // Standalone card built directly from fileRecord — no source toggle
+          // (the diff toggle on the edit card already covers that), but the
+          // Preview button opens the live file content in the canvas.
+          const followUp = document.createElement('div');
+          followUp.className = 'inline-edit-card inline-edit-card--followup';
+
+          const isSvg = fr.type === 'svg';
+          const isPdf = fr.type === 'pdf';
+          const isPpt = fr.type === 'ppt';
+          const badgeLabel = isPpt ? 'SLIDES' : isPdf ? 'PDF' : isSvg ? 'SVG' : 'HTML';
+          const primaryBtnText = isPpt ? 'Present slides' : isPdf ? 'Preview & print' : 'Open canvas';
+          const updatedTitle = (fr.title || fr.name || 'Updated file') + ' · v' + version;
+
+          // Tiny thumb (no code toggle)
+          let miniThumb = '';
+          if (isSvg) {
+            const svgMatch = (fr.content || '').match(/<svg[\s\S]*?<\/svg>/i);
+            const safeSvg = svgMatch ? svgMatch[0].replace(/<script[\s\S]*?<\/script>/gi, '') : '';
+            miniThumb = `<div class="edit-card__thumb edit-card__thumb--svg" aria-hidden="true">${safeSvg}</div>`;
+          } else if (isPdf) {
+            miniThumb = `<div class="edit-card__thumb edit-card__thumb--pdf" aria-hidden="true"><div class="pdf-preview-sheet__line"></div><div class="pdf-preview-sheet__line"></div><div class="pdf-preview-sheet__line"></div></div>`;
+          } else if (isPpt) {
+            miniThumb = `<div class="edit-card__thumb edit-card__thumb--ppt" aria-hidden="true"><div class="ppt-mini-slide__title"></div><div class="ppt-mini-slide__sub"></div></div>`;
+          } else {
+            miniThumb = `<div class="edit-card__thumb edit-card__thumb--html" aria-hidden="true"><div class="html-preview-canvas__bar"><span></span><span></span><span></span></div><div class="html-preview-canvas__hero"></div></div>`;
+          }
+
+          followUp.innerHTML = `
+            <div class="edit-card__header edit-card__header--followup">
+              ${miniThumb}
+              <div class="edit-card__title-group edit-card__title-group--followup">
+                <div class="edit-card__file-name">${escapeHTML(updatedTitle)}</div>
+                <span class="edit-card__summary">Updated · ${escapeHTML(badgeLabel)} file ready to preview</span>
               </div>
-              <div class="edit-card__file-name">${escapeHTML(fileName)}</div>
-              <span class="edit-card__version-pill">v${version}</span>
+              <div class="edit-card__actions edit-card__actions--followup">
+                <button type="button" class="btn-artifact-primary btn-edit-open" title="Open updated file in canvas">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+                  <span>${escapeHTML(primaryBtnText)}</span>
+                </button>
+                <button type="button" class="btn-artifact-secondary btn-edit-view-source" title="View source code">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                  <span>View source</span>
+                </button>
+              </div>
             </div>
-            <p class="edit-card__summary">${escapeHTML(summaryText)}</p>
-          </div>
-          <div class="edit-card__actions">
-            <button type="button" class="btn-artifact-primary btn-edit-preview" title="Preview updated file">
-              <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>
-              <span>Preview updated</span>
-            </button>
-            <button type="button" class="btn-artifact-secondary btn-edit-toggle-diff" title="View diff">
-              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="m7 15 5 5 5-5M7 9l5-5 5 5"/></svg>
-              <span>View diff</span>
-            </button>
-          </div>
-          <div class="edit-card__diff-drawer" hidden>
-            <pre style="margin:0; background:transparent; border:none; padding:0; font-family:inherit;"><code>${diffLinesHtml}</code></pre>
-          </div>
-        `;
+            <div class="edit-card__source-drawer" hidden>
+              <pre class="edit-card__diff-pre"><code>${escapeHTML(fr.content || '')}</code></pre>
+            </div>
+          `;
 
-        const previewBtn = editCard.querySelector('.btn-edit-preview');
-        if (previewBtn) {
-          previewBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (editRes.fileRecord) {
-              openCanvas(editRes.fileRecord.content, editRes.fileRecord.title, editRes.fileRecord.type);
-            }
-          });
-        }
+          const openBtn = followUp.querySelector('.btn-edit-open');
+          if (openBtn) {
+            openBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              openCanvas(fr.content || '', fr.title || fr.name, fr.type || 'html');
+            });
+          }
+          const srcBtn = followUp.querySelector('.btn-edit-view-source');
+          const srcDrawer = followUp.querySelector('.edit-card__source-drawer');
+          if (srcBtn && srcDrawer) {
+            srcBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const open = srcDrawer.hidden;
+              srcDrawer.hidden = !open;
+              srcBtn.classList.toggle('is-active', open);
+              const txt = srcBtn.querySelector('span');
+              if (txt) txt.textContent = open ? 'Hide source' : 'View source';
+            });
+          }
 
-        const diffToggleBtn = editCard.querySelector('.btn-edit-toggle-diff');
-        const diffDrawer = editCard.querySelector('.edit-card__diff-drawer');
-        if (diffToggleBtn && diffDrawer) {
-          diffToggleBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            diffDrawer.hidden = !diffDrawer.hidden;
-            diffToggleBtn.classList.toggle('is-active', !diffDrawer.hidden);
-          });
+          // Insert the follow-up card right after the minimal edit card.
+          wrapper.parentNode.insertBefore(followUp, wrapper);
         }
 
         wrapper.classList.add('is-collapsed');
-        wrapper.classList.add('has-artifact-card');
-        wrapper.parentNode.insertBefore(editCard, wrapper);
         return;
       }
 
@@ -3518,136 +4330,8 @@
 
       if ((isCanvas || isPdf || isPpt) && isArtifactComplete) {
         // Detect title
-        let artifactTitle = '';
-        const titleMatch = rawText.match(/<title[^>]*>([^<]+)<\/title>/i);
-        const h1Match = rawText.match(/<h1[^>]*>([^<]+)<\/h1>/i);
-        const ariaLabelMatch = rawText.match(/aria-label=["']([^"']+)["']/i);
-        if (titleMatch && titleMatch[1]) {
-          artifactTitle = titleMatch[1].trim();
-        } else if (h1Match && h1Match[1]) {
-          artifactTitle = h1Match[1].trim();
-        } else if (ariaLabelMatch && ariaLabelMatch[1]) {
-          artifactTitle = ariaLabelMatch[1].trim();
-        } else if (isPpt) {
-          artifactTitle = 'Keynote Presentation';
-        } else if (isPdf) {
-          artifactTitle = 'Document Report';
-        } else if (isSvg) {
-          const descMatch = rawText.match(/<desc[^>]*>([^<]+)<\/desc>/i);
-          const dataTitleMatch = rawText.match(/data-title=["']([^"']+)["']/i);
-          const svgIdMatch = rawText.match(/<svg[^>]*id=["']([^"']+)["']/i);
-          if (descMatch && descMatch[1]) {
-            artifactTitle = descMatch[1].trim();
-          } else if (dataTitleMatch && dataTitleMatch[1]) {
-            artifactTitle = dataTitleMatch[1].trim();
-          } else if (svgIdMatch && svgIdMatch[1] && !svgIdMatch[1].startsWith('svg_')) {
-            artifactTitle = svgIdMatch[1].replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-          } else {
-            artifactTitle = 'Vector Graphic';
-          }
-        } else {
-          artifactTitle = 'Web Artifact';
-        }
-
+        const artifactTitle = detectArtifactTitle(rawText, { isPpt, isPdf, isSvg });
         const artifactType = isPpt ? 'ppt' : isPdf ? 'pdf' : isSvg ? 'svg' : 'html';
-        const badgeLabel = isPpt ? 'SLIDES' : isPdf ? 'PDF' : isSvg ? 'SVG' : 'Interactive';
-
-        let thumbHtml = '';
-        let metaDesc = '';
-        let primaryBtnText = '';
-        let badgeClass = '';
-
-        if (isPpt) {
-          badgeClass = 'artifact-pill-badge--ppt';
-          metaDesc = 'Interactive presentation deck · 16:9 widescreen';
-          primaryBtnText = 'Present slides';
-          thumbHtml = `
-            <div class="artifact-card__thumb artifact-card__thumb--ppt" aria-hidden="true">
-              <div class="ppt-mini-slide">
-                <div class="ppt-mini-slide__top">
-                  <div class="ppt-mini-slide__badge"></div>
-                  <span class="ppt-mini-slide__count">01 / 05</span>
-                </div>
-                <div class="ppt-mini-slide__title"></div>
-                <div class="ppt-mini-slide__sub"></div>
-                <div class="ppt-mini-slide__cards">
-                  <div class="ppt-mini-slide__card ppt-mini-slide__card--active"></div>
-                  <div class="ppt-mini-slide__card"></div>
-                  <div class="ppt-mini-slide__card"></div>
-                </div>
-              </div>
-            </div>
-          `;
-        } else if (isPdf) {
-          badgeClass = 'artifact-pill-badge--pdf';
-          metaDesc = 'Formatted document · Ready to preview & print';
-          primaryBtnText = 'Preview & print';
-          thumbHtml = `
-            <div class="artifact-card__thumb artifact-card__thumb--pdf" aria-hidden="true">
-              <div class="pdf-preview-sheet">
-                <div class="pdf-preview-sheet__top-row">
-                  <div class="pdf-preview-sheet__header"></div>
-                  <div class="pdf-preview-sheet__header-sub"></div>
-                </div>
-                <div class="pdf-preview-sheet__title-bar"></div>
-                <div class="pdf-preview-sheet__lines">
-                  <div class="pdf-preview-sheet__line"></div>
-                  <div class="pdf-preview-sheet__line-with-dot">
-                    <span class="pdf-dot pdf-dot--amber"></span>
-                    <div class="pdf-preview-sheet__line"></div>
-                  </div>
-                  <div class="pdf-preview-sheet__line-with-dot">
-                    <span class="pdf-dot pdf-dot--teal"></span>
-                    <div class="pdf-preview-sheet__line"></div>
-                  </div>
-                  <div class="pdf-preview-sheet__line-with-dot">
-                    <span class="pdf-dot pdf-dot--blue"></span>
-                    <div class="pdf-preview-sheet__line"></div>
-                  </div>
-                </div>
-                <div class="pdf-preview-sheet__blocks">
-                  <div class="pdf-preview-sheet__block pdf-preview-sheet__block--mint"></div>
-                  <div class="pdf-preview-sheet__block pdf-preview-sheet__block--active"></div>
-                  <div class="pdf-preview-sheet__block pdf-preview-sheet__block--mint"></div>
-                </div>
-              </div>
-            </div>
-          `;
-        } else if (isSvg) {
-          badgeClass = 'artifact-pill-badge--svg';
-          const elemMatches = rawText.match(/<(path|rect|circle|ellipse|line|polygon|polyline|text)/gi);
-          const elemCount = elemMatches ? elemMatches.length : 8;
-          metaDesc = `Scalable vector illustration · ${elemCount} elements`;
-          primaryBtnText = 'Open canvas';
-
-          const svgMatch = rawText.match(/<svg[\s\S]*?<\/svg>/i);
-          let safeSvg = svgMatch ? svgMatch[0].replace(/<script[\s\S]*?<\/script>/gi, '') : '';
-          thumbHtml = `
-            <div class="artifact-card__thumb artifact-card__thumb--svg" aria-hidden="true">
-              ${safeSvg}
-            </div>
-          `;
-        } else {
-          badgeClass = 'artifact-pill-badge--html';
-          metaDesc = 'Interactive web component · Ready to preview';
-          primaryBtnText = 'Open canvas';
-          thumbHtml = `
-            <div class="artifact-card__thumb artifact-card__thumb--html" aria-hidden="true">
-              <div class="html-preview-canvas">
-                <div class="html-preview-canvas__bar">
-                  <span></span><span></span><span></span>
-                </div>
-                <div class="html-preview-canvas__body">
-                  <div class="html-preview-canvas__hero"></div>
-                  <div class="html-preview-canvas__row">
-                    <div class="html-preview-canvas__block"></div>
-                    <div class="html-preview-canvas__block"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          `;
-        }
 
         // Auto-save artifact into project files registry
         const currentConv = activeConv();
@@ -3663,58 +4347,15 @@
         }
 
         // Build the inline open-able artifact card
-        const card = document.createElement('div');
-        card.className = 'inline-artifact-card' + (isSvg ? ' is-svg-card' : '');
-        card.dataset.type = artifactType;
-
-        card.innerHTML = `
-          ${thumbHtml}
-          <div class="artifact-card__body">
-            <div class="artifact-card__meta-top">
-              <div class="artifact-card__title-row">
-                <h4 class="artifact-card__title">${escapeHTML(artifactTitle)}</h4>
-                <span class="artifact-pill-badge ${badgeClass}">${escapeHTML(badgeLabel)}</span>
-              </div>
-            </div>
-            <div class="artifact-card__actions">
-              <button type="button" class="btn-artifact-primary" title="Preview and open artifact">
-                <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>
-                <span>${escapeHTML(primaryBtnText)}</span>
-              </button>
-              <button type="button" class="btn-artifact-secondary btn-artifact-toggle-code" title="View source code">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-                <span>View source</span>
-              </button>
-            </div>
-          </div>
-        `;
-
-        const openBtn = card.querySelector('.btn-artifact-primary');
-        if (openBtn) {
-          openBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const content = code.textContent || '';
-            openCanvas(content, artifactTitle, artifactType);
-          });
-        }
-
-        const toggleCodeBtn = card.querySelector('.btn-artifact-toggle-code');
-        if (toggleCodeBtn) {
-          toggleCodeBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const isCollapsed = wrapper.classList.toggle('is-collapsed');
-            toggleCodeBtn.classList.toggle('is-active', !isCollapsed);
-            const txt = toggleCodeBtn.querySelector('span');
-            if (txt) txt.textContent = isCollapsed ? 'View source' : 'Hide source';
-          });
-        }
-
-        // Initially collapse the code container so inline card is primary
-        wrapper.classList.add('is-collapsed');
-        wrapper.classList.add('has-artifact-card');
-
-        // Insert card before wrapper
-        wrapper.parentNode.insertBefore(card, wrapper);
+        buildArtifactCard({
+          rawText,
+          artifactType,
+          artifactTitle,
+          code,
+          wrapper,
+          parent: wrapper.parentNode,
+          attachSourceToggle: true,
+        });
 
         // Header preview button
         const prevBtn = document.createElement('button');
@@ -3772,7 +4413,7 @@
             resContainer.className = 'code-tool-result';
             wrapper.parentNode.insertBefore(resContainer, wrapper.nextSibling);
           }
-          resContainer.innerHTML = `<div class="tool-result-card"><div class="typing-indicator"><span class="streaming-spinner"></span> <span class="typing-indicator__label">Searching…</span></div></div>`;
+          resContainer.innerHTML = `<div class="tool-result-card"><div class="typing-indicator"><span class="pixel-spinner" aria-hidden="true">${'<span class="pixel-spinner__cell"></span>'.repeat(9)}</span> <span class="typing-indicator__label">Searching…</span></div></div>`;
           const data = await searchWeb(rawText);
           resContainer.innerHTML = formatSearchResultsHTML(data);
         });
@@ -3980,7 +4621,7 @@
 
     if (!c || !c.messages || !c.messages.length) {
       host.innerHTML = renderHero();
-      host.querySelectorAll('.hero-starter').forEach(btn => {
+      host.querySelectorAll('.hero-pill').forEach(btn => {
         on(btn, 'click', () => {
           const input = document.getElementById('input');
           if (input) {
@@ -4047,13 +4688,29 @@
       if (m.isHelpCard || m.isToolResult) {
         contentHtml = m.content;
       } else if (isCurrentlyStreaming) {
-        const thinkingHtml = renderThinkingBlockHTML(m.thinkingContent, true);
-        const stepsHtml = renderStepsBlockHTML(m.steps);
-        if (!m.content && !m.thinkingContent && !stepsHtml) {
-          contentHtml = '<div class="typing-indicator" title="Thinking..."><span class="streaming-spinner"></span> <span class="typing-indicator__label">Thinking…</span></div>';
+        // Empty skeleton — applyIncrementalStream fills in the slots on
+        // the first rAF tick. Keeps the initial render cheap (no
+        // marked/DOMPurify on the empty buffer).
+        if (!m.content && !m.thinkingContent && !m.steps) {
+          contentHtml = '<div class="thinking-line thinking-line--solo" data-thinking><span class="thinking-line__summary"><span class="pixel-spinner" aria-hidden="true">' +
+            '<span class="pixel-spinner__cell"></span>'.repeat(9) +
+            '</span><span class="thinking-line__label">Thinking</span><span class="thinking-line__metrics"><span class="thinking-line__dot">·</span><span class="thinking-line__metric" data-elapsed>0.0s</span><span class="thinking-line__dot">·</span><span class="thinking-line__metric" data-words>0 words</span></span></span></div>';
         } else {
-          contentHtml = thinkingHtml + stepsHtml + mdToSafeHTML(m.content || '') +
-            '<span class="msg__streaming-indicator" title="Generating response..."><span class="streaming-spinner"></span></span>';
+          // Minimal skeleton — let the rAF ticker paint the actual content.
+          contentHtml = '<div class="msg__stream-skeleton" data-stream-skeleton="1">' +
+            '<div class="msg__stream-steps" data-stream-slot="steps"></div>' +
+            '<div class="msg__stream-thinking" data-stream-slot="thinking"></div>' +
+            '<div class="msg__stream-closed" data-stream-slot="closed"></div>' +
+            '<div class="msg__stream-raw" data-stream-slot="raw"></div>' +
+            '<span class="msg__streaming-indicator" data-stream-slot="cursor" aria-hidden="true">' +
+              '<span class="pixel-spinner" aria-hidden="true">' +
+                '<span class="pixel-spinner__cell"></span>'.repeat(9) +
+              '</span>' +
+            '</span>' +
+          '</div>';
+          // Reset any stale "rendered up to" markers so the incremental
+          // renderer starts from the very beginning of the new buffer.
+          resetStreamMarkers(m);
         }
       } else {
         const thinkingHtml = renderThinkingBlockHTML(m.thinkingContent, false);
@@ -4192,6 +4849,58 @@
     return div;
   }
 
+  // Wire (or re-wire) the action buttons on a message row. Called from
+  // renderMessage() the first time a message is rendered, and again from
+  // finalizeStreamedMessage() once a stream completes (the innerHTML
+  // rebuild in the finalizer wipes the original handlers).
+  function renderMessageActions(div, m) {
+    const copyBtn = div.querySelector('.msg__copy');
+    if (copyBtn && !copyBtn.dataset.wired) {
+      copyBtn.dataset.wired = '1';
+      on(copyBtn, 'click', async () => {
+        try {
+          const textToCopy = typeof m.content === 'string'
+            ? m.content
+            : Array.isArray(m.content)
+            ? m.content.map(p => p.text || '').join('\n')
+            : String(m.content || '');
+          await navigator.clipboard.writeText(textToCopy);
+          flashCopyIcon(copyBtn);
+        } catch {
+          toast('Failed to copy', 'warn');
+        }
+      });
+    }
+    const editBtn = div.querySelector('.msg__edit');
+    if (editBtn && !editBtn.dataset.wired) {
+      editBtn.dataset.wired = '1';
+      on(editBtn, 'click', () => {
+        const conv = activeConv();
+        if (!conv) return;
+        if (isConvStreaming(conv.id)) {
+          toast('Please wait for streaming to complete', 'warn');
+          return;
+        }
+        startInlineMessageEdit(div, m, conv);
+      });
+    }
+    const pinBtn = div.querySelector('.msg__pin');
+    if (pinBtn && !pinBtn.dataset.wired) {
+      pinBtn.dataset.wired = '1';
+      on(pinBtn, 'click', () => {
+        m.pinned = !m.pinned;
+        persist();
+        renderChat(false);
+        toast(m.pinned ? 'Message pinned' : 'Message unpinned', 'ok');
+      });
+    }
+    const regen = div.querySelector('.msg__regen');
+    if (regen && !regen.dataset.wired && m.role === 'assistant' && !m.isHelpCard) {
+      regen.dataset.wired = '1';
+      on(regen, 'click', () => regenerateLast());
+    }
+  }
+
   function startInlineMessageEdit(msgEl, m, conv) {
     const contentEl = msgEl.querySelector('.msg__content');
     const actionsEl = msgEl.querySelector('.msg__actions');
@@ -4319,23 +5028,62 @@
     const text = (thinkingContent || '').trim();
     if (!text && !isStreaming) return '';
     const wordCount = text ? text.split(/\s+/).length : 0;
-    const summaryText = isStreaming ? 'Thinking…' : `Thought for a moment · ${wordCount} words`;
-    const body = isStreaming
-      ? (text ? escapeHTML(text).replace(/\n/g, '<br>') + '<br>' : '') + '<div class="typing-indicator" title="Thinking..."><span class="streaming-spinner"></span> <span class="typing-indicator__label">Thinking…</span></div>'
-      : escapeHTML(text).replace(/\n/g, '<br>');
+    // Minimal single-line label: "Thinking" (during stream) or "Thought for a moment" (after).
+    // Metrics (elapsed time, word count) are injected by updateThinkingLine() while streaming
+    // and by the finalizer on completion.
+    const label = isStreaming ? 'Thinking' : 'Thought for a moment';
+    const body = text ? escapeHTML(text).replace(/\n/g, '<br>') : '';
     const openAttr = forceOpen ? ' open' : '';
+    const streamClass = isStreaming ? ' is-streaming' : '';
     return `
-      <details class="thinking-block"${openAttr}>
-        <summary class="thinking-block__summary">
-          <svg class="thought-clock-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/>
-            <polyline points="12 6 12 12 16 14"/>
-          </svg>
-          <span class="thinking-block__label">${escapeHTML(summaryText)}</span>
+      <details class="thinking-line${streamClass}"${openAttr} data-thinking>
+        <summary class="thinking-line__summary">
+          <span class="pixel-spinner" aria-hidden="true">
+            ${'<span class="pixel-spinner__cell"></span>'.repeat(9)}
+          </span>
+          <span class="thinking-line__label">${escapeHTML(label)}</span>
+          <span class="thinking-line__metrics" data-thinking-metrics>
+            <span class="thinking-line__dot" aria-hidden="true">·</span>
+            <span class="thinking-line__metric thinking-line__metric--elapsed" data-elapsed>0.0s</span>
+            <span class="thinking-line__dot" aria-hidden="true">·</span>
+            <span class="thinking-line__metric thinking-line__metric--words" data-words>${wordCount} ${wordCount === 1 ? 'word' : 'words'}</span>
+          </span>
+          <svg class="thinking-line__chevron" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
         </summary>
-        <div class="thinking-block__body">${body}</div>
+        ${body ? `<div class="thinking-line__body">${body}</div>` : ''}
       </details>
     `;
+  }
+
+  // Live metrics updater: ticks every ~120ms while a thinking-line is mounted.
+  // Watches all `.thinking-line[data-thinking]` elements; on stream end, freezes values.
+  let _thinkingTickHandle = null;
+  let _thinkingStartTime = 0;
+  function startThinkingMetricsTicker() {
+    if (_thinkingTickHandle) return;
+    _thinkingStartTime = performance.now();
+    const tick = () => {
+      const lines = document.querySelectorAll('.thinking-line[data-thinking].is-streaming');
+      if (!lines.length) {
+        stopThinkingMetricsTicker();
+        return;
+      }
+      const elapsed = (performance.now() - _thinkingStartTime) / 1000;
+      for (const el of lines) {
+        const elapsedEl = el.querySelector('[data-elapsed]');
+        const wordsEl = el.querySelector('[data-words]');
+        const text = (el.querySelector('.thinking-line__body')?.textContent || '').trim();
+        const words = text ? text.split(/\s+/).filter(Boolean).length : 0;
+        if (elapsedEl) elapsedEl.textContent = elapsed.toFixed(1) + 's';
+        if (wordsEl) wordsEl.textContent = `${words} ${words === 1 ? 'word' : 'words'}`;
+      }
+      _thinkingTickHandle = requestAnimationFrame(tick);
+    };
+    _thinkingTickHandle = requestAnimationFrame(tick);
+  }
+  function stopThinkingMetricsTicker() {
+    if (_thinkingTickHandle) cancelAnimationFrame(_thinkingTickHandle);
+    _thinkingTickHandle = null;
   }
 
   function renderStepsBlockHTML(steps) {
@@ -4752,6 +5500,9 @@
     if (!el) return;
     el.style.height = 'auto';
     el.style.height = Math.min(el.scrollHeight, 220) + 'px';
+    // Send button readiness: quiet while empty, armed once there's text.
+    const sendBtn = document.getElementById('sendBtn');
+    if (sendBtn) sendBtn.classList.toggle('is-ready', !!(el.value && el.value.trim().length));
   }
 
   function renderAttachments() {
@@ -5169,40 +5920,10 @@
             }
             assistantMsg.content += piece;
           }
-
-          // Live DOM update with steps and thinking blocks
-          if (state.activeConvId === conv.id) {
-            const host = document.getElementById('chat');
-            if (host) {
-              const last = host.lastElementChild;
-              if (last && last.classList.contains('msg--assistant')) {
-                last.classList.add('is-streaming');
-                const actions = last.querySelector('.msg__actions');
-                if (actions) actions.style.display = 'none';
-
-                const c = last.querySelector('.msg__content');
-                if (c) {
-                  if (!c.classList.contains('md')) c.classList.add('md');
-                  const streamingDots = '<span class="msg__streaming-indicator" title="Generating response...">' +
-                    '<span class="streaming-spinner"></span>' +
-                  '</span>';
-                  const wasOpen = !!(c.querySelector('.thinking-block[open]'));
-                  const stepsHtml = renderStepsBlockHTML(assistantMsg.steps);
-                  const thinkingHtml = renderThinkingBlockHTML(assistantMsg.thinkingContent, true, wasOpen);
-                  c.innerHTML = stepsHtml + thinkingHtml + mdToSafeHTML(assistantMsg.content || '') + streamingDots;
-                  decorateCodeBlocks(c);
-                }
-                const dist = host.scrollHeight - host.scrollTop - host.clientHeight;
-                if (!state.userScrolledUp && dist <= 140) {
-                  host.scrollTop = host.scrollHeight;
-                } else {
-                  updateScrollBottomButton(host);
-                }
-              } else {
-                renderChat(false);
-              }
-            }
-          }
+          // Coalesce many chunks into a single per-frame render. This is
+          // the hot path — keep it cheap: just append to a buffer and
+          // schedule an rAF.
+          requestLiveUpdate(conv, assistantMsg);
         },
       });
 
@@ -5280,23 +6001,8 @@
             } else {
               assistantMsg.content += piece;
             }
-            if (state.activeConvId === conv.id) {
-              const host = document.getElementById('chat');
-              if (host) {
-                const last = host.lastElementChild;
-                if (last && last.classList.contains('msg--assistant')) {
-                  const c = last.querySelector('.msg__content');
-                  if (c) {
-                    const streamingDots = '<span class="msg__streaming-indicator" title="Generating response..."><span class="streaming-spinner"></span></span>';
-                    const wasOpen = !!(c.querySelector('.thinking-block[open]'));
-                    const stepsHtml = renderStepsBlockHTML(assistantMsg.steps);
-                    const thinkingHtml = renderThinkingBlockHTML(assistantMsg.thinkingContent, true, wasOpen);
-                    c.innerHTML = stepsHtml + thinkingHtml + mdToSafeHTML(assistantMsg.content || '') + streamingDots;
-                    decorateCodeBlocks(c);
-                  }
-                }
-              }
-            }
+            // Same rAF-coalesced hot path as the first stream.
+            requestLiveUpdate(conv, assistantMsg);
           }
         });
       }
@@ -5349,6 +6055,13 @@
     } finally {
       state.activeStreams.delete(conv.id);
       updateStreamingUI();
+      // Drop any pending rAF tick — we're about to do a full re-render.
+      const liveSt = liveUpdateState.get(assistantMsg);
+      if (liveSt) {
+        if (liveSt.raf) cancelAnimationFrame(liveSt.raf);
+        liveSt.raf = 0;
+        liveSt.dirty = false;
+      }
       renderConversations();
       if (state.activeConvId === conv.id) {
         renderChat(false);
@@ -5395,7 +6108,7 @@
   // Expose everything defined in part 4 to subsequent chunks and the rest of the app
   Object.assign(CC, {
     // core rendering
-    buildSystemPrompt, renderModes, updateSuggestions,
+    buildSystemPrompt, renderModes, setupModeMenu, updateSuggestions,
     renderConversations, createConversation, uid,
     renameConversation, togglePinConversation, duplicateConversation,
     exportSingleConversation, deleteConversation,
@@ -5417,7 +6130,7 @@
     sendMessage, streamAssistant, regenerateLast, stopStream, setStreamingUI, updateStreamingUI, switchConversation, isConvStreaming,
     extractUserMemoryFromText, recordMemoryFact, renderMemoryFactsUI,
     // incognito mode
-    toggleIncognito, deactivateIncognito, handleIncognitoClearKeep, handleIncognitoClearClear,
+    startIncognitoChat, toggleIncognito, deactivateIncognito, handleIncognitoClearKeep, handleIncognitoClearClear,
     // MCP tools & connectors
     SQL_DB, searchWeb, formatSearchResultsHTML, fetchGitHubRepo, formatGitHubRepoHTML,
     sendSlackMessage, createCalendarEvent, formatCalendarEventHTML, renderSVGChart, parseChartSpec, formatChartHTML,
@@ -5438,7 +6151,7 @@
   const { $, $$, on, escapeHTML, LS, MODES, SKILLS, STATIC_MODELS, MODELS,
           state, ensureSession, activeConv, activeSession, persist,
           loadPersisted, hydrateModelsFromCache,
-          createConversation, renderModes, updateSuggestions,
+          createConversation, renderModes, setupModeMenu, updateSuggestions,
           renderConversations, renderChat, renderSkills,
           updateScrollBottomButton, setupConvContextMenu,
           refreshTopbarModelButton, setProviderStatus,
@@ -5630,14 +6343,8 @@
       btn.title = t === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
     }
     const icon = document.getElementById('themeIcon');
-    if (icon) {
-      if (t === 'dark') {
-        // Moon icon
-        icon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
-      } else {
-        // Sun icon
-        icon.innerHTML = '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>';
-      }
+    if (icon && window.SAGE_ICONS) {
+      icon.innerHTML = window.SAGE_ICONS.get(t === 'dark' ? 'moon' : 'sun');
     }
   }
 
@@ -5646,6 +6353,11 @@
     applyTheme(t);
     const btn = document.getElementById('toggleThemeBtn');
     on(btn, 'click', () => {
+      // Theme is locked while the incognito vault is active
+      if (state.incognitoActive) {
+        toast('Theme is locked while incognito is active', 'info');
+        return;
+      }
       const current = document.documentElement.getAttribute('data-theme') || 'light';
       t = (current === 'dark') ? 'light' : 'dark';
       LS.set('cc.theme', t);
@@ -5660,15 +6372,77 @@
     const sidebar = document.getElementById('sidebar');
     const scrim = document.getElementById('sidebarScrim');
     const collapseBtn = document.getElementById('collapseSidebarBtn');
-    const headerCollapseBtn = document.getElementById('headerCollapseBtn');
-    const brandZone = document.getElementById('sidebarBrandZone');
+    const headToggle = document.getElementById('sidebarCollapseBtn');
     const openBtn = document.getElementById('openSidebarBtn');
     const closeBtn = document.getElementById('closeSidebarBtn');
+    const resizer = document.getElementById('sidebarResizer');
+    const resizerBtn = document.getElementById('sidebarResizerBtn');
 
-    // Restore desktop collapsed state
+    // --- Sidebar width persistence (drag-to-resize) --------------------
+    // Default is whatever the CSS sets (--sidebar-w). User can drag between
+    // MIN_W and MAX_W. Collapsing is independent and is handled below.
+    const SIDEBAR_MIN = 220;
+    const SIDEBAR_MAX = 480;
+    const SIDEBAR_COLLAPSE_AT = 120; // drag below this → snap to collapsed
+    const SIDEBAR_DEFAULT_W = 280;
+    const savedWidth = parseInt(LS.get('cc.sidebar.width', String(SIDEBAR_DEFAULT_W)), 10);
+    const initialWidth = Number.isFinite(savedWidth) && savedWidth >= SIDEBAR_MIN && savedWidth <= SIDEBAR_MAX
+      ? savedWidth
+      : SIDEBAR_DEFAULT_W;
+    let lastOpenWidth = initialWidth; // remembered width when user collapses
+
+    function setSidebarWidth(px, { persist = true, animate = true } = {}) {
+      if (!sidebar) return;
+      // Clamp
+      const clamped = Math.max(SIDEBAR_MIN, Math.min(SIDEBAR_MAX, Math.round(px)));
+      if (!animate) {
+        const prev = sidebar.style.transition;
+        sidebar.style.transition = 'none';
+        sidebar.style.setProperty('--sidebar-w', clamped + 'px');
+        // Force reflow so the change applies before restoring transition
+        // eslint-disable-next-line no-unused-expressions
+        sidebar.offsetWidth;
+        sidebar.style.transition = prev;
+      } else {
+        sidebar.style.setProperty('--sidebar-w', clamped + 'px');
+      }
+      lastOpenWidth = clamped;
+      if (resizer) resizer.setAttribute('aria-valuenow', String(clamped));
+      if (persist) LS.set('cc.sidebar.width', String(clamped));
+    }
+
+    // Restore desktop width (only if not collapsed)
     const isCollapsed = !!LS.get('cc.sidebar.collapsed', false);
+    if (!isCollapsed && window.innerWidth > 768) {
+      setSidebarWidth(initialWidth, { persist: false, animate: false });
+    }
     if (isCollapsed && sidebar && window.innerWidth > 768) {
       sidebar.classList.add('is-collapsed');
+      const app = document.getElementById('app');
+      if (app) app.classList.add('sidebar-is-collapsed');
+    }
+
+    function syncHeadToggle(collapsed) {
+      if (!headToggle) return;
+      const nextLabel = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
+      headToggle.setAttribute('aria-label', nextLabel);
+      headToggle.setAttribute('aria-pressed', collapsed ? 'true' : 'false');
+      headToggle.setAttribute('title', nextLabel + ' (Ctrl+[)');
+    }
+
+    function syncResizerBtnIcon(collapsed) {
+      if (!resizerBtn) return;
+      const iconSpan = resizerBtn.querySelector('.sage-icon');
+      if (!iconSpan) return;
+      const next = collapsed ? 'panelExpand' : 'panelCollapse';
+      iconSpan.setAttribute('data-icon', next);
+      const nextLabel = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
+      resizerBtn.setAttribute('aria-label', nextLabel);
+      resizerBtn.setAttribute('title', nextLabel);
+      // Re-render the inline svg
+      if (window.SAGE_ICONS && typeof window.SAGE_ICONS.render === 'function') {
+        window.SAGE_ICONS.render(iconSpan);
+      }
     }
 
     function toggleDesktopSidebar(forceState) {
@@ -5678,20 +6452,29 @@
       } else {
         sidebar.classList.toggle('is-collapsed');
       }
-      LS.set('cc.sidebar.collapsed', sidebar.classList.contains('is-collapsed'));
+      const collapsed = sidebar.classList.contains('is-collapsed');
+      // Mirror the collapsed state on the app root so the topbar menu can
+      // hide/show to avoid duplicating the sidebar head toggle.
+      const app = document.getElementById('app');
+      if (app) app.classList.toggle('sidebar-is-collapsed', collapsed);
+      syncHeadToggle(collapsed);
+      syncResizerBtnIcon(collapsed);
+      LS.set('cc.sidebar.collapsed', collapsed);
+      // When expanding from a collapsed state, restore the last user width.
+      if (!collapsed) {
+        setSidebarWidth(lastOpenWidth, { persist: false, animate: true });
+      }
     }
 
-    // Header hover collapse button (sidebar head)
-    on(headerCollapseBtn, 'click', (e) => {
+    // Sidebar head toggle — the SINGLE desktop toggle. Visible open AND
+    // collapsed; chevron direction inverts with the state (handled in CSS
+    // via .sidebar__collapse / .sidebar__expand-mark swap).
+    on(headToggle, 'click', (e) => {
       e.stopPropagation();
-      toggleDesktopSidebar(true);
+      toggleDesktopSidebar();
     });
-
-    on(brandZone, 'click', (e) => {
-      if (window.innerWidth > 768) {
-        toggleDesktopSidebar(true);
-      }
-    });
+    // Sync the initial label with the restored state
+    syncHeadToggle(isCollapsed);
 
     // Collapse button (sidebar foot)
     on(collapseBtn, 'click', () => {
@@ -5734,6 +6517,146 @@
       if (scrim) scrim.classList.remove('is-open');
     });
 
+    // --- Sidebar resizer: drag-to-resize + double-arrow toggle ---------
+    if (resizer) {
+      // Initial resizer-button icon (matches the restored collapsed state)
+      syncResizerBtnIcon(isCollapsed);
+
+      // Drag handlers
+      let dragState = null;
+
+      const onPointerMove = (e) => {
+        if (!dragState) return;
+        e.preventDefault();
+        const deltaX = e.clientX - dragState.startX;
+        let nextWidth = dragState.startWidth + deltaX;
+        // If user drags far left past the collapse threshold, snap to
+        // collapsed state mid-drag (visual feedback only — we don't
+        // commit the collapse until pointerup).
+        if (nextWidth < SIDEBAR_COLLAPSE_AT) {
+          // Apply a minimum "almost collapsed" width so the panel still
+          // shows a sliver; the snap-to-collapse happens on pointerup.
+          nextWidth = Math.max(0, nextWidth);
+        }
+        setSidebarWidth(nextWidth, { persist: false, animate: false });
+      };
+
+      const onPointerUp = (e) => {
+        if (!dragState) return;
+        document.removeEventListener('pointermove', onPointerMove);
+        document.removeEventListener('pointerup', onPointerUp);
+        document.removeEventListener('pointercancel', onPointerUp);
+        document.body.classList.remove('is-resizing-sidebar');
+        resizer.classList.remove('is-dragging');
+        resizer.classList.remove('is-resizing');
+        // If the user dragged below the collapse threshold, treat the gesture
+        // as "collapse" — it matches what most file explorers / IDEs do.
+        const finalWidth = parseInt(sidebar.style.getPropertyValue('--sidebar-w'), 10) || lastOpenWidth;
+        if (finalWidth < SIDEBAR_COLLAPSE_AT) {
+          toggleDesktopSidebar(true);
+        } else {
+          setSidebarWidth(finalWidth, { persist: true, animate: true });
+        }
+        dragState = null;
+      };
+
+      on(resizer, 'pointerdown', (e) => {
+        // Ignore drags that originate on the inner button (the button has
+        // its own click handler).
+        if (e.target.closest && e.target.closest('.sidebar-resizer__btn')) return;
+        if (e.button !== 0) return; // left button only
+        if (window.innerWidth <= 768) return; // mobile: drawer pattern
+        const currentWidth = sidebar.getBoundingClientRect().width;
+        // If currently collapsed, opening a drag should expand the sidebar
+        // first and then resize from the last open width.
+        if (sidebar.classList.contains('is-collapsed')) {
+          toggleDesktopSidebar(false);
+          return;
+        }
+        dragState = { startX: e.clientX, startWidth: currentWidth };
+        document.body.classList.add('is-resizing-sidebar');
+        resizer.classList.add('is-dragging');
+        resizer.classList.add('is-resizing');
+        document.addEventListener('pointermove', onPointerMove);
+        document.addEventListener('pointerup', onPointerUp);
+        document.addEventListener('pointercancel', onPointerUp);
+        // Capture the pointer so we keep getting events even if the
+        // cursor leaves the resizer.
+        try { resizer.setPointerCapture(e.pointerId); } catch {}
+        e.preventDefault();
+      });
+
+      // Double-click on the rail to snap to the default width
+      on(resizer, 'dblclick', (e) => {
+        if (window.innerWidth <= 768) return;
+        if (e.target.closest && e.target.closest('.sidebar-resizer__btn')) return;
+        setSidebarWidth(SIDEBAR_DEFAULT_W, { persist: true, animate: true });
+      });
+
+      // Keyboard support on the resizer itself (role=separator)
+      on(resizer, 'keydown', (e) => {
+        if (window.innerWidth <= 768) return;
+        const step = e.shiftKey ? 32 : 8;
+        const currentWidth = sidebar.getBoundingClientRect().width;
+        if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          if (sidebar.classList.contains('is-collapsed')) {
+            toggleDesktopSidebar(false);
+            return;
+          }
+          setSidebarWidth(currentWidth - step, { persist: true, animate: true });
+        } else if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          if (sidebar.classList.contains('is-collapsed')) {
+            toggleDesktopSidebar(false);
+            return;
+          }
+          setSidebarWidth(currentWidth + step, { persist: true, animate: true });
+        } else if (e.key === 'Home') {
+          e.preventDefault();
+          setSidebarWidth(SIDEBAR_MIN, { persist: true, animate: true });
+        } else if (e.key === 'End') {
+          e.preventDefault();
+          setSidebarWidth(SIDEBAR_MAX, { persist: true, animate: true });
+        } else if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          toggleDesktopSidebar();
+        }
+      });
+    }
+
+    // Resizer button — toggle between collapsed and last open width
+    on(resizerBtn, 'click', (e) => {
+      e.stopPropagation();
+      if (window.innerWidth <= 768) return;
+      toggleDesktopSidebar();
+    });
+
+    // When the viewport crosses into mobile, drop the inline width so the
+    // drawer takes over cleanly; when it comes back to desktop, restore.
+    let lastIsMobile = window.innerWidth <= 768;
+    let rafId = 0;
+    window.addEventListener('resize', () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        const isMobile = window.innerWidth <= 768;
+        if (isMobile === lastIsMobile) return;
+        lastIsMobile = isMobile;
+        if (isMobile) {
+          // Going to mobile: clear inline override, close drawer
+          sidebar.style.removeProperty('--sidebar-w');
+          sidebar.classList.remove('is-open');
+          if (scrim) scrim.classList.remove('is-open');
+        } else {
+          // Coming back to desktop: restore width from persistence
+          const w = parseInt(LS.get('cc.sidebar.width', String(SIDEBAR_DEFAULT_W)), 10);
+          if (Number.isFinite(w) && w >= SIDEBAR_MIN && w <= SIDEBAR_MAX) {
+            setSidebarWidth(w, { persist: false, animate: false });
+          }
+        }
+      });
+    });
+
     // New chat
     on($('#newChatBtn'), 'click', () => {
       createConversation();
@@ -5753,22 +6676,6 @@
 
     // Search conversations
     on($('#searchInput'), 'input', renderConversations);
-
-    // Setup collapsible sections: Modes Accordion
-    const toggleModesBtn = document.getElementById('toggleModesBtn');
-    const modesBody = document.getElementById('modesBody');
-    if (toggleModesBtn && modesBody) {
-      const isCollapsed = !!LS.get('cc.sidebar.modes.collapsed', false);
-      if (isCollapsed) {
-        modesBody.classList.add('is-collapsed');
-        toggleModesBtn.setAttribute('aria-expanded', 'false');
-      }
-      on(toggleModesBtn, 'click', () => {
-        const collapsed = modesBody.classList.toggle('is-collapsed');
-        toggleModesBtn.setAttribute('aria-expanded', (!collapsed).toString());
-        LS.set('cc.sidebar.modes.collapsed', collapsed);
-      });
-    }
 
     // Setup collapsible sections: Chats Accordion
     const toggleChatsBtn = document.getElementById('toggleChatsBtn');
@@ -6746,6 +7653,178 @@
     if (!modal) return;
     modal.querySelectorAll('[data-close]').forEach(b => on(b, 'click', CC.closeCanvas));
 
+    // --- Canvas resizer: drag-to-resize + double-arrow toggle ----------
+    // Mirrors the sidebar resizer, but the canvas lives on the right and
+    // is sized by a CSS variable --canvas-w. The resizer itself is only
+    // visible while the canvas is open (handled in CSS via
+    // .app.has-canvas-open .canvas-resizer).
+    const canvasResizer = document.getElementById('canvasResizer');
+    const canvasResizerBtn = document.getElementById('canvasResizerBtn');
+    const app = document.getElementById('app');
+    const setAppCanvasVar = (val) => { if (app) app.style.setProperty('--canvas-w', val + 'px'); };
+
+    const CANVAS_MIN = 320;
+    const CANVAS_MAX = 1200;
+    const CANVAS_DEFAULT = 640;
+    const CANVAS_HIDE_AT = 240; // drag below this → snap to "hidden" (no canvas)
+    const savedCanvasW = parseInt(LS.get('cc.canvas.width', String(CANVAS_DEFAULT)), 10);
+    const initialCanvasW = Number.isFinite(savedCanvasW) && savedCanvasW >= CANVAS_MIN && savedCanvasW <= CANVAS_MAX
+      ? savedCanvasW
+      : CANVAS_DEFAULT;
+    // Apply on init so the first paint uses the saved width.
+    setAppCanvasVar(initialCanvasW);
+
+    function setCanvasWidth(px, { persist = true, animate = true } = {}) {
+      const clamped = Math.max(CANVAS_MIN, Math.min(CANVAS_MAX, Math.round(px)));
+      if (!animate) {
+        const prev = app ? app.style.transition : '';
+        if (app) {
+          app.style.transition = 'none';
+          setAppCanvasVar(clamped);
+          // Force reflow so the change applies before restoring transition
+          // eslint-disable-next-line no-unused-expressions
+          app.offsetWidth;
+          app.style.transition = prev;
+        } else {
+          setAppCanvasVar(clamped);
+        }
+      } else {
+        setAppCanvasVar(clamped);
+      }
+      if (canvasResizer) canvasResizer.setAttribute('aria-valuenow', String(clamped));
+      if (persist) LS.set('cc.canvas.width', String(clamped));
+    }
+
+    function syncCanvasResizerBtnIcon(collapsed) {
+      if (!canvasResizerBtn) return;
+      const iconSpan = canvasResizerBtn.querySelector('.sage-icon');
+      if (!iconSpan) return;
+      const next = collapsed ? 'panelExpandLeft' : 'panelCollapseRight';
+      iconSpan.setAttribute('data-icon', next);
+      const nextLabel = collapsed ? 'Expand canvas' : 'Collapse canvas';
+      canvasResizerBtn.setAttribute('aria-label', nextLabel);
+      canvasResizerBtn.setAttribute('title', nextLabel);
+      if (window.SAGE_ICONS && typeof window.SAGE_ICONS.render === 'function') {
+        window.SAGE_ICONS.render(iconSpan);
+      }
+    }
+
+    if (canvasResizer) {
+      let dragState = null;
+
+      const onPointerMove = (e) => {
+        if (!dragState) return;
+        e.preventDefault();
+        // The canvas lives on the RIGHT edge of the viewport, so dragging it
+        // LEFT (toward the content) should GROW the window, and dragging RIGHT
+        // (toward the edge) should SHRINK it. Invert the sign of deltaX.
+        const deltaX = e.clientX - dragState.startX;
+        let nextWidth = dragState.startWidth - deltaX;
+        if (nextWidth < CANVAS_HIDE_AT) nextWidth = Math.max(0, nextWidth);
+        setCanvasWidth(nextWidth, { persist: false, animate: false });
+      };
+
+      const onPointerUp = () => {
+        if (!dragState) return;
+        document.removeEventListener('pointermove', onPointerMove);
+        document.removeEventListener('pointerup', onPointerUp);
+        document.removeEventListener('pointercancel', onPointerUp);
+        document.body.classList.remove('is-resizing-canvas');
+        canvasResizer.classList.remove('is-dragging');
+        canvasResizer.classList.remove('is-resizing');
+        const raw = app ? parseInt(app.style.getPropertyValue('--canvas-w'), 10) : NaN;
+        const finalWidth = Number.isFinite(raw) ? raw : initialCanvasW;
+        if (finalWidth < CANVAS_HIDE_AT) {
+          // Snap fully closed — close the canvas and remember the width.
+          try { CC.closeCanvas && CC.closeCanvas(); } catch {}
+          // Restore to the default so the next open starts at a sane size.
+          setCanvasWidth(CANVAS_DEFAULT, { persist: true, animate: false });
+        } else {
+          setCanvasWidth(finalWidth, { persist: true, animate: true });
+        }
+        dragState = null;
+      };
+
+      on(canvasResizer, 'pointerdown', (e) => {
+        if (e.target.closest && e.target.closest('.canvas-resizer__btn')) return;
+        if (e.button !== 0) return;
+        if (window.innerWidth <= 768) return;
+        const currentWidth = modal.getBoundingClientRect().width;
+        dragState = { startX: e.clientX, startWidth: currentWidth };
+        document.body.classList.add('is-resizing-canvas');
+        canvasResizer.classList.add('is-dragging');
+        canvasResizer.classList.add('is-resizing');
+        document.addEventListener('pointermove', onPointerMove);
+        document.addEventListener('pointerup', onPointerUp);
+        document.addEventListener('pointercancel', onPointerUp);
+        try { canvasResizer.setPointerCapture(e.pointerId); } catch {}
+        e.preventDefault();
+      });
+
+      // Double-click the rail to reset to the default width.
+      on(canvasResizer, 'dblclick', (e) => {
+        if (window.innerWidth <= 768) return;
+        if (e.target.closest && e.target.closest('.canvas-resizer__btn')) return;
+        setCanvasWidth(CANVAS_DEFAULT, { persist: true, animate: true });
+      });
+
+      // Keyboard support (role=separator)
+      on(canvasResizer, 'keydown', (e) => {
+        if (window.innerWidth <= 768) return;
+        const step = e.shiftKey ? 32 : 8;
+        const currentWidth = modal.getBoundingClientRect().width;
+        if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          setCanvasWidth(currentWidth - step, { persist: true, animate: true });
+        } else if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          setCanvasWidth(currentWidth + step, { persist: true, animate: true });
+        } else if (e.key === 'Home') {
+          e.preventDefault();
+          setCanvasWidth(CANVAS_MIN, { persist: true, animate: true });
+        } else if (e.key === 'End') {
+          e.preventDefault();
+          setCanvasWidth(CANVAS_MAX, { persist: true, animate: true });
+        } else if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          if (modal.hidden || !modal.classList.contains('is-open')) {
+            // Re-open at the last saved width.
+            setCanvasWidth(initialCanvasW, { persist: false, animate: true });
+          } else {
+            try { CC.closeCanvas && CC.closeCanvas(); } catch {}
+          }
+        }
+      });
+    }
+
+    // Toggle button: close the canvas; if already closed, just re-open.
+    on(canvasResizerBtn, 'click', (e) => {
+      e.stopPropagation();
+      if (window.innerWidth <= 768) return;
+      if (modal.hidden || !modal.classList.contains('is-open')) {
+        setCanvasWidth(initialCanvasW, { persist: false, animate: true });
+      } else {
+        try { CC.closeCanvas && CC.closeCanvas(); } catch {}
+      }
+    });
+
+    // When the canvas opens, the resizer pops in; when it closes, hide it.
+    // CSS owns visibility via .app.has-canvas-open .canvas-resizer, so the
+    // observer's only job is to keep the button glyph in sync with state.
+    const observer = new MutationObserver(() => {
+      const isOpen = !modal.hidden && modal.classList.contains('is-open');
+      // The button is always "collapse" while the canvas is open. There is
+      // no collapsed state separate from "canvas closed" — closing the
+      // canvas itself is the toggle action.
+      syncCanvasResizerBtnIcon(false);
+      // The resizer's a11y presence maps to the canvas being open.
+      if (canvasResizer) {
+        canvasResizer.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+      }
+    });
+    observer.observe(modal, { attributes: true, attributeFilter: ['hidden', 'class'] });
+    syncCanvasResizerBtnIcon(false);
+
     const copyBtn = document.getElementById('canvasCopyBtn');
     if (copyBtn) {
       on(copyBtn, 'click', async () => {
@@ -6818,6 +7897,38 @@
         window.open(u, '_blank', 'noopener');
       });
     }
+
+    // Refresh button — re-renders the current canvas HTML into the iframe.
+    // A short spin on the glyph signals the action; the iframe re-loads
+    // by re-assigning the same `srcdoc`, which is the most reliable way to
+    // reset a sandboxed iframe (avoids reload() permission edge-cases).
+    const refreshBtn = document.getElementById('canvasRefreshBtn');
+    const refreshGlyph = refreshBtn ? refreshBtn.querySelector('.canvas-refresh-glyph') : null;
+    function spinRefreshGlyph() {
+      if (!refreshGlyph) return;
+      refreshGlyph.classList.remove('is-spinning');
+      // Force reflow so the animation restarts on rapid clicks
+      void refreshGlyph.offsetWidth;
+      refreshGlyph.classList.add('is-spinning');
+      setTimeout(() => refreshGlyph.classList.remove('is-spinning'), 650);
+    }
+    function refreshCanvas() {
+      const html = CC.getCanvasHtml ? CC.getCanvasHtml() : '';
+      if (!html) return;
+      const f = document.getElementById('canvasFrame');
+      if (!f) return;
+      // Reassign srcdoc with the cached HTML — same as the initial load.
+      // Wrap path mirrors openCanvas(): we re-route through openCanvas() so
+      // the canvas header (title, slide counter, type) stays in sync.
+      const title = CC.getCanvasTitle ? CC.getCanvasTitle() : '';
+      const type  = CC.getCanvasType  ? CC.getCanvasType()  : 'html';
+      if (CC.openCanvas) CC.openCanvas(html, title, type);
+      spinRefreshGlyph();
+    }
+    if (refreshBtn) {
+      on(refreshBtn, 'click', refreshCanvas);
+    }
+    CC.refreshCanvas = refreshCanvas;
 
     // Keynote presentation slide controls
     const prevSlideBtn = document.getElementById('canvasPrevSlideBtn');
@@ -7540,11 +8651,27 @@
 
     const incogBtn = document.getElementById('incognitoBtn');
     if (incogBtn) {
-      on(incogBtn, 'click', toggleIncognito);
+      // Topbar click: always start a fresh chat. If we're already in
+      // incognito mode, treat the click as "leave incognito" so the user
+      // gets the same dialog/end-flow they'd get from the status bar.
+      // Otherwise just spin up a brand-new incognito conversation.
+      on(incogBtn, 'click', () => {
+        if (CC.state && CC.state.incognitoActive) {
+          CC.toggleIncognito();
+        } else {
+          CC.startIncognitoChat();
+        }
+      });
     }
     const incogSidebarBadge = document.getElementById('incognitoSidebarBadge');
     if (incogSidebarBadge) {
-      on(incogSidebarBadge, 'click', toggleIncognito);
+      on(incogSidebarBadge, 'click', () => {
+        if (CC.state && CC.state.incognitoActive) {
+          CC.toggleIncognito();
+        } else {
+          CC.startIncognitoChat();
+        }
+      });
     }
     const incogEndBtn = document.getElementById('incognitoEndBtn');
     if (incogEndBtn) {
@@ -7670,6 +8797,7 @@
     setupTopbar();
     setupSettingsModal();
     setupComposer();
+    setupModeMenu();
     setupChatScroll();
     setupImageModal();
     setupCanvasModal();
@@ -7711,6 +8839,7 @@
   });
 
   // Expose what callers may want
+  CC.applyTheme = applyTheme;
   CC.openSettings = openSettings;
   CC.openProjectFilesModal = openProjectFilesModal;
   CC.closeProjectFilesModal = closeProjectFilesModal;

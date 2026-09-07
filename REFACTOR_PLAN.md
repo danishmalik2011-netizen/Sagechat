@@ -5,6 +5,96 @@ the refactor. Each phase is executable independently and should be checked off a
 
 ## Phase log
 
+- ✅ **Empty state + collapsed rail (landed, v24):** hero redesigned into a
+  centered welcome moment — S-mark tile, serif greeting, single quiet sub-line
+  (mode label dropped — it lives in the composer picker), and the 2×2 starter
+  cards replaced with **quiet suggestion pills** (title-only, hairline, tooltips
+  carry the descriptions). Collapsed sidebar is now a **56px rail** (brand tile
+  toggle on top, icon-only new-chat below) instead of vanishing; the duplicate
+  foot collapser was removed and the head control became a true toggle. Topbar
+  brand scaled up (28px tile, 18px wordmark); desktop topbar toggle hidden (the
+  sidebar owns expand/collapse). Hero pill clicks wire into the composer.
+
+- ✅ **Chromeless topbar + brand relocation (landed, v21):** removed the topbar
+  hairline so the header and chat read as one surface; brand (S-tile + Newsreader
+  wordmark) now sits dead-center in the topbar; sidebar head is a single
+  always-visible collapse control (hover-swap removed — it caused a
+  same-color-on-same-color hover bug together with `.iconbtn:hover`, which also
+  flipped the collapsed-state tile to light gray under its white glyph; fixed via
+  `.iconbtn.topbar__toggle:hover` specificity override that pins the inverted
+  tile). Topbar new-chat button removed — New Conversation lives in the sidebar
+  below the collapse control with the chat-bubble-plus icon. Topbar height 32→40.
+
+- ✅ **Art direction pass (landed, v20):** defined Sage's design language —
+  **monochrome with contrast discipline**: Inter carries UI, **Newsreader**
+  (variable optical serif, italics added to the font load) carries brand moments
+  via `--font-display`; the brand name and hero title are set in Newsreader with
+  an *italic* name treatment. New bespoke mark: a single continuous monoline
+  **"S"** on the inverted tile (`--invert-bg` black-in-light / white-in-dark),
+  replacing the leftover multi-shape diamond/pinwheel on all three surfaces
+  (sidebar brand, hero, collapsed-topbar toggle) **and the favicon** (inline SVG
+  data URI). De-blued the dark palette ink ladders to soft warm-neutrals;
+  mobile hero title scaled up to keep the display hierarchy. Deferred: logo in
+  settings/about surfaces, PWA icons.
+
+- ✅ **"Sage Solid" icon pack + topbar visibility fix (landed, v16):** fixed the
+  topbar bug where `.topbar__action-btn span { display: none }` (written for the
+  pre-registry raw-SVG buttons) hid the `sage-icon` spans after the registry
+  migration — topbar buttons (incognito/new/files/export/clear) are visible again;
+  the rule now excludes `.sage-icon` and the badge. Replaced the entire stock
+  Lucide-style stroke set with a bespoke **Sage Solid** pack: filled glyphs with
+  generous rounding and evenodd punched cutouts (details are holes in the fill,
+  so they read on any surface), bold 2.4–2.6 round strokes for inherently linear
+  marks (chevrons, cross, paperclip), one 24×24 grid with consistent optical
+  weight. 29 icons incl. new sun/moon (theme), shieldOff/shieldOn (incognito —
+  inline SVGs migrated onto the registry), sliders-style settings, panel/rail
+  collapse, plug connectors, globe translate. Theme-icon JS now pulls from the
+  registry; mode-picker + accordion chevrons migrated too.
+
+- ✅ **Mode picker relocated to composer (landed, v15):** removed the sidebar
+  "Assistance Mode" accordion (sidebar now shows only New Chat, search, threads,
+  Settings — the ChatGPT/Claude pattern) and replaced it with a compact pill
+  (`.composer__mode`) in the composer toolbar-left that opens a popover menu
+  (`.mode-menu`) listing all six modes with icons, descriptions and an active
+  check. Wired via `setupModeMenu()` (build-once + outside-click/Escape close),
+  `renderModes()` now updates the picker button and menu states. **Bonus:**
+  assistant mode now persists across reloads (`cc.mode.v1`, validated on load)
+  — previously it silently reset to Chat. Dead code removed: sidebar accordion
+  wiring, `.mode`/`.modes` CSS, dark-mono `.mode.is-active` selector. Verified:
+  light + dark, switch/persist/outside-click/Escape flows.
+
+- ✅ **Premium redesign pass (landed, v12):** full visual overhaul per the
+  "high-end AI product" brief — dark mode is now **pure black** (`#000` canvas,
+  `#0a0a0a` raised surfaces, white-alpha hairlines `rgba(255,255,255,0.07/0.1)`);
+  light mode uses the low-opacity hairline recipe (`rgba(0,0,0,0.07/0.12)`) instead
+  of solid grays; **zero neon anywhere** (audited: no saturated color survives
+  outside token definitions — accents are neutral ink/black, incognito accent muted
+  slate); neutral dark code blocks + desaturated syntax palette; softer radii
+  (`--r-lg` 18→14, `--r-xl` 20→16, bubbles → `--r-md` 12); type scale enforced
+  (12/14/16/18/20/24/32) with message text at 16px (ChatGPT-style) and the
+  font-size settings remapped onto it; **Inter is the default font** (system stack
+  fallback, tight -0.011em tracking); de-cluttered hero (eyebrow removed, quieter
+  suggestion cards, sparkle icon removed) and de-duplicated the incognito status
+  label (shown once in the topbar pill, not in header/tooltip/footer);
+  thinking-level meter pips de-neoned. Verified live: light, dark (pure black),
+  and incognito vault all coherent; console clean.
+
+- ✅ **Phase 1 — Design tokens & icon registry (landed):** added the full token
+  layer to `:root` (radius scale `--r-2xs…--r-full` with legacy aliases, spacing
+  `--space-1..7`, elevation `--shadow-1..3` + `--shadow-popover`, motion
+  `--t-fast/med/slow` + `--ease-out/in-out`, semantic colors danger/success/warning/
+  info/on-accent/scrim, code-chrome + `--syntax-*` palette, fixed surfaces); swept
+  every literal `border-radius` in the file onto the token scale; replaced ~90% of
+  scattered component colors with semantic/rgba-`var(--danger-rgb)`/`var(--success-rgb)`
+  tokens (hex outside `:root`/palettes is now zero; remaining rgba is elevation
+  shadows only); added the `prefers-reduced-motion` guard. Created `icons.js`
+  (24×24/1.8-stroke registry + `data-icon` runtime), migrated the 6 MODES icons in
+  JS plus 15 chrome icons in `index.html` (topbar, sidebar, composer), added
+  `.sage-icon` sizing CSS, and added `icons.js` to the SW shell.
+  *Deferred:* full migration of remaining inline SVGs (settings tabs, canvas toolbar,
+  connectors menu, thinking brain) and consolidating remaining box-shadow rgba into
+  the elevation tokens — tracked in Phase 5/7.
+
 - ✅ **Phase 0 — Cleanup (landed):** removed dead files (`part5.js`, `served.js`,
   `analyze_part5*.js`, `fix1.js`, `chrome-temp/`); fixed font loading (Plus Jakarta
   Sans, Lexend, Newsreader now actually load); canonicalized palette ids
@@ -369,7 +459,7 @@ through `Sage.emit/on` instead of direct reach-ins (decouples UI from providers)
 | Phase | Scope | Exit criteria |
 |---|---|---|
 | **0. Cleanup** ✅ | rm dead files, chrome-temp; unify names; fix fonts; palette aliases; cache-busting | Repo has only live files; fonts actually load; grep for `cute`/`sagechat` returns only README history |
-| **1. Design tokens** | color/space/radius/shadow/motion tokens; replace hard-coded colors; icon registry | No raw hex/rgba outside `:root`; `icons.js` exists and is used |
+| **1. Design tokens** ✅ | color/space/radius/shadow/motion tokens; replace hard-coded colors; icon registry | No raw hex/rgba outside `:root`; `icons.js` exists and is used |
 | **2. Shell** | sidebar, topbar, rail, responsive drawer rebuilt on tokens | Shell matches reference screenshots in light+dark |
 | **3. Startup** | splash + redesigned empty state + suggestions | Fresh load → splash → "How can I help you today?"; reduced-motion skips splash |
 | **4. Chat & composer** | message surfaces, actions, streaming caret, composer dock, thinking/model dropdowns | Streaming chat looks/feels premium in both themes |

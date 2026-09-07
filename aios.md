@@ -26,6 +26,7 @@ A real AI chat assistant that runs in the browser. No backend. Vanilla HTML/CSS/
 - `index.html` — full UI: sidebar, topbar, chat, composer, modals (settings + image)
 - `styles.css` — light/dark theme, mobile responsive, no neon
 - `app.js` — all logic: providers, streaming, history, attachments, voice, settings
+- `icons.js` — single 24×24 "Sculpt" icon registry (34 icons: brand, 6 modes, chrome, resizers, actions, status). Two shells — `S()` filled-with-evenodd-cut + `L()` monoline round-cap (default 2.6, 1.6 for fine chrome, 2.4 for brand/send). Every `data-icon` in `index.html` and every `SAGE_ICONS.get(...)` / `setAttribute('data-icon', ...)` in `app.js` resolves to a registered glyph.
 - `serve.js` — local static server (`node serve.js` then open http://localhost:8766)
 - `aios.md` — this file
 
@@ -82,6 +83,7 @@ Or just open `index.html` directly in a browser (file:// works for most features
 - **Redesigned send button**: diagonal arrow-up-right icon with micro-interaction on hover
 - **Thinking levels**: CSS variable-driven (`--thinking-1` through `--thinking-4`) — no hardcoded hex colors; Level 4 glow removed for consistency
 - **Status dots**: `is-ok` state uses `--primary` instead of hardcoded ink color
+- **Code block redesign**: `.code-container` is a theme-aware elevated card (12px radius, 3-layer shadow, subtle border). Header is a separate surface (slightly darker than body, macOS-style traffic-light dots, lang badge, line count, copy + collapse controls). Body is a separate surface with `pre > code` at JetBrains Mono 12.5px / 1.65 lh, padding 14px 16px 16px. After streaming finishes, code blocks default to **collapsed** (header-only). Scrollbar is invisible by default, visible on hover. Syntax tokens use 4 theme-aware vars (`--hl-keyword`, `--hl-string`, `--hl-built-in`, `--hl-comment`) for crisp contrast in both modes.
 
 ## Conventions
 - Soft pastel palette, friendly tone, no placeholders
